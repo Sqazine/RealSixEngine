@@ -1,0 +1,20 @@
+fn ret()
+{
+    return struct {
+        name:"test",
+        value:100,
+    };
+}
+
+let r=ret();
+io.println("{},{}",r.name,r.value);//test,100
+
+let johnScore=struct {
+        name:"John",
+        score:100,
+    };
+
+johnScore.score=60;
+
+io.println("{},{}",johnScore.name,johnScore.score);//John,60
+io.println("{},{}",johnScore.name,johnScore.value);//error:no property name 'value'

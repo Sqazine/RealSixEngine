@@ -1,0 +1,36 @@
+let a=10;
+let b=a;
+b=20;
+io.println("{}",a);//10.000000
+io.println("{}",b);//20.000000
+
+if(b<a)
+    b=a;
+else 
+{
+    a=b;
+}
+
+io.println("{}",a);//20.000000
+io.println("{}",b);//20.000000
+
+
+if(a>100)
+    a=100;
+else if(a>50)
+    a=50;
+else if(a>30)
+    a=30;
+else a=5; 
+
+io.println("{}",a);//5.000000
+
+if(b>a)
+   if(a==100)
+        a=1000;
+    else 
+        a=500;
+else 
+    a=300;
+
+io.println("{}",a);//500.000000
