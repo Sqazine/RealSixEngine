@@ -1,0 +1,17 @@
+[submodule "3rd/SDL"]
+	path = 3rd/SDL
+	url = https://github.com/libsdl-org/SDL.git
+	branch = release-3.2.x
+[submodule "3rd/SPIRV-Reflect"]
+	path = 3rd/SPIRV-Reflect
+	url = https://github.com/KhronosGroup/SPIRV-Reflect.git
+[submodule "3rd/stb"]
+	path = 3rd/stb
+	url = https://github.com/nothings/stb.git
+[submodule "3rd/imgui"]
+	path = 3rd/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "3rd/cgltf"]
+	path = 3rd/cgltf
+	url = https://github.com/jkuhlmann/cgltf.git
+	branch = master

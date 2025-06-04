@@ -1,0 +1,28 @@
+let a=3;
+switch(a)
+{
+    default:
+        io.println("{}",0);// 0
+    1:
+    {
+        io.println("{}",a);
+    }
+    2:
+        io.println("{}",2);
+}
+
+switch(a)
+{
+    default:
+        io.println("{}",10);// 10
+}
+
+let b=10;
+
+switch(b)
+{
+    10,11:
+        io.println("{}",b);// 10
+    default:
+        io.println(0);
+}

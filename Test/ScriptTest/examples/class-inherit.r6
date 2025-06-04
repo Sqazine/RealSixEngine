@@ -1,0 +1,42 @@
+class vec2
+{
+    let x=10,y=8;
+
+    fn sqLength()
+    {
+        return this.x*this.x+this.y*this.y;
+    }
+}
+
+class vec3:vec2
+{
+    let z=20;
+
+    fn sqLength()
+    {
+        return this.vec2.sqLength()+this.z*this.z;
+    }
+}
+
+class vec4:vec3
+{
+    let w=40;
+    fn sqLength()
+    {
+        return this.vec3.sqLength()+this.w*this.w;
+    }
+}
+
+class vec5:vec4
+{
+    let q=50;
+    fn sqLength()
+    {
+        return this.vec4.sqLength()+this.q*this.q;
+    }
+}
+
+let a=new vec5();
+
+io.println(a.sqLength());// 4664
+

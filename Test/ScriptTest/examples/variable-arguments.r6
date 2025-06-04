@@ -1,0 +1,87 @@
+let [x1,y1,...args]=[100,200,300,400,500];
+io.println("{},{},{}",x1,y1,args);//100,200,[300,400,500]
+
+[x1,y1,...args]=[100,200];
+io.println("{},{},{}",x1,y1,args);//100,200,[]
+
+[x1,y1,...args]=[100,200,300,400,500,600];
+io.println("{},{},{}",x1,y1,args);//100,200,[300,400,500,600]
+
+[x1,y1]=[y1,x1];
+io.println("{},{}",x1,y1);//200,100
+
+[x1,y1,...args]=[100];
+io.println("{},{},{}",x1,y1,args);//100,null,[]
+
+let [x2,y2,...]=[150,100,100];
+io.println("{},{}",x2,y2);//150,100
+
+[x2,y2,...]=1000;
+io.println("{},{}",x2,y2);//1000,null
+
+fn IsNull(obj)
+{
+    if(obj==null)
+        return true;
+    return false,obj;
+}
+
+let [isNull,value,value2,...argsOther]=IsNull(10);
+io.println("{},{},{},{}",isNull,value,value2,argsOther);// false,10,null,[]
+
+{
+    let [isNull,value,value2,...argsOther]=IsNull(10);
+    io.println("{},{},{},{}",isNull,value,value2,argsOther);// false,10,null,[]
+}
+
+[x2,...args]=IsNull(null);
+io.println("{},{}",x2,args);//true,[]
+
+
+fn variableParamFn(x,y,...args)
+{
+    let result=x+y;
+    for(let i=0;i<ds.sizeof(args);++i)
+        result+=args[i];
+
+    return result;
+}
+
+io.println(variableParamFn(10,20));// 30
+io.println(variableParamFn(10,20,30,60));// 120
+io.println(variableParamFn(10,20,40));// 70
+
+
+fn variableParamFnWithoutVarArg(x,y,...)
+{
+    let result=x+y;
+    return result;
+}
+
+io.println(variableParamFnWithoutVarArg(10,20));// 30
+io.println(variableParamFnWithoutVarArg(10,20,30,60));// 30
+io.println(variableParamFnWithoutVarArg(10,20,40));// 30
+
+let lambdaVarArg = fn(x,y,...args)
+{
+    let result=x+y;
+    for(let i=0;i<ds.sizeof(args);++i)
+        result+=args[i];
+
+    return result;
+};
+
+io.println(lambdaVarArg(10,20));// 30
+io.println(lambdaVarArg(10,20,30,60));// 120
+io.println(lambdaVarArg(10,20,40));// 70
+
+
+let lambdaWithoutVarArg = fn(x,y,...)
+{
+    let result=x+y;
+    return result;
+};
+
+io.println(lambdaWithoutVarArg(10,20));// 30
+io.println(lambdaWithoutVarArg(10,20,30,60));// 30
+io.println(lambdaWithoutVarArg(10,20,40));// 30

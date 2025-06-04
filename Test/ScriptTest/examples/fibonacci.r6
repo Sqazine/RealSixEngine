@@ -1,0 +1,14 @@
+fn fib(x)
+{
+    if(x<2)
+        return x;
+    else 
+        return fib(x-1)+fib(x-2);
+}
+
+let start=time.clock();
+let x=50;
+let a=fib(x);
+let end=time.clock();
+io.println("fibonacci({}):{}",x,a);//fibonacci(50):12586269025
+io.println("{}",end-start);

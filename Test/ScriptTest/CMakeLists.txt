@@ -1,0 +1,11 @@
+set(NAME ScriptTest)
+
+add_executable(${NAME} RealSixScript.cc)
+target_include_directories(${NAME} PRIVATE ${REALSIX_INC_DIRS})
+target_link_libraries(${NAME} PRIVATE ${REALSIX_EDITOR_LIB_NAME})
+target_compile_definitions(${NAME} PUBLIC ${COMPILE_DEFINITIONS})
+if(MSVC)
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+    set_property(TARGET ${NAME} PROPERTY FOLDER Test)
+    target_compile_options(${NAME} PRIVATE "/wd4251;" "/wd4819" "/bigobj;")
+endif()

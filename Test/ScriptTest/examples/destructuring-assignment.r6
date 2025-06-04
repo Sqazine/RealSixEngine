@@ -1,0 +1,32 @@
+fn multiReturn(a,b,c)
+{
+    return a+10,b+20,c+30;
+}
+
+let [a,b,c]=multiReturn(10,20,30);
+
+io.println("{},{},{}",a,b,c);//20,40,60
+
+let [x,y]=[0.0,10.0];
+io.println("{},{}",x,y);//0,10
+
+let [x1,y1]=100.0;
+io.println("{},{}",x1,y1);//100,100
+
+let [x2,y2,z2];
+io.println("{},{}",x2,y2);//null,null
+
+[x2,y2]=[1,1000];
+io.println("{},{}",x2,y2);//1,1000
+
+[x2,y2]=150;
+io.println("{},{}",x2,y2);//150,null
+
+[x2,y2]=[150];//WARN:variable count greater than value count,rest value set as null
+io.println("{},{}",x2,y2);//150,null
+
+[x2,y2]=[150,100,100];
+io.println("{},{}",x2,y2);//WARN:assigned variable less than value.
+
+[x2,y2,z2]=[150,100];
+io.println("{},{},{}",x2,y2,z2);//WARN:variable count greater than value count,rest value set as null.
