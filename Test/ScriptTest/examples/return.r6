@@ -1,0 +1,10 @@
+fn check(x)
+{
+    if(x==null)
+        return;
+    return x;
+}
+
+io.println("{}",check("str"));//str
+io.println("{}",check(10));//10
+io.println("{}",check(null));//null

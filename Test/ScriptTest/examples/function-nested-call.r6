@@ -1,0 +1,10 @@
+fn Set()
+{
+    let add=fn(x,y)
+    {
+        return x+y;
+    };
+    return add;
+} 
+let a=Set()(10,30);
+io.println("{}",a);//40

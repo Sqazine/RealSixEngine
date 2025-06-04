@@ -1,0 +1,3 @@
+add_subdirectory(FrameGraphTest)
+add_subdirectory(RenderTest)
+add_subdirectory(ScriptTest)
