@@ -24,8 +24,8 @@ namespace RealSix
     class GfxVulkanShader : public GfxVulkanObject, public IGfxShader
     {
     public:
-        GfxVulkanShader(IGfxDevice *device) : GfxVulkanObject(device) {}
-        virtual ~GfxVulkanShader() = default;
+        GfxVulkanShader(IGfxDevice *device);
+        virtual ~GfxVulkanShader();
 
         VkShaderModule CreateShaderModule(const uint8_t *content, size_t contentSize);
 
@@ -49,13 +49,11 @@ namespace RealSix
         std::vector<VkWriteDescriptorSet> GetWrites();
         bool CheckDescriptorWriteValid();
 
-        VkShaderStageFlagBits GetShaderStageFlag(size_t idx);
+        SpirvReflectedData SpirvReflect(SpvReflectShaderModule &spvModule, const uint8_t *spvCode, size_t spvCodeSize);
 
         void MarkDirty();
 
         bool mIsDirty{true};
-
-        std::vector<VkPipelineShaderStageCreateInfo> mStageCreateInfos;
 
         std::unordered_map<std::string_view, VkDescriptorSetLayoutBinding> mBindings;
         std::unordered_map<std::string_view, VkWriteDescriptorSet> mWrites;
@@ -100,7 +98,9 @@ namespace RealSix
         void DumpDescriptorSetLayouts();
         void DumpDescriptorWrites();
 
-        SpirvReflectedData SpirvReflect(SpvReflectShaderModule& spvModule, const uint8_t *spvCode, size_t spvCodeSize);
+                VkShaderStageFlagBits GetShaderStageFlag(size_t idx);
+
+        std::vector<VkPipelineShaderStageCreateInfo> mStageCreateInfos;
 
         SpvReflectShaderModule mSpvModule[5];
         SpirvReflectedData mReflectedData[5];
@@ -118,15 +118,17 @@ namespace RealSix
                                const std::vector<uint8_t> &compContent);
         ~GfxVulkanComputeShader() override;
 
-        const std::vector<VkPipelineShaderStageCreateInfo> &GetPipelineShaderStageInfoList() const;
+        VkPipelineShaderStageCreateInfo GetPipelineShaderStageInfo() const;
 
     private:
-        void CreateFromContents(const uint8_t *compContent, size_t compContentSize);
+        void CreateFromContent(const uint8_t *compContent, size_t compContentSize);
         void DumpDescriptorBindings();
         void DumpDescriptorSetLayouts();
         void DumpDescriptorWrites();
 
-        SpirvReflectedData SpirvReflect(size_t idx, const uint8_t *spvCode, size_t spvCodeSize);
+        VkShaderStageFlagBits GetShaderStageFlag();
+
+        VkPipelineShaderStageCreateInfo mStageCreateInfo;
 
         SpvReflectShaderModule mSpvModule;
         SpirvReflectedData mReflectedData;

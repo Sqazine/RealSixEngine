@@ -8,6 +8,24 @@
 
 namespace RealSix
 {
+    GfxVulkanShader::GfxVulkanShader(IGfxDevice *device)
+        : GfxVulkanObject(device)
+    {
+    }
+
+    GfxVulkanShader::~GfxVulkanShader()
+    {
+        VkDevice device = mDevice->GetLogicDevice();
+
+        vkDestroyPipelineLayout(device, mPipelineLayout, nullptr);
+
+        for (auto &setLayout : mDescriptorSetLayouts)
+        {
+            vkDestroyDescriptorSetLayout(device, setLayout, nullptr);
+        }
+
+        vkDestroyDescriptorPool(device, mDescriptorPool, nullptr);
+    }
 
     VkShaderModule GfxVulkanShader::CreateShaderModule(const uint8_t *content, size_t contentSize)
     {
@@ -63,25 +81,6 @@ namespace RealSix
             }
         }
         return true;
-    }
-
-    VkShaderStageFlagBits GfxVulkanShader::GetShaderStageFlag(size_t idx)
-    {
-        switch (idx)
-        {
-        case 0:
-            return VK_SHADER_STAGE_VERTEX_BIT;
-        case 1:
-            return VK_SHADER_STAGE_FRAGMENT_BIT;
-        case 2:
-            return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-        case 3:
-            return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-        case 4:
-            return VK_SHADER_STAGE_GEOMETRY_BIT;
-        }
-
-        return VK_SHADER_STAGE_ALL; // for avoiding compiler warning
     }
 
     void GfxVulkanShader::MarkDirty()
@@ -241,6 +240,46 @@ namespace RealSix
         }
     }
 
+    SpirvReflectedData GfxVulkanShader::SpirvReflect(SpvReflectShaderModule &spvModule, const uint8_t *spvCode, size_t spvCodeSize)
+    {
+#define SPIRV_REFLECT_CHECK(v)                   \
+    do                                           \
+    {                                            \
+        assert(v == SPV_REFLECT_RESULT_SUCCESS); \
+    } while (false);
+
+        SpirvReflectedData result;
+
+        SPIRV_REFLECT_CHECK(spvReflectCreateShaderModule(spvCodeSize, (const void *)spvCode, &spvModule));
+
+        uint32_t varCount = 0;
+        SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvModule, &varCount, nullptr));
+        result.inputVariables.resize(varCount);
+        SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvModule, &varCount, result.inputVariables.data()));
+
+        varCount = 0;
+        SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvModule, &varCount, nullptr));
+        result.ouputVariables.resize(varCount);
+        SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvModule, &varCount, result.ouputVariables.data()));
+
+        varCount = 0;
+        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvModule, &varCount, nullptr));
+        result.descriptorBindings.resize(varCount);
+        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvModule, &varCount, result.descriptorBindings.data()));
+
+        varCount = 0;
+        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvModule, &varCount, nullptr));
+        result.descriptorSets.resize(varCount);
+        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvModule, &varCount, result.descriptorSets.data()));
+
+        varCount = 0;
+        SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvModule, &varCount, nullptr));
+        result.pushConstants.resize(varCount);
+        SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvModule, &varCount, result.pushConstants.data()));
+
+        return result;
+    }
+
     GfxVulkanRasterShader::GfxVulkanRasterShader(IGfxDevice *device,
                                                  std::string_view vertContent,
                                                  std::string_view fragContent,
@@ -287,15 +326,6 @@ namespace RealSix
     {
         VkDevice device = mDevice->GetLogicDevice();
 
-        vkDestroyPipelineLayout(device, mPipelineLayout, nullptr);
-
-        for (auto &setLayout : mDescriptorSetLayouts)
-        {
-            vkDestroyDescriptorSetLayout(device, setLayout, nullptr);
-        }
-
-        vkDestroyDescriptorPool(device, mDescriptorPool, nullptr);
-
         for (int i = 0; i < 5; i++)
         {
             if (mSpvModule[i].entry_point_name != nullptr)
@@ -308,9 +338,7 @@ namespace RealSix
             }
         }
         for (auto &info : mStageCreateInfos)
-        {
-            info = {};
-        }
+            ZeroVulkanStruct(info, VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
     }
 
     void GfxVulkanRasterShader::CreateFromContents(const uint8_t *vertContent, size_t vertContentSize,
@@ -326,7 +354,6 @@ namespace RealSix
 
         mShaderModule[0] = CreateShaderModule(vertContent, vertContentSize);
         mReflectedData[0] = SpirvReflect(mSpvModule[0], vertContent, vertContentSize);
-        shaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         shaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
         shaderStageCreateInfo.module = mShaderModule[0];
         shaderStageCreateInfo.pName = "main";
@@ -334,7 +361,6 @@ namespace RealSix
 
         mShaderModule[1] = CreateShaderModule(fragContent, fragContentSize);
         mReflectedData[1] = SpirvReflect(mSpvModule[1], fragContent, fragContentSize);
-        shaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         shaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         shaderStageCreateInfo.module = mShaderModule[1];
         shaderStageCreateInfo.pName = "main";
@@ -344,7 +370,6 @@ namespace RealSix
         {
             mShaderModule[2] = CreateShaderModule(tessCtrlContent, tessCtrlContentSize);
             mReflectedData[2] = SpirvReflect(mSpvModule[2], tessCtrlContent, tessCtrlContentSize);
-            shaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             shaderStageCreateInfo.stage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
             shaderStageCreateInfo.module = mShaderModule[2];
             shaderStageCreateInfo.pName = "main";
@@ -356,7 +381,6 @@ namespace RealSix
 
             mShaderModule[3] = CreateShaderModule(tessEvalContent, tessEvalContentSize);
             mReflectedData[3] = SpirvReflect(mSpvModule[3], tessEvalContent, tessEvalContentSize);
-            shaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             shaderStageCreateInfo.stage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
             shaderStageCreateInfo.module = mShaderModule[3];
             shaderStageCreateInfo.pName = "main";
@@ -367,7 +391,6 @@ namespace RealSix
         {
             mShaderModule[4] = CreateShaderModule(geomContent, geomContentSize);
             mReflectedData[4] = SpirvReflect(mSpvModule[4], geomContent, geomContentSize);
-            shaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             shaderStageCreateInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
             shaderStageCreateInfo.module = mShaderModule[4];
             shaderStageCreateInfo.pName = "main";
@@ -385,46 +408,6 @@ namespace RealSix
     const std::vector<VkPipelineShaderStageCreateInfo> &GfxVulkanRasterShader::GetPipelineShaderStageInfoList() const
     {
         return mStageCreateInfos;
-    }
-
-#define SPIRV_REFLECT_CHECK(v)                   \
-    do                                           \
-    {                                            \
-        assert(v == SPV_REFLECT_RESULT_SUCCESS); \
-    } while (false);
-
-    SpirvReflectedData GfxVulkanRasterShader::SpirvReflect(SpvReflectShaderModule& spvModule, const uint8_t *spvCode, size_t spvCodeSize)
-    {
-        SpirvReflectedData result;
-
-        SPIRV_REFLECT_CHECK(spvReflectCreateShaderModule(spvCodeSize, (const void *)spvCode, &spvModule));
-
-        uint32_t varCount = 0;
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvModule, &varCount, nullptr));
-        result.inputVariables.resize(varCount);
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvModule, &varCount, result.inputVariables.data()));
-
-        varCount = 0;
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvModule, &varCount, nullptr));
-        result.ouputVariables.resize(varCount);
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvModule, &varCount, result.ouputVariables.data()));
-
-        varCount = 0;
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvModule, &varCount, nullptr));
-        result.descriptorBindings.resize(varCount);
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvModule, &varCount, result.descriptorBindings.data()));
-
-        varCount = 0;
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvModule, &varCount, nullptr));
-        result.descriptorSets.resize(varCount);
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvModule, &varCount, result.descriptorSets.data()));
-
-        varCount = 0;
-        SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvModule, &varCount, nullptr));
-        result.pushConstants.resize(varCount);
-        SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvModule, &varCount, result.pushConstants.data()));
-
-        return result;
     }
 
     void GfxVulkanRasterShader::DumpDescriptorBindings()
@@ -535,5 +518,186 @@ namespace RealSix
 
             mWrites[k] = write;
         }
+    }
+
+    VkShaderStageFlagBits GfxVulkanRasterShader::GetShaderStageFlag(size_t idx)
+    {
+        switch (idx)
+        {
+        case 0:
+            return VK_SHADER_STAGE_VERTEX_BIT;
+        case 1:
+            return VK_SHADER_STAGE_FRAGMENT_BIT;
+        case 2:
+            return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+        case 3:
+            return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+        case 4:
+            return VK_SHADER_STAGE_GEOMETRY_BIT;
+        }
+
+        return VK_SHADER_STAGE_ALL; // for avoiding compiler warning
+    }
+
+    GfxVulkanComputeShader::GfxVulkanComputeShader(IGfxDevice *device,
+                                                   std::string_view compContent)
+        : GfxVulkanShader(device)
+    {
+        mShaderModule = VK_NULL_HANDLE;
+        mSpvModule = {};
+
+        CreateFromContent((const uint8_t *)compContent.data(), compContent.size());
+    }
+
+    GfxVulkanComputeShader::GfxVulkanComputeShader(IGfxDevice *device,
+                                                   const std::vector<uint8_t> &compContent)
+        : GfxVulkanShader(device)
+    {
+        mShaderModule = VK_NULL_HANDLE;
+        mSpvModule = {};
+
+        CreateFromContent(compContent.data(), compContent.size());
+    }
+
+    GfxVulkanComputeShader::~GfxVulkanComputeShader()
+    {
+        VkDevice device = mDevice->GetLogicDevice();
+
+        if (mSpvModule.entry_point_name != nullptr)
+            spvReflectDestroyShaderModule(&mSpvModule);
+
+        if (mShaderModule != VK_NULL_HANDLE)
+        {
+            vkDestroyShaderModule(device, mShaderModule, nullptr);
+            mShaderModule = VK_NULL_HANDLE;
+        }
+
+        ZeroVulkanStruct(mStageCreateInfo, VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
+    }
+
+    VkPipelineShaderStageCreateInfo GfxVulkanComputeShader::GetPipelineShaderStageInfo() const
+    {
+        return mStageCreateInfo;
+    }
+
+    void GfxVulkanComputeShader::CreateFromContent(const uint8_t *compContent, size_t compContentSize)
+    {
+        VkPipelineShaderStageCreateInfo shaderStageCreateInfo;
+        ZeroVulkanStruct(shaderStageCreateInfo, VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
+
+        mShaderModule = CreateShaderModule(compContent, compContentSize);
+        mReflectedData = SpirvReflect(mSpvModule, compContent, compContentSize);
+        mStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        mStageCreateInfo.module = mShaderModule;
+        mStageCreateInfo.pName = "main";
+
+        DumpDescriptorBindings();
+        DumpDescriptorSetLayouts();
+        CreateDescriptorPool();
+        AllocateDescriptorSets();
+        DumpDescriptorWrites();
+        CreatePipelineLayout();
+    }
+
+    void GfxVulkanComputeShader::DumpDescriptorBindings()
+    {
+
+        for (auto &spvBinding : mReflectedData.descriptorBindings)
+        {
+            for (auto &vkBinding : mBindings)
+            {
+                if (vkBinding.first == spvBinding->name)
+                {
+                    vkBinding.second.stageFlags = GetShaderStageFlag();
+                }
+            }
+            VkDescriptorSetLayoutBinding layoutBinding{};
+            layoutBinding.binding = spvBinding->binding;
+            layoutBinding.descriptorCount = spvBinding->count;
+            layoutBinding.descriptorType = (VkDescriptorType)spvBinding->descriptor_type;
+            layoutBinding.pImmutableSamplers = nullptr;
+            layoutBinding.stageFlags = GetShaderStageFlag();
+            mBindings[spvBinding->name] = layoutBinding;
+        }
+    }
+    void GfxVulkanComputeShader::DumpDescriptorSetLayouts()
+    {
+        size_t maxCount = 0;
+        size_t descriptorSetSize = mReflectedData.descriptorSets.size();
+        for (auto &spvSet : mReflectedData.descriptorSets)
+        {
+            if (maxCount < spvSet->set)
+            {
+                maxCount = spvSet->set;
+            }
+        }
+
+        if (descriptorSetSize == 0)
+            return;
+
+        mDescriptorSetLayouts.resize(maxCount + 1);
+
+        auto GetDescriptorBinding = [&](std::string_view name)
+        {
+            for (auto &[k, v] : mBindings)
+            {
+                if (k == name)
+                    return v;
+            }
+
+            return VkDescriptorSetLayoutBinding{};
+        };
+
+        for (auto &spvSet : mReflectedData.descriptorSets)
+        {
+            auto setSlot = spvSet->set;
+
+            std::vector<VkDescriptorSetLayoutBinding> vkBindings(spvSet->binding_count);
+
+            for (size_t i = 0; i < spvSet->binding_count; ++i)
+            {
+                vkBindings[i] = GetDescriptorBinding(spvSet->bindings[i]->name);
+            }
+
+            VkDescriptorSetLayoutCreateInfo layoutInfo{};
+            layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            layoutInfo.bindingCount = static_cast<uint32_t>(vkBindings.size());
+            layoutInfo.pBindings = vkBindings.data();
+
+            VK_CHECK(vkCreateDescriptorSetLayout(mDevice->GetLogicDevice(), &layoutInfo, nullptr, &mDescriptorSetLayouts[setSlot]))
+        }
+    }
+    void GfxVulkanComputeShader::DumpDescriptorWrites()
+    {
+        auto GetSetIndex = [&](std::string_view name) -> uint32_t
+        {
+            for (const auto &spvBinding : mReflectedData.descriptorBindings)
+            {
+                if (name == spvBinding->name)
+                {
+                    return spvBinding->set;
+                }
+            }
+
+            return 4096;
+        };
+
+        for (const auto &[k, v] : mBindings)
+        {
+            VkWriteDescriptorSet write = {};
+            ZeroVulkanStruct(write, VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET);
+            write.dstSet = mDescriptorSets[GetSetIndex(k)];
+            write.dstBinding = v.binding;
+            write.dstArrayElement = 0;
+            write.descriptorType = v.descriptorType;
+            write.descriptorCount = v.descriptorCount;
+
+            mWrites[k] = write;
+        }
+    }
+
+    VkShaderStageFlagBits GfxVulkanComputeShader::GetShaderStageFlag()
+    {
+        return VK_SHADER_STAGE_COMPUTE_BIT;
     }
 }
