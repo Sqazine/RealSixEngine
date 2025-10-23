@@ -32,7 +32,7 @@ namespace RealSix
         std::vector<VkDescriptorSetLayoutBinding> GetDescriptorLayoutBindingList();
         const std::vector<VkDescriptorSetLayout> &GetDescriptorSetLayoutList() const;
         const std::vector<VkDescriptorSet> &GetDescriptorSets();
-        VkPipelineLayout GetPiplineLayout() const;
+        VkPipelineLayout GetPipelineLayout() const;
 
         IGfxShader *BindBuffer(std::string_view name, const IGfxBuffer *buffer) override;
         IGfxShader *BindTexture(std::string_view name, const IGfxTexture *texture) override;

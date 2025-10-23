@@ -300,17 +300,32 @@ namespace RealSix
 
     IGfxCommandBuffer *GfxVulkanCommandBuffer::BindRasterPipeline(IGfxRasterPipeline *pipeline)
     {
-        auto vulkanRasterShader = static_cast<GfxVulkanRasterShader*>(static_cast<IGfxShader *>(pipeline->GetShader()));
+        auto vulkanRasterShader = static_cast<GfxVulkanRasterShader *>(static_cast<IGfxShader *>(pipeline->GetShader()));
         vulkanRasterShader->Flush();
 
         auto sets = vulkanRasterShader->GetDescriptorSets();
         if (!sets.empty())
-            vkCmdBindDescriptorSets(mHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanRasterShader->GetPiplineLayout(), 0, sets.size(), sets.data(), 0, nullptr);
+            vkCmdBindDescriptorSets(mHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanRasterShader->GetPipelineLayout(), 0, sets.size(), sets.data(), 0, nullptr);
 
         auto vulkanRasterPipeline = static_cast<GfxVulkanRasterPipeline *>(pipeline);
         vkCmdBindPipeline(mHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanRasterPipeline->GetHandle());
         return this;
     }
+
+    IGfxCommandBuffer *GfxVulkanCommandBuffer::BindComputePipeline(IGfxComputePipeline *pipeline)
+    {
+        auto vulkanComputeShader = static_cast<GfxVulkanComputeShader *>(static_cast<IGfxShader *>(pipeline->GetShader()));
+        vulkanComputeShader->Flush();
+
+        auto sets = vulkanComputeShader->GetDescriptorSets();
+        if (!sets.empty())
+            vkCmdBindDescriptorSets(mHandle, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputeShader->GetPipelineLayout(), 0, sets.size(), sets.data(), 0, nullptr);
+
+        auto vulkanComputePipeline = static_cast<GfxVulkanComputePipeline *>(pipeline);
+        vkCmdBindPipeline(mHandle, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputePipeline->GetHandle());
+        return this;
+    }
+
     IGfxCommandBuffer *GfxVulkanCommandBuffer::BindVertexBuffer(const GfxVertexBuffer *vertexBuffer)
     {
         auto vulkanVertexBuffer = static_cast<const GfxVulkanBuffer *>(vertexBuffer->GetGfxBuffer());
@@ -329,6 +344,18 @@ namespace RealSix
     IGfxCommandBuffer *GfxVulkanCommandBuffer::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance)
     {
         vkCmdDrawIndexed(mHandle, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+        return this;
+    }
+
+    IGfxCommandBuffer *GfxVulkanCommandBuffer::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance)
+    {
+        vkCmdDraw(mHandle, vertexCount, instanceCount, firstVertex, firstInstance);
+        return this;
+    }
+
+    IGfxCommandBuffer *GfxVulkanCommandBuffer::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+    {
+        vkCmdDispatch(mHandle, groupCountX, groupCountY, groupCountZ);
         return this;
     }
 }

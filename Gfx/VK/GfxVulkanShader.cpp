@@ -114,7 +114,7 @@ namespace RealSix
         return mDescriptorSets;
     }
 
-    VkPipelineLayout GfxVulkanShader::GetPiplineLayout() const
+    VkPipelineLayout GfxVulkanShader::GetPipelineLayout() const
     {
         return mPipelineLayout;
     }
@@ -587,7 +587,9 @@ namespace RealSix
 
         mShaderModule = CreateShaderModule(compContent, compContentSize);
         mReflectedData = SpirvReflect(mSpvModule, compContent, compContentSize);
-        mStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+
+        ZeroVulkanStruct(mStageCreateInfo, VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
+        mStageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
         mStageCreateInfo.module = mShaderModule;
         mStageCreateInfo.pName = "main";
 

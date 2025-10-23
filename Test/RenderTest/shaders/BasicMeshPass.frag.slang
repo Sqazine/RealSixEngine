@@ -1,4 +1,4 @@
-#include "meshdrawPass.common.slang"
+#include "VertexDef.common.slang"
 
 struct PixelOutput
 {
@@ -12,6 +12,6 @@ Sampler2D texSampler : register(s1);
 PixelOutput main(VSOutput vertInput)
 {
     PixelOutput pixelOutput;
-    pixelOutput.color = texSampler.Sample(vertInput.fragTexCoord);
+    pixelOutput.color = texSampler.Sample(vertInput.texcoord0);
     return pixelOutput;
 }

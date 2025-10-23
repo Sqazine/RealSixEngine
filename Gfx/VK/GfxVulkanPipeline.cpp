@@ -104,7 +104,7 @@ namespace RealSix
         pipelineRendering.depthAttachmentFormat = ToVkFormat(mPipelineStateDesc.depthAttachment->texture->GetDesc().format);
         pipelineRendering.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
 
-        auto rawShader = static_cast<GfxVulkanRasterShader*>(static_cast<IGfxShader *>(mPipelineStateDesc.shader));
+        auto rawShader = static_cast<GfxVulkanRasterShader *>(static_cast<IGfxShader *>(mPipelineStateDesc.shader));
 
         VkGraphicsPipelineCreateInfo pipelineInfo;
         ZeroVulkanStruct(pipelineInfo, VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO);
@@ -120,8 +120,36 @@ namespace RealSix
         pipelineInfo.pColorBlendState = &colorBlendState;
         pipelineInfo.pDynamicState = &dynamicState;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-        pipelineInfo.layout = rawShader->GetPiplineLayout();
+        pipelineInfo.layout = rawShader->GetPipelineLayout();
 
         VK_CHECK(vkCreateGraphicsPipelines(mDevice->GetLogicDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &mHandle))
+    }
+
+    GfxVulkanComputePipeline::GfxVulkanComputePipeline(IGfxDevice *device, const GfxComputePipelineStateDesc &pipelineState)
+        : GfxVulkanObject(device), IGfxComputePipeline(pipelineState)
+    {
+        Create();
+    }
+
+    GfxVulkanComputePipeline::~GfxVulkanComputePipeline()
+    {
+        mDevice->WaitIdle();
+        vkDestroyPipeline(mDevice->GetLogicDevice(), mHandle, nullptr);
+    }
+
+    void GfxVulkanComputePipeline::Create()
+    {
+        auto rawShader = static_cast<GfxVulkanComputeShader *>(static_cast<IGfxShader *>(mPipelineStateDesc.shader));
+        
+        VkComputePipelineCreateInfo pipelineInfo{};
+        ZeroVulkanStruct(pipelineInfo, VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO);
+        pipelineInfo.pNext = nullptr;
+        pipelineInfo.flags = 0;
+        pipelineInfo.stage = rawShader->GetPipelineShaderStageInfo();
+        pipelineInfo.layout = rawShader->GetPipelineLayout();
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+        pipelineInfo.basePipelineIndex = -1;
+
+        VK_CHECK(vkCreateComputePipelines(mDevice->GetLogicDevice(), nullptr, 1, &pipelineInfo, nullptr, &mHandle));
     }
 }

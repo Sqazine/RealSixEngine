@@ -28,6 +28,31 @@ namespace RealSix
         return nullptr; // for avoiding compiler warning
     }
 
+    GfxIndexBuffer *GfxIndexBuffer::Create(IGfxDevice *device, const GfxBufferDesc &desc)
+    {
+        GfxIndexBuffer *indexBuffer = new GfxIndexBuffer();
+        indexBuffer->mElementCount = desc.bufferSize / desc.elementSize;
+
+        const GfxConfig &gfxConfig = GfxConfig::GetInstance();
+        switch (gfxConfig.GetBackend())
+        {
+        case GfxBackend::VULKAN:
+        {
+            indexBuffer->mGfxBuffer.reset(GfxVulkanBufferCommon::CreateIndexBuffer(device, desc));
+            return indexBuffer;
+        }
+        case GfxBackend::D3D12:
+            REALSIX_LOG_ERROR(TEXT("Not implemented D3D12 device creation yet"));
+            break;
+        default:
+            REALSIX_LOG_ERROR(TEXT("Unreachable GfxBackend: {}"), static_cast<int>(gfxConfig.GetBackend()));
+            break;
+        }
+
+        REALSIX_LOG_ERROR(TEXT("Unreachable GfxBackend: {}"), static_cast<int>(gfxConfig.GetBackend()));
+        return nullptr; // for avoiding compiler warning
+    }
+
     GfxUniformBuffer *GfxUniformBuffer::Create(IGfxDevice *device, const GfxBufferDesc &desc)
     {
         GfxUniformBuffer *uniformBuffer = new GfxUniformBuffer();
@@ -70,19 +95,18 @@ namespace RealSix
             break;
         }
     }
-    
-    GfxIndexBuffer *GfxIndexBuffer::Create(IGfxDevice *device, const GfxBufferDesc &desc)
+
+    GfxShaderStorageBuffer *GfxShaderStorageBuffer::Create(IGfxDevice *device, const GfxBufferDesc &desc)
     {
-        GfxIndexBuffer *indexBuffer = new GfxIndexBuffer();
-        indexBuffer->mElementCount = desc.bufferSize / desc.elementSize;
+        GfxShaderStorageBuffer *storageBuffer = new GfxShaderStorageBuffer();
 
         const GfxConfig &gfxConfig = GfxConfig::GetInstance();
         switch (gfxConfig.GetBackend())
         {
         case GfxBackend::VULKAN:
         {
-            indexBuffer->mGfxBuffer.reset(GfxVulkanBufferCommon::CreateIndexBuffer(device, desc));
-            return indexBuffer;
+            storageBuffer->mGfxBuffer.reset(GfxVulkanBufferCommon::CreateShaderStorageBuffer(device, desc));
+            return storageBuffer;
         }
         case GfxBackend::D3D12:
             REALSIX_LOG_ERROR(TEXT("Not implemented D3D12 device creation yet"));

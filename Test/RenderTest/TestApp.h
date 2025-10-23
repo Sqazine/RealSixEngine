@@ -26,9 +26,11 @@ namespace RealSix
         void PostTick() override;
         void Destroy() override;
 
+        void AddPasses(FrameGraph &frameGraph);
+
         bool mShowDemoWindow = true;
         bool mShowAnotherWindow = false;
-        bool mRemoveMeshDrawPass = false;
+        bool mRemoveBasicMeshPass = false;
         Vector4f mClearColor = Vector4f(0.45f, 0.55f, 0.60f, 1.00f);
     };
 

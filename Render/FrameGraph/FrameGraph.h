@@ -100,6 +100,8 @@ namespace RealSix
 
         size_t GetTaskCount() const { return mRenderTasks.size(); }
 
+        bool IsNoTask() const { return mRenderTasks.empty(); }
+
         void Compile()
         {
             // Reference counting.

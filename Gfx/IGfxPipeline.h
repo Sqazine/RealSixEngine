@@ -22,9 +22,9 @@ namespace RealSix
     {
         IGfxRasterShader *shader;
 
-        uint8_t colorAttachmentCount{0}; 
-        GfxColorAttachment* colorAttachments;
-        GfxDepthStencilAttachment* depthAttachment;
+        uint8_t colorAttachmentCount{0};
+        GfxColorAttachment *colorAttachments;
+        GfxDepthStencilAttachment *depthAttachment;
 
         GfxVertexBinding vertexBinding;
         GfxPrimitiveTopology primitiveTopology{GfxPrimitiveTopology::TRIANGLE_LIST};
@@ -38,6 +38,12 @@ namespace RealSix
         GfxCompareOp depthCompare{GfxCompareOp::LESS};
         bool stencilTest{false};
     };
+
+    struct GfxComputePipelineStateDesc
+    {
+        IGfxComputeShader *shader;
+    };
+
     class IGfxRasterPipeline
     {
     public:
@@ -50,5 +56,19 @@ namespace RealSix
 
     protected:
         GfxRasterPipelineStateDesc mPipelineStateDesc;
+    };
+
+    class IGfxComputePipeline
+    {
+    public:
+        IGfxComputePipeline(const GfxComputePipelineStateDesc &pipelineState);
+        virtual ~IGfxComputePipeline() = default;
+
+        static IGfxComputePipeline *Create(IGfxDevice *device, const GfxComputePipelineStateDesc &pipelineState);
+
+        IGfxComputeShader *GetShader() const { return mPipelineStateDesc.shader; }
+
+    protected:
+        GfxComputePipelineStateDesc mPipelineStateDesc;
     };
 }

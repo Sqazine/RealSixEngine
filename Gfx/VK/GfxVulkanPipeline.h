@@ -21,4 +21,18 @@ namespace RealSix
 
         VkPipeline mHandle;
     };
+
+     class GfxVulkanComputePipeline : public GfxVulkanObject, public IGfxComputePipeline
+    {
+    public:
+        GfxVulkanComputePipeline(IGfxDevice *device, const GfxComputePipelineStateDesc & pipelineState);
+        ~GfxVulkanComputePipeline() override;
+
+        VkPipeline GetHandle() const { return mHandle; }
+
+    private:
+        void Create();
+
+        VkPipeline mHandle;
+    };
 }

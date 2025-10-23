@@ -8,11 +8,11 @@
 #include "Gfx/IGfxTexture.h"
 namespace RealSix
 {
-    class MeshDrawPass
+    class BasicMeshPass
     {
     public:
         void Init();
-        void Execute();
+        void Execute(FrameGraph &frameGraph);
 
         struct MeshUniformData
         {
@@ -29,5 +29,5 @@ namespace RealSix
         std::unique_ptr<IGfxRasterPipeline> mRasterPipeline;
     };
 
-    void AddMeshDrawPass(FrameGraph &framgGraph);
+    void AddBasicMeshPass(FrameGraph &frameGraph);
 }

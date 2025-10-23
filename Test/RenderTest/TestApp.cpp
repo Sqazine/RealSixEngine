@@ -2,8 +2,9 @@
 #include "Logger/Logger.h"
 #include "Config/Config.h"
 #include "Platform/PlatformInfo.h"
-#include "MeshDrawPass.h"
 #include "Editor/EditorUIPass/EditorUIPass.h"
+#include "BasicMeshPass.h"
+#include "MandelbrotSetPass.h"
 #include <imgui.h>
 
 namespace RealSix
@@ -21,8 +22,7 @@ namespace RealSix
 
         FrameGraph &frameGraph = mRenderer->GetFrameGraph();
 
-        AddMeshDrawPass(frameGraph);
-        AddEditorUIPass(frameGraph);
+        AddPasses(frameGraph);
     }
 
     void TestApp::Tick()
@@ -30,17 +30,16 @@ namespace RealSix
         App::Tick();
 
         FrameGraph &frameGraph = mRenderer->GetFrameGraph();
-        if (mRemoveMeshDrawPass)
+        if (mRemoveBasicMeshPass)
         {
-            frameGraph.RemoveRenderTask<MeshDrawPass>();
+            frameGraph.RemoveRenderTask<BasicMeshPass>();
         }
         else
         {
             if (frameGraph.HasOnly<EditorUIPass>())
             {
                 frameGraph.Clear();
-                AddMeshDrawPass(frameGraph);
-                AddEditorUIPass(frameGraph);
+                AddPasses(frameGraph);
             }
         }
     }
@@ -76,7 +75,7 @@ namespace RealSix
             ImGui::Text("This is some useful text.");         // Display some text (you can use a format strings too)
             ImGui::Checkbox("Demo Window", &mShowDemoWindow); // Edit bools storing our window open/close state
             ImGui::Checkbox("Another Window", &mShowAnotherWindow);
-            ImGui::Checkbox("Remove Mesh Draw Pass", &mRemoveMeshDrawPass);
+            ImGui::Checkbox("Remove Mesh Draw Pass", &mRemoveBasicMeshPass);
 
             ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float *)&mClearColor); // Edit 3 floats representing a color
@@ -114,5 +113,12 @@ namespace RealSix
     void TestApp::PostTick()
     {
         App::PostTick();
+    }
+
+    void TestApp::AddPasses(FrameGraph &frameGraph)
+    {
+        AddMandelbrotSetPass(frameGraph);
+        AddBasicMeshPass(frameGraph);
+        AddEditorUIPass(frameGraph);
     }
 }

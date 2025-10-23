@@ -70,4 +70,18 @@ namespace RealSix
     protected:
         std::unique_ptr<IGfxBuffer> mGfxBuffer;
     };
+
+    class GfxShaderStorageBuffer
+    {
+    public:
+        GfxShaderStorageBuffer() = default;
+        ~GfxShaderStorageBuffer() { mGfxBuffer.reset(nullptr); }
+
+        static GfxShaderStorageBuffer *Create(IGfxDevice *device, const GfxBufferDesc &desc);
+
+        IGfxBuffer *GetGfxBuffer() const { return mGfxBuffer.get(); }
+
+    protected:
+        std::unique_ptr<IGfxBuffer> mGfxBuffer;
+    };
 }

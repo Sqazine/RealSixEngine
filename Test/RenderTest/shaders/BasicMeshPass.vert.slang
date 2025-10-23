@@ -1,20 +1,4 @@
-#include "meshdrawPass.common.slang"
-
-struct VSInput
-{
-    [[vk::location(0)]]
-    float3 inPosition : POSITION;
-    [[vk::location(1)]]
-    float3 inNormal : NORMAL;
-    [[vk::location(2)]]
-    float3 inTangent : TANGENT;
-    [[vk::location(3)]]
-    float3 inBinormal : BINORMAL;
-    [[vk::location(4)]]
-    float4 inColor : COLOR;
-    [[vk::location(5)]]
-    float2 inTexCoord : TEXCOORD0;
-};
+#include "VertexDef.common.slang"
 
 struct CameraData
 {
@@ -38,8 +22,8 @@ VSOutput main(VSInput vsInput)
 {
     VSOutput vsOutput;
     vsOutput.position = mul(cameraData.proj, mul(cameraData.view, mul(meshUBO.model, float4(vsInput.inPosition, 1.0))));
-    vsOutput.fragColor = vsInput.inColor;
-    vsOutput.fragTexCoord = vsInput.inTexCoord;
+    vsOutput.color = vsInput.inColor;
+    vsOutput.texcoord0 = vsInput.inTexCoord;
 
     return vsOutput;
 }

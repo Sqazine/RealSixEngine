@@ -87,4 +87,32 @@ namespace RealSix::GfxVulkanBufferCommon
         SetCpuBufferData(result, (size_t)desc.size, gfxDesc.data);
         return result;
     }
+
+    inline GfxVulkanBuffer *CreateShaderStorageBuffer(IGfxDevice *device, const GfxBufferDesc &gfxDesc)
+    {
+        GfxVulkanBufferDesc desc;
+        desc.size = gfxDesc.bufferSize;
+        desc.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        desc.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+        GfxVulkanBuffer *result = new GfxVulkanBuffer(device, desc);
+
+        if (gfxDesc.data != nullptr)
+        {
+            std::unique_ptr<GfxVulkanBuffer> stagingBuffer;
+            stagingBuffer.reset(CreateStagingBuffer(device, gfxDesc.bufferSize));
+
+            SetCpuBufferData(stagingBuffer.get(), (size_t)gfxDesc.bufferSize, gfxDesc.data);
+
+            std::unique_ptr<GfxVulkanCommandBuffer> commandBuffer = std::make_unique<GfxVulkanCommandBuffer>(device, GfxCommandType::TRANSFER, true);
+            commandBuffer->Begin()
+                ->CopyBuffer(stagingBuffer.get(), result, desc.size)
+                ->End();
+
+            commandBuffer->Submit();
+
+            stagingBuffer.reset();
+        }
+        return result;
+    }
 }

@@ -24,9 +24,13 @@ namespace RealSix
         IGfxCommandBuffer *CopyBuffer(IGfxBuffer *src, IGfxBuffer *dst, size_t bufferSize) override;
         IGfxCommandBuffer *CopyBufferToImage(IGfxBuffer *src, IGfxTexture *dst, uint32_t width, uint32_t height) override;
         IGfxCommandBuffer *BindRasterPipeline(IGfxRasterPipeline *pipeline) override;
+        IGfxCommandBuffer *BindComputePipeline(IGfxComputePipeline *pipeline) override;
         IGfxCommandBuffer *BindVertexBuffer(const GfxVertexBuffer *vertexBuffer) override;
         IGfxCommandBuffer *BindIndexBuffer(const GfxIndexBuffer *indexBuffer) override;
         IGfxCommandBuffer *DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) override;
+        IGfxCommandBuffer *Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) override;
+        
+        IGfxCommandBuffer *Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
         IGfxCommandBuffer *Submit(GfxVulkanSemaphore *waitSemaphore = nullptr);
 

@@ -1,18 +1,19 @@
-#include "MeshDrawPass.h"
+#include "BasicMeshPass.h"
 #include "Core/IO.h"
 #include "Gfx/IGfxCommandBuffer.h"
 #include "Gfx/IGfxPipeline.h"
+#include "Editor/EditorUIPass/EditorUIPass.h"
 namespace RealSix
 {
-    void MeshDrawPass::Init()
+    void BasicMeshPass::Init()
     {
         std::string shaderCompile;
-        shaderCompile = "slangc.exe " SHADER_DIR "meshDrawPass.vert.slang"
-                        " -profile sm_6_6+spirv_1_6 -target spirv -o " SHADER_DIR "meshDrawPass.vert.slang.spv"
+        shaderCompile = "slangc.exe " SHADER_DIR "BasicMeshPass.vert.slang"
+                        " -profile sm_6_6+spirv_1_6 -target spirv -o " SHADER_DIR "BasicMeshPass.vert.slang.spv"
                         " -emit-spirv-directly -fvk-use-entrypoint-name";
         system(shaderCompile.c_str());
-        shaderCompile = "slangc.exe " SHADER_DIR "meshDrawPass.frag.slang"
-                        " -profile sm_6_6+spirv_1_6 -target spirv -o " SHADER_DIR "meshDrawPass.frag.slang.spv"
+        shaderCompile = "slangc.exe " SHADER_DIR "BasicMeshPass.frag.slang"
+                        " -profile sm_6_6+spirv_1_6 -target spirv -o " SHADER_DIR "BasicMeshPass.frag.slang.spv"
                         " -emit-spirv-directly -fvk-use-entrypoint-name";
         system(shaderCompile.c_str());
 
@@ -30,8 +31,8 @@ namespace RealSix
         bufferDesc.data = &mMeshUniformData;
         mMeshUniformDataBuffer.reset(GfxUniformBuffer::Create(Renderer::GetGfxDevice(), bufferDesc));
 
-        auto vertShaderContent = ReadBinaryFile(SHADER_DIR "meshDrawPass.vert.slang.spv");
-        auto fragShaderContent = ReadBinaryFile(SHADER_DIR "meshDrawPass.frag.slang.spv");
+        auto vertShaderContent = ReadBinaryFile(SHADER_DIR "BasicMeshPass.vert.slang.spv");
+        auto fragShaderContent = ReadBinaryFile(SHADER_DIR "BasicMeshPass.frag.slang.spv");
         mShader.reset(IGfxRasterShader::Create(Renderer::GetGfxDevice(), vertShaderContent, fragShaderContent));
 
         GfxRasterPipelineStateDesc pipelineState;
@@ -48,14 +49,27 @@ namespace RealSix
         mShader->BindTexture("texSampler", mColorTexture.get());
     }
 
-    void MeshDrawPass::Execute()
+    void BasicMeshPass::Execute(FrameGraph &frameGraph)
     {
-        auto swapChain = Renderer::GetGfxDevice()->GetSwapChain();
-        swapChain->GetColorAttachment().loadOp = GfxAttachmentLoadOp::CLEAR;
-        swapChain->GetColorAttachment().storeOp = GfxAttachmentStoreOp::STORE;
+        bool isFirstTask = frameGraph.HasOnly<EditorUIPass>() || frameGraph.IsNoTask();
 
-        swapChain->GetDepthAttachment().loadOp = GfxAttachmentLoadOp::CLEAR;
-        swapChain->GetDepthAttachment().storeOp = GfxAttachmentStoreOp::STORE;
+        auto swapChain = Renderer::GetGfxDevice()->GetSwapChain();
+        if (isFirstTask)
+        {
+            swapChain->GetColorAttachment().loadOp = GfxAttachmentLoadOp::CLEAR;
+            swapChain->GetColorAttachment().storeOp = GfxAttachmentStoreOp::STORE;
+
+            swapChain->GetDepthAttachment().loadOp = GfxAttachmentLoadOp::CLEAR;
+            swapChain->GetDepthAttachment().storeOp = GfxAttachmentStoreOp::STORE;
+        }
+        else
+        {
+            swapChain->GetColorAttachment().loadOp = GfxAttachmentLoadOp::LOAD;
+            swapChain->GetColorAttachment().storeOp = GfxAttachmentStoreOp::STORE;
+
+            swapChain->GetDepthAttachment().loadOp = GfxAttachmentLoadOp::LOAD;
+            swapChain->GetDepthAttachment().storeOp = GfxAttachmentStoreOp::STORE;
+        }
 
         auto cmdBuffer = Renderer::GetGfxDevice()->GetCurrentBackCommandBuffer();
         cmdBuffer
@@ -67,17 +81,17 @@ namespace RealSix
             ->EndRenderPass();
     }
 
-    void AddMeshDrawPass(FrameGraph &fragmeGraph)
+    void AddBasicMeshPass(FrameGraph &frameGraph)
     {
-        fragmeGraph.AddRenderTask<MeshDrawPass>(
+        frameGraph.AddRenderTask<BasicMeshPass>(
             true,
-            [&](MeshDrawPass *task, RenderTaskBuilder &builder)
+            [&](BasicMeshPass *task, RenderTaskBuilder &builder)
             {
                 task->Init();
             },
-            [=](MeshDrawPass *task)
+            [&](BasicMeshPass *task)
             {
-                task->Execute();
+                task->Execute(frameGraph);
             });
     }
 }

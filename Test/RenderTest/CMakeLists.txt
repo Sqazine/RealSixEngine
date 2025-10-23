@@ -1,6 +1,8 @@
 set(NAME RenderTest)
 
-add_executable(${NAME} TestApp.h TestApp.cpp MeshDrawPass.h MeshDrawPass.cpp RenderTestMainEntry.cc)
+file(GLOB SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
+
+add_executable(${NAME} ${SRC})
 target_include_directories(${NAME} PRIVATE ${REALSIX_INC_DIRS})
 target_link_libraries(${NAME} PUBLIC ${REALSIX_EDITOR_LIB_NAME} ${THIRDPARTY_LIB} ${REALSIX_LIB_NAME})
 target_compile_definitions(${NAME} PUBLIC ${COMPILE_DEFINITIONS})

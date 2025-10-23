@@ -16,6 +16,7 @@ namespace RealSix
         virtual ~Renderer();
 
         static IGfxDevice *GetGfxDevice();
+        static Window *GetWindow();
 
         void BeginFrame();
         virtual void Render();
@@ -24,9 +25,9 @@ namespace RealSix
         FrameGraph &GetFrameGraph() { return mFrameGraph; }
 
     private:
-        Window *mWindow;
         FrameGraph mFrameGraph;
 
+        static Window *mWindow;
         static std::unique_ptr<IGfxDevice> mGfxDevice;
     };
 }

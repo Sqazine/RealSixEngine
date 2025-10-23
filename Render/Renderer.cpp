@@ -4,10 +4,11 @@
 namespace RealSix
 {
     std::unique_ptr<IGfxDevice> Renderer::mGfxDevice{nullptr};
+    Window* Renderer::mWindow{nullptr};
 
     Renderer::Renderer(Window *window)
-        : mWindow(window)
     {
+        mWindow = window;
         mGfxDevice.reset(IGfxDevice::Create(mWindow));
     }
 
@@ -20,6 +21,11 @@ namespace RealSix
     IGfxDevice *Renderer::GetGfxDevice()
     {
         return mGfxDevice.get();
+    }
+
+    Window *Renderer::GetWindow()
+    {
+        return mWindow;
     }
 
     void Renderer::BeginFrame()
