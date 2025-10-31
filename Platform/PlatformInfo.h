@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <vulkan/vulkan.h>
-#include "Core/Singleton.h"
+#include "Core/Common.h"
 #include "Core/Marco.h"
 #include "Window.h"
 namespace RealSix

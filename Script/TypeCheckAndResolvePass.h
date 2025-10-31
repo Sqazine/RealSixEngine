@@ -1,9 +1,9 @@
 #pragma once
-#include "AstOptimizePass.h"
+#include "AstPass.h"
 namespace RealSix::Script
 {
     class TypeInfoTable;
-    class REALSIX_API TypeCheckAndResolvePass : public AstOptimizePass
+    class REALSIX_API TypeCheckAndResolvePass : public AstPass
     {
     public:
         TypeCheckAndResolvePass() noexcept;

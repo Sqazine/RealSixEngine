@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/NonCopyable.h"
+
 namespace RealSix
 {
     class FrameGraph;

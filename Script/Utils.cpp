@@ -6,30 +6,12 @@
 #include <sstream>
 #include "Allocator.h"
 #include "LibraryManager.h"
-#include "Core/IO.h"
+#include "Resource/IO.h"
 #include "Logger/Logger.h"
 #include "Core/Marco.h"
 
 namespace RealSix::Script
 {
-    void Init()
-    {
-        Allocator::GetInstance().Init();
-        LibraryManager::GetInstance().Init();
-
-        // Register built-in libraries
-        for (size_t i = 0; i < LibraryManager::GetInstance().GetLibraries().size(); ++i)
-        {
-            ModuleObject *lib = LibraryManager::GetInstance().GetLibraries()[i];
-            Allocator::GetInstance().SetGlobalVariable(i, lib);
-        }
-    }
-    void Destroy()
-    {
-        LibraryManager::GetInstance().Destroy();
-        Allocator::GetInstance().Destroy();
-    }
-
     STRING PointerAddressToString(void *pointer)
     {
         STRING_STREAM sstr;

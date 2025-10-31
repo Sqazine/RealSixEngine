@@ -1,11 +1,11 @@
 #pragma once
 #include <vector>
 #include "Ast.h"
-#include "AstOptimizePass.h "
+#include "AstPass.h "
 
 namespace RealSix::Script
 {
-    class REALSIX_API ConstantFoldPass : public AstOptimizePass
+    class REALSIX_API ConstantFoldPass : public AstPass
     {
     public:
         ConstantFoldPass() noexcept = default;

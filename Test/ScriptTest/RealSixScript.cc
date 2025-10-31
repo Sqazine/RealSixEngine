@@ -1,20 +1,20 @@
 #include <string>
 #include <string_view>
 #include "Version.h"
-#include "Script/Common.h"
 #include "Script/Logger.h"
 #include "Script/Token.h"
 #include "Script/Ast.h"
 #include "Script/Lexer.h"
 #include "Script/Parser.h"
-#include "Script/AstOptimizePass.h"
+#include "Script/AstPass.h"
 #include "Script/ConstantFoldPass.h"
 #include "Script/TypeCheckAndResolvePass.h"
 #include "Script/SyntaxCheckPass.h"
 #include "Script/Compiler.h"
 #include "Script/VM.h"
+#include "Script/Context.h"
 #include "Config/Config.h"
-#include "Core/IO.h"
+#include "Resource/IO.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 #pragma warning(disable : 4996)
@@ -26,7 +26,7 @@
 RealSix::Script::Lexer *gLexer{nullptr};
 RealSix::Script::Parser *gParser{nullptr};
 
-RealSix::Script::AstOptimizePassManager *gAstOptimizePassManager{nullptr};
+RealSix::Script::AstPassManager *gAstPassManager{nullptr};
 
 RealSix::Script::Compiler *gCompiler{nullptr};
 RealSix::Script::VM *gVm{nullptr};
@@ -66,7 +66,7 @@ void Run(STRING_VIEW content)
 	RealSix::Logger::Println(TEXT("{}"), stmt->ToString());
 #endif
 
-	stmt = gAstOptimizePassManager->Execute(stmt);
+	stmt = gAstPassManager->Execute(stmt);
 
 #ifndef NDEBUG
 	RealSix::Logger::Println(TEXT("{}"), stmt->ToString());
@@ -174,15 +174,15 @@ int32_t main(int32_t argc, const char *argv[])
 	if (ParseArgs(argc, argv) == EXIT_FAILURE)
 		return EXIT_FAILURE;
 
-	RealSix::Script::Init();
+	RealSix::Script::Context::GetInstance().Init();
 
 	gLexer = new RealSix::Script::Lexer();
 	gParser = new RealSix::Script::Parser();
-	gAstOptimizePassManager = new RealSix::Script::AstOptimizePassManager();
+	gAstPassManager = new RealSix::Script::AstPassManager();
 	gCompiler = new RealSix::Script::Compiler();
 	gVm = new RealSix::Script::VM();
 
-	gAstOptimizePassManager
+	gAstPassManager
 		->Add<RealSix::Script::ConstantFoldPass>()
 		->Add<RealSix::Script::SyntaxCheckPass>()
 		->Add<RealSix::Script::TypeCheckAndResolvePass>();
@@ -194,11 +194,11 @@ int32_t main(int32_t argc, const char *argv[])
 
 	SAFE_DELETE(gLexer);
 	SAFE_DELETE(gParser);
-	SAFE_DELETE(gAstOptimizePassManager);
+	SAFE_DELETE(gAstPassManager);
 	SAFE_DELETE(gCompiler);
 	SAFE_DELETE(gVm);
 
-	RealSix::Script::Destroy();
+	RealSix::Script::Context::GetInstance().Destroy();
 
 	return EXIT_SUCCESS;
 }

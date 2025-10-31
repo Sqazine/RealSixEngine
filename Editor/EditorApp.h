@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "Core/Singleton.h"
+
 #include "Core/App.h"
 #include "Math/Matrix4.h"
 namespace RealSix

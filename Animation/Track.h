@@ -164,14 +164,14 @@ namespace RealSix
     template <typename T, int32_t N>
     inline T Track<T, N>::Hermite(float time, const T &p1, const T &s1, const T &p2, const T &s2)
     {
-        float tt = time * time;
-        float ttt = tt * time;
+        float timeSquare = Math::Pow(time,2);
+        float timeCubic = Math::Pow(time,3);
         T tmp_p2 = p2;
         Neighborhood(p1, tmp_p2);
-        float h1 = 2.0f * ttt - 3.0f * tt + 1.0f;
-        float h2 = -2.0f * ttt + 3.0f * tt;
-        float h3 = ttt - 2.0f * tt + time;
-        float h4 = ttt - tt;
+        float h1 = 2.0f * timeCubic - 3.0f * timeSquare + 1.0f;
+        float h2 = -2.0f * timeCubic + 3.0f * timeSquare;
+        float h3 = timeCubic - 2.0f * timeSquare + time;
+        float h4 = timeCubic - timeSquare;
         T result = p1 * h1 + tmp_p2 * h2 + s1 * h3 + s2 * h4;
         return AdjustHermiteResult(result);
     }

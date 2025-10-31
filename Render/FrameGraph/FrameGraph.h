@@ -6,7 +6,7 @@
 #include "FrameGraphResource.h"
 #include "FrameGraphRenderTask.h"
 #include "Core/Common.h"
-#include "Core/NonCopyable.h"
+
 namespace RealSix
 {
     class FrameGraphRenderTaskBuilder;

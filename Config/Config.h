@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Singleton.h"
+#include "Core/Common.h"
 #include "Core/Marco.h"
 namespace RealSix
 {

@@ -3,9 +3,8 @@
 #include "GfxVulkanCommon.h"
 #include "GfxVulkanBuffer.h"
 #include "GfxVulkanTexture.h"
-#include "Core/IO.h"
 #include <cassert>
-
+#include "Core/Common.h"
 namespace RealSix
 {
     GfxVulkanShader::GfxVulkanShader(IGfxDevice *device)
@@ -280,27 +279,6 @@ namespace RealSix
     }
 
     GfxVulkanRasterShader::GfxVulkanRasterShader(IGfxDevice *device,
-                                                 std::string_view vertContent,
-                                                 std::string_view fragContent,
-                                                 std::string_view tessCtrlContent,
-                                                 std::string_view tessEvalContent,
-                                                 std::string_view geomContent)
-        : GfxVulkanShader(device)
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            mShaderModule[i] = VK_NULL_HANDLE;
-            mSpvModule[i] = {};
-        }
-
-        CreateFromContents((const uint8_t *)vertContent.data(), vertContent.size(),
-                           (const uint8_t *)fragContent.data(), fragContent.size(),
-                           (const uint8_t *)tessCtrlContent.data(), tessCtrlContent.size(),
-                           (const uint8_t *)tessEvalContent.data(), tessEvalContent.size(),
-                           (const uint8_t *)geomContent.data(), geomContent.size());
-    }
-
-    GfxVulkanRasterShader::GfxVulkanRasterShader(IGfxDevice *device,
                                                  const std::vector<uint8_t> &vertContent,
                                                  const std::vector<uint8_t> &fragContent,
                                                  const std::vector<uint8_t> &tessCtrlContent,
@@ -539,22 +517,9 @@ namespace RealSix
     }
 
     GfxVulkanComputeShader::GfxVulkanComputeShader(IGfxDevice *device,
-                                                   std::string_view compContent)
-        : GfxVulkanShader(device)
-    {
-        mShaderModule = VK_NULL_HANDLE;
-        mSpvModule = {};
-
-        CreateFromContent((const uint8_t *)compContent.data(), compContent.size());
-    }
-
-    GfxVulkanComputeShader::GfxVulkanComputeShader(IGfxDevice *device,
                                                    const std::vector<uint8_t> &compContent)
         : GfxVulkanShader(device)
     {
-        mShaderModule = VK_NULL_HANDLE;
-        mSpvModule = {};
-
         CreateFromContent(compContent.data(), compContent.size());
     }
 

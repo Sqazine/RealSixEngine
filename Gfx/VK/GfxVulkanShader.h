@@ -72,13 +72,6 @@ namespace RealSix
     {
     public:
         GfxVulkanRasterShader(IGfxDevice *device,
-                              std::string_view vertContent,
-                              std::string_view fragContent,
-                              std::string_view tessCtrlContent,
-                              std::string_view tessEvalContent,
-                              std::string_view geomContent);
-
-        GfxVulkanRasterShader(IGfxDevice *device,
                               const std::vector<uint8_t> &vertContent,
                               const std::vector<uint8_t> &fragContent,
                               const std::vector<uint8_t> &tessCtrlContent,
@@ -98,22 +91,19 @@ namespace RealSix
         void DumpDescriptorSetLayouts();
         void DumpDescriptorWrites();
 
-                VkShaderStageFlagBits GetShaderStageFlag(size_t idx);
+        VkShaderStageFlagBits GetShaderStageFlag(size_t idx);
 
-        std::vector<VkPipelineShaderStageCreateInfo> mStageCreateInfos;
+        std::vector<VkPipelineShaderStageCreateInfo> mStageCreateInfos{};
 
-        SpvReflectShaderModule mSpvModule[5];
-        SpirvReflectedData mReflectedData[5];
+        SpvReflectShaderModule mSpvModule[5]{};
+        SpirvReflectedData mReflectedData[5]{};
 
-        VkShaderModule mShaderModule[5];
+        VkShaderModule mShaderModule[5]{};
     };
 
     class GfxVulkanComputeShader : public GfxVulkanShader
     {
     public:
-        GfxVulkanComputeShader(IGfxDevice *device,
-                               std::string_view compContent);
-
         GfxVulkanComputeShader(IGfxDevice *device,
                                const std::vector<uint8_t> &compContent);
         ~GfxVulkanComputeShader() override;
@@ -128,11 +118,11 @@ namespace RealSix
 
         VkShaderStageFlagBits GetShaderStageFlag();
 
-        VkPipelineShaderStageCreateInfo mStageCreateInfo;
+        VkPipelineShaderStageCreateInfo mStageCreateInfo{};
 
-        SpvReflectShaderModule mSpvModule;
-        SpirvReflectedData mReflectedData;
+        SpvReflectShaderModule mSpvModule{};
+        SpirvReflectedData mReflectedData{};
 
-        VkShaderModule mShaderModule;
+        VkShaderModule mShaderModule{VK_NULL_HANDLE};
     };
 }

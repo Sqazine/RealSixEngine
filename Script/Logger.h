@@ -6,7 +6,7 @@
 #include <cassert>
 #include <cstdarg>
 #include "Token.h"
-#include "Common.h"
+#include "Utils.h"
 #include "Core/Marco.h"
 #include "Logger/Logger.h"
 
@@ -101,22 +101,22 @@ namespace RealSix::Script
         }
     }
 
-#define REALSIX_LOG_ERROR_WITH_LOC(tokOrPos, fmt, ...)                          \
-    do                                                                                 \
-    {                                                                                  \
+#define REALSIX_LOG_ERROR_WITH_LOC(tokOrPos, fmt, ...)                           \
+    do                                                                           \
+    {                                                                            \
         RealSix::Script::Log(Logger::Kind::ERROR, tokOrPos, fmt, ##__VA_ARGS__); \
-        assert(0);                                                                     \
+        assert(0);                                                               \
     } while (false)
 
-#define REALSIX_LOG_WARN_WITH_LOC(tokOrPos, fmt, ...)                          \
-    do                                                                                \
-    {                                                                                 \
+#define REALSIX_LOG_WARN_WITH_LOC(tokOrPos, fmt, ...)                           \
+    do                                                                          \
+    {                                                                           \
         RealSix::Script::Log(Logger::Kind::WARN, tokOrPos, fmt, ##__VA_ARGS__); \
     } while (false)
 
-#define REALSIX_LOG_INFO_WITH_LOC(tokOrPos, fmt, ...)                          \
-    do                                                                                \
-    {                                                                                 \
+#define REALSIX_LOG_INFO_WITH_LOC(tokOrPos, fmt, ...)                           \
+    do                                                                          \
+    {                                                                           \
         RealSix::Script::Log(Logger::Kind::INFO, tokOrPos, fmt, ##__VA_ARGS__); \
     } while (false)
 

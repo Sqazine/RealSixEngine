@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <unordered_map>
-#include "Common.h"
+#include "Utils.h"
 namespace RealSix::Script
 {
 	enum ValueKind : uint8_t

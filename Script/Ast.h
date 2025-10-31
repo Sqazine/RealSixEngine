@@ -5,7 +5,7 @@
 #include <memory>
 #include "Type.h"
 #include "Token.h"
-#include "Common.h"
+#include "Utils.h"
 namespace RealSix::Script
 {
 	enum class AstKind

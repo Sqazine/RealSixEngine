@@ -1,7 +1,7 @@
 #pragma once
 #include <variant>
 #include <memory>
-#include "Core/NonCopyable.h"
+#include "Core/Common.h"
 namespace RealSix
 {
     class FrameGraphRenderTaskBase;

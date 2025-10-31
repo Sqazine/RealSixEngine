@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include "Core/Common.h"
-#include "Core/NonCopyable.h"
+
 namespace RealSix
 {
     class FrameGraphRenderTaskBuilder;

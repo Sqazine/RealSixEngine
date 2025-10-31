@@ -1,5 +1,5 @@
 #include "EditorApp.h"
-#include "Core/Singleton.h"
+
 namespace RealSix
 {
     class EditorAppInstance : public EditorApp, public Singleton<EditorAppInstance>

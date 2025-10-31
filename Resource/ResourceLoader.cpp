@@ -1,57 +1,57 @@
-#include "MeshResourceManager.h"
-
+#include "ResourceLoader.h"
+#include "IO.h"
 namespace RealSix
 {
-    StaticMesh *MeshResourceManager::GetBuiltinTriangleMesh()
+    StaticMesh *ResourceLoader::GetBuiltinTriangleMesh()
     {
-        if (mBuiltinMeshes.find(MeshType::TRIANGLE) == mBuiltinMeshes.end())
+        if (mBuiltinMesheCache.find(MeshType::TRIANGLE) == mBuiltinMesheCache.end())
         {
-            mBuiltinMeshes[MeshType::TRIANGLE] = std::unique_ptr<StaticMesh>(CreateBuiltinTriangle());
+            mBuiltinMesheCache[MeshType::TRIANGLE] = std::unique_ptr<StaticMesh>(CreateBuiltinTriangle());
         }
-        return mBuiltinMeshes[MeshType::TRIANGLE].get();
+        return mBuiltinMesheCache[MeshType::TRIANGLE].get();
     }
-    StaticMesh *MeshResourceManager::GetBuiltinQuadMesh()
+    StaticMesh *ResourceLoader::GetBuiltinQuadMesh()
     {
-        if (mBuiltinMeshes.find(MeshType::QUAD) == mBuiltinMeshes.end())
+        if (mBuiltinMesheCache.find(MeshType::QUAD) == mBuiltinMesheCache.end())
         {
-            mBuiltinMeshes[MeshType::QUAD] = std::unique_ptr<StaticMesh>(CreateBuiltinQuad());
+            mBuiltinMesheCache[MeshType::QUAD] = std::unique_ptr<StaticMesh>(CreateBuiltinQuad());
         }
-        return mBuiltinMeshes[MeshType::QUAD].get();
+        return mBuiltinMesheCache[MeshType::QUAD].get();
     }
-    StaticMesh *MeshResourceManager::GetBuiltinCubeMesh()
+    StaticMesh *ResourceLoader::GetBuiltinCubeMesh()
     {
-        if (mBuiltinMeshes.find(MeshType::CUBE) == mBuiltinMeshes.end())
+        if (mBuiltinMesheCache.find(MeshType::CUBE) == mBuiltinMesheCache.end())
         {
-            mBuiltinMeshes[MeshType::CUBE] = std::unique_ptr<StaticMesh>(CreateBuiltinCube());
+            mBuiltinMesheCache[MeshType::CUBE] = std::unique_ptr<StaticMesh>(CreateBuiltinCube());
         }
-        return mBuiltinMeshes[MeshType::CUBE].get();
+        return mBuiltinMesheCache[MeshType::CUBE].get();
     }
-    StaticMesh *MeshResourceManager::GetBuiltinSphereMesh()
+    StaticMesh *ResourceLoader::GetBuiltinSphereMesh()
     {
-        if (mBuiltinMeshes.find(MeshType::SPHERE) == mBuiltinMeshes.end())
+        if (mBuiltinMesheCache.find(MeshType::SPHERE) == mBuiltinMesheCache.end())
         {
-            mBuiltinMeshes[MeshType::SPHERE] = std::unique_ptr<StaticMesh>(CreateBuiltinSphere());
+            mBuiltinMesheCache[MeshType::SPHERE] = std::unique_ptr<StaticMesh>(CreateBuiltinSphere());
         }
-        return mBuiltinMeshes[MeshType::SPHERE].get();
+        return mBuiltinMesheCache[MeshType::SPHERE].get();
     }
-    StaticMesh *MeshResourceManager::GetBuiltinCapsuleMesh()
+    StaticMesh *ResourceLoader::GetBuiltinCapsuleMesh()
     {
-        if (mBuiltinMeshes.find(MeshType::CAPSULE) == mBuiltinMeshes.end())
+        if (mBuiltinMesheCache.find(MeshType::CAPSULE) == mBuiltinMesheCache.end())
         {
-            mBuiltinMeshes[MeshType::CAPSULE] = std::unique_ptr<StaticMesh>(CreateBuiltinCapsule());
+            mBuiltinMesheCache[MeshType::CAPSULE] = std::unique_ptr<StaticMesh>(CreateBuiltinCapsule());
         }
-        return mBuiltinMeshes[MeshType::CAPSULE].get();
+        return mBuiltinMesheCache[MeshType::CAPSULE].get();
     }
-    StaticMesh *MeshResourceManager::GetBuiltinCylinderMesh()
+    StaticMesh *ResourceLoader::GetBuiltinCylinderMesh()
     {
-        if (mBuiltinMeshes.find(MeshType::CYLINDER) == mBuiltinMeshes.end())
+        if (mBuiltinMesheCache.find(MeshType::CYLINDER) == mBuiltinMesheCache.end())
         {
-            mBuiltinMeshes[MeshType::CYLINDER] = std::unique_ptr<StaticMesh>(CreateBuiltinCylinder());
+            mBuiltinMesheCache[MeshType::CYLINDER] = std::unique_ptr<StaticMesh>(CreateBuiltinCylinder());
         }
-        return mBuiltinMeshes[MeshType::CYLINDER].get();
+        return mBuiltinMesheCache[MeshType::CYLINDER].get();
     }
 
-    StaticMesh *MeshResourceManager::CreateBuiltinTriangle()
+    StaticMesh *ResourceLoader::CreateBuiltinTriangle()
     {
         Vector3f positions[] =
             {
@@ -114,7 +114,7 @@ namespace RealSix
         return result;
     }
 
-    StaticMesh *MeshResourceManager::CreateBuiltinQuad()
+    StaticMesh *ResourceLoader::CreateBuiltinQuad()
     {
         const Vector3f positions[] =
             {
@@ -174,7 +174,7 @@ namespace RealSix
         return result;
     }
 
-    StaticMesh *MeshResourceManager::CreateBuiltinCube()
+    StaticMesh *ResourceLoader::CreateBuiltinCube()
     {
         const Vector3f positions[] =
             {
@@ -407,7 +407,7 @@ namespace RealSix
         return result;
     }
 
-    StaticMesh *MeshResourceManager::CreateBuiltinSphere()
+    StaticMesh *ResourceLoader::CreateBuiltinSphere()
     {
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
@@ -466,12 +466,12 @@ namespace RealSix
         return result;
     }
 
-    StaticMesh *MeshResourceManager::CreateBuiltinCapsule()
+    StaticMesh *ResourceLoader::CreateBuiltinCapsule()
     {
         return nullptr; // TODO: Implementation not ready
     }
 
-    StaticMesh *MeshResourceManager::CreateBuiltinCylinder()
+    StaticMesh *ResourceLoader::CreateBuiltinCylinder()
     {
 
         // TODO: not finifhed yet
@@ -504,4 +504,20 @@ namespace RealSix
         return result;
     }
 
+    std::vector<uint8_t> ResourceLoader::GetShaderContentFromDisk(std::string_view path)
+    {
+        if (mShaderContentCache.find(path) == mShaderContentCache.end())
+            mShaderContentCache[path] = ReadBinaryFile(path);
+        return mShaderContentCache[path];
+    }
+
+    IGfxTexture *ResourceLoader::GetTextureFromDisk(std::string_view path)
+    {
+        if (mTextureCache.find(path) == mTextureCache.end())
+        {
+            GfxTextureDesc textureDesc = ReadTexture(path);
+            mTextureCache[path].reset(IGfxTexture::Create(Renderer::GetGfxDevice(), textureDesc));
+        }
+        return mTextureCache[path].get();
+    }
 }

@@ -1,8 +1,9 @@
 #include "MandelbrotSetPass.h"
-#include "Core/IO.h"
+#include "Resource/ResourceLoader.h"
 #include "Render/Mesh.h"
 #include "Gfx/IGfxCommandBuffer.h"
 #include "Editor/EditorUIPass/EditorUIPass.h"
+
 #define WORKGROUP_SIZE 32
 
 namespace RealSix
@@ -38,15 +39,15 @@ namespace RealSix
         unifomrBufferDesc.data = &mUniform;
         mUniformBuffer.reset(GfxUniformBuffer::Create(Renderer::GetGfxDevice(), unifomrBufferDesc));
 
-        auto compShaderContent = ReadBinaryFile(TEST_SHADER_DIR "MandelbrotSet.comp.slang.spv");
+        auto compShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "MandelbrotSet.comp.slang.spv");
         mComputeShader.reset(IGfxComputeShader::Create(Renderer::GetGfxDevice(), compShaderContent));
         mComputeShader->BindBuffer("imageData", mComputeImageBuffer->GetGfxBuffer());
         mComputeShader->BindBuffer("uniform", mUniformBuffer->GetGfxBuffer());
 
         mComputePipeline.reset(IGfxComputePipeline::Create(Renderer::GetGfxDevice(), mComputeShader.get()));
 
-        auto vertShaderContent = ReadBinaryFile(TEST_SHADER_DIR "ScreenSpaceQuad.vert.slang.spv");
-        auto fragShaderContent = ReadBinaryFile(TEST_SHADER_DIR "MandelbrotSetDrawPass.frag.slang.spv");
+        auto vertShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "ScreenSpaceQuad.vert.slang.spv");
+        auto fragShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "MandelbrotSetDrawPass.frag.slang.spv");
         mRasterShader.reset(IGfxRasterShader::Create(Renderer::GetGfxDevice(), vertShaderContent, fragShaderContent));
         mRasterShader->BindBuffer("imageData", mComputeImageBuffer->GetGfxBuffer());
         mRasterShader->BindBuffer("uniform", mUniformBuffer->GetGfxBuffer());

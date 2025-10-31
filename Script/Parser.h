@@ -7,6 +7,7 @@
 #include "Ast.h"
 #include "Common.h"
 #include "Type.h"
+#include "Core/Common.h"
 namespace RealSix::Script
 {
 	enum class Precedence

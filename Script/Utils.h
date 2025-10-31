@@ -5,7 +5,6 @@
 #include <vector>
 #include <array>
 #include "Core/Marco.h"
-#include "Core/Singleton.h"
 
 #define STACK_MAX 1024
 #define GLOBAL_VARIABLE_MAX 512
@@ -18,9 +17,6 @@
 
 namespace RealSix::Script
 {
-    REALSIX_API void Init();
-    REALSIX_API void Destroy();
-
     enum class Permission : uint8_t
     {
         MUTABLE,

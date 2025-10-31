@@ -23,7 +23,7 @@ namespace RealSix
 
         std::unique_ptr<Camera> mCamera;
         StaticMesh* mStaticMeshPtr;
-        std::unique_ptr<IGfxTexture> mColorTexture;
+        IGfxTexture* mColorTexture;
         std::unique_ptr<GfxUniformBuffer> mMeshUniformDataBuffer;
         std::unique_ptr<IGfxRasterShader> mShader;
         std::unique_ptr<IGfxRasterPipeline> mRasterPipeline;

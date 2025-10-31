@@ -20,13 +20,6 @@ namespace RealSix
         virtual ~IGfxRasterShader() = default;
 
         static IGfxRasterShader *Create(IGfxDevice *device,
-                                        std::string_view vertContent,
-                                        std::string_view fragContent,
-                                        std::string_view tessCtrlContent = "",
-                                        std::string_view tessEvalContent = "",
-                                        std::string_view geomContent = "");
-
-        static IGfxRasterShader *Create(IGfxDevice *device,
                                         const std::vector<uint8_t> &vertContent,
                                         const std::vector<uint8_t> &fragContent,
                                         const std::vector<uint8_t> &tessCtrlContent = {},
@@ -39,9 +32,6 @@ namespace RealSix
     public:
         IGfxComputeShader() = default;
         virtual ~IGfxComputeShader() = default;
-
-        static IGfxComputeShader *Create(IGfxDevice *device,
-                                        std::string_view compContent);
 
         static IGfxComputeShader *Create(IGfxDevice *device,
                                         const std::vector<uint8_t> &compContent);

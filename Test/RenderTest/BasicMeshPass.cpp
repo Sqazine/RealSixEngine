@@ -1,9 +1,9 @@
 #include "BasicMeshPass.h"
-#include "Core/IO.h"
+
 #include "Gfx/IGfxCommandBuffer.h"
 #include "Gfx/IGfxPipeline.h"
 #include "Editor/EditorUIPass/EditorUIPass.h"
-#include "Resource/MeshResourceManager.h"
+#include "Resource/ResourceLoader.h"
 namespace RealSix
 {
     void BasicMeshPass::Init()
@@ -22,10 +22,8 @@ namespace RealSix
         mCamera->SetPosition(Vector3f(0.0f, 0.0f, 10.0f));
         mCamera->SetFovByDegree(60.0f);
 
-        mStaticMeshPtr = MeshResourceManager::GetInstance().GetBuiltinSphereMesh();
-
-        GfxTextureDesc textureDesc = ReadTexture(TEST_ASSETS_DIR "uv.png");
-        mColorTexture.reset(IGfxTexture::Create(Renderer::GetGfxDevice(), textureDesc));
+        mStaticMeshPtr = ResourceLoader::GetInstance().GetBuiltinSphereMesh();
+        mColorTexture = ResourceLoader::GetInstance().GetTextureFromDisk(TEST_TEXTURE_DIR "uv.png");
 
         GfxBufferDesc bufferDesc{};
         bufferDesc.bufferSize = sizeof(MeshUniformData);
@@ -33,8 +31,8 @@ namespace RealSix
         bufferDesc.data = &mMeshUniformData;
         mMeshUniformDataBuffer.reset(GfxUniformBuffer::Create(Renderer::GetGfxDevice(), bufferDesc));
 
-        auto vertShaderContent = ReadBinaryFile(TEST_SHADER_DIR "BasicMeshPass.vert.slang.spv");
-        auto fragShaderContent = ReadBinaryFile(TEST_SHADER_DIR "BasicMeshPass.frag.slang.spv");
+        auto vertShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "BasicMeshPass.vert.slang.spv");
+        auto fragShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "BasicMeshPass.frag.slang.spv");
         mShader.reset(IGfxRasterShader::Create(Renderer::GetGfxDevice(), vertShaderContent, fragShaderContent));
 
         GfxRasterPipelineStateDesc pipelineState;
@@ -48,7 +46,7 @@ namespace RealSix
 
         mShader->BindBuffer("cameraData", mCamera->GetRenderDataBuffer()->GetGfxBuffer());
         mShader->BindBuffer("meshUBO", mMeshUniformDataBuffer->GetGfxBuffer());
-        mShader->BindTexture("texSampler", mColorTexture.get());
+        mShader->BindTexture("texSampler", mColorTexture);
     }
 
     void BasicMeshPass::Execute(FrameGraph &frameGraph)

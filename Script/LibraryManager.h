@@ -4,6 +4,7 @@
 #include "Value.h"
 #include "Object.h"
 #include "Common.h"
+#include "Core/Common.h"
 namespace RealSix::Script
 {
     class REALSIX_API LibraryManager:public Singleton<LibraryManager>

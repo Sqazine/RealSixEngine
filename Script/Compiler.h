@@ -3,7 +3,7 @@
 #include "Ast.h"
 #include "Object.h"
 #include "Common.h"
-#include "Core/NonCopyable.h"
+#include "Core/Common.h"
 namespace RealSix::Script
 {
 	struct Symbol;

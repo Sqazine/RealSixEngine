@@ -6,17 +6,17 @@
 #include <memory>
 namespace RealSix::Script
 {
-    class AstOptimizePass;
+    class AstPass;
     template <typename T>
-    concept IsChildOfAstOptimizePass = !std::is_same_v<T, void> &&
+    concept IsChildOfAstPass = !std::is_same_v<T, void> &&
                                        !std::is_abstract_v<T> &&
-                                       std::is_base_of_v<AstOptimizePass, T>;
+                                       std::is_base_of_v<AstPass, T>;
 
-    class REALSIX_API AstOptimizePass
+    class REALSIX_API AstPass
     {
     public:
-        AstOptimizePass() noexcept = default;
-        virtual ~AstOptimizePass() = default;
+        AstPass() noexcept = default;
+        virtual ~AstPass() = default;
 
         Stmt *Execute(Stmt *stmt)
         {
@@ -167,23 +167,23 @@ namespace RealSix::Script
 
     protected:
         template <typename T>
-        requires IsChildOfAstOptimizePass<T>
+        requires IsChildOfAstPass<T>
         void RequirePass();
 
     private:
-        friend class AstOptimizePassManager;
-        AstOptimizePassManager *mOwner;
+        friend class AstPassManager;
+        AstPassManager *mOwner;
     };
 
-    class AstOptimizePassManager
+    class AstPassManager
     {
     public:
-        constexpr AstOptimizePassManager() noexcept = default;
-        constexpr ~AstOptimizePassManager() noexcept = default;
+        constexpr AstPassManager() noexcept = default;
+        constexpr ~AstPassManager() noexcept = default;
 
         template <typename T, typename... Args>
-        requires IsChildOfAstOptimizePass<T>
-            AstOptimizePassManager *Add(Args &&...params) noexcept
+        requires IsChildOfAstPass<T>
+            AstPassManager *Add(Args &&...params) noexcept
         {
             for (size_t pos = 0; pos < mPasses.size(); ++pos)
             {
@@ -207,12 +207,12 @@ namespace RealSix::Script
         }
 
     private:
-        std::vector<std::unique_ptr<AstOptimizePass>> mPasses;
+        std::vector<std::unique_ptr<AstPass>> mPasses;
 
-        friend class AstOptimizePass;
+        friend class AstPass;
 
         template <typename T>
-        requires IsChildOfAstOptimizePass<T>
+        requires IsChildOfAstPass<T>
         bool HasPass()
         {
             for (int32_t pos; pos < mPasses.size(); ++pos)
@@ -225,8 +225,8 @@ namespace RealSix::Script
     };
 
     template <typename T>
-    requires IsChildOfAstOptimizePass<T>
-    inline void AstOptimizePass::RequirePass()
+    requires IsChildOfAstPass<T>
+    inline void AstPass::RequirePass()
     {
         if (!mOwner->HasPass<T>())
             mOwner->Add<T>();

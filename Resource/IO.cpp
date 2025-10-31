@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include "Logger/Logger.h"
+#include "Core/Common.h"
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #endif

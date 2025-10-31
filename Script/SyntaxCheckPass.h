@@ -1,10 +1,10 @@
 #pragma once
 #include <cstdint>
-#include "AstOptimizePass.h"
+#include "AstPass.h"
 
 namespace RealSix::Script
 {
-    class REALSIX_API SyntaxCheckPass : public AstOptimizePass
+    class REALSIX_API SyntaxCheckPass : public AstPass
     {
     public:
          SyntaxCheckPass() noexcept;
