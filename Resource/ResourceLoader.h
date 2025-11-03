@@ -14,6 +14,9 @@ namespace RealSix
         IGfxTexture *GetTextureFromDisk(std::string_view path);
         std::vector<uint8_t> GetShaderContentFromDisk(std::string_view path);
 
+        std::vector<StaticMesh> LoadStaticMeshesFromDisk(std::string_view path);
+        std::vector<SkeletalMesh> LoadSkeletalMeshesFromDisk(std::string_view path);
+
         StaticMesh *GetBuiltinTriangleMesh();
         StaticMesh *GetBuiltinQuadMesh();
         StaticMesh *GetBuiltinCubeMesh();

@@ -4,13 +4,25 @@
 namespace RealSix
 {
 
-    Skeleton::Skeleton() {}
+    Skeleton::Skeleton()
+    {
+    }
+
     Skeleton::Skeleton(const Pose &rest, const Pose &bind, const std::vector<std::string> &names)
     {
         Set(rest, bind, names);
     }
     Skeleton::~Skeleton()
     {
+    }
+
+    Skeleton::Skeleton(const Skeleton &other)
+    {
+        this->mRestPose = other.mRestPose;
+        this->mBindPose = other.mBindPose;
+        this->mInverseBindPoseMatrix4Form = other.mInverseBindPoseMatrix4Form;
+        this->mInverseBindPoseDualQuaternionForm = other.mInverseBindPoseDualQuaternionForm;
+        this->mBoneNames = other.mBoneNames;
     }
 
     void Skeleton::Set(const Pose &rest, const Pose &bind, const std::vector<std::string> &names)

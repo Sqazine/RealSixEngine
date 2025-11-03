@@ -39,7 +39,7 @@ namespace RealSix
         allocInfo.commandPool = mPoolHandle;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount = 1;
-        VK_CHECK(vkAllocateCommandBuffers(mDevice->GetLogicDevice(), &allocInfo, &mHandle))
+        VK_CHECK(vkAllocateCommandBuffers(mDevice->GetLogicDevice(), &allocInfo, &mHandle));
 
         {
             mSignalSemaphore = std::make_unique<GfxVulkanSemaphore>(mDevice);
@@ -74,7 +74,7 @@ namespace RealSix
 
     IGfxCommandBuffer *GfxVulkanCommandBuffer::End()
     {
-        VK_CHECK(vkEndCommandBuffer(mHandle))
+        VK_CHECK(vkEndCommandBuffer(mHandle));
         return this;
     }
 
@@ -202,9 +202,9 @@ namespace RealSix
         submitInfo.pCommandBuffers = &mHandle;
 
         if (mFence)
-            VK_CHECK(vkQueueSubmit(mRelatedQueue, 1, &submitInfo, mFence->GetHandle()))
+            VK_CHECK(vkQueueSubmit(mRelatedQueue, 1, &submitInfo, mFence->GetHandle()));
         else
-            VK_CHECK(vkQueueSubmit(mRelatedQueue, 1, &submitInfo, VK_NULL_HANDLE))
+            VK_CHECK(vkQueueSubmit(mRelatedQueue, 1, &submitInfo, VK_NULL_HANDLE));
 
         return this;
     }
@@ -267,7 +267,7 @@ namespace RealSix
         }
         else
         {
-            REALSIX_LOG_ERROR(TEXT("unsupported layout transition!"))
+            REALSIX_LOG_ERROR(TEXT("unsupported layout transition!"));
         }
 
         vkCmdPipelineBarrier(

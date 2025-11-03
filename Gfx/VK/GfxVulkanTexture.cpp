@@ -66,7 +66,7 @@ namespace RealSix
         imageInfo.samples = (VkSampleCountFlagBits)mDesc.sampleCount;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        VK_CHECK(vkCreateImage(mDevice->GetLogicDevice(), &imageInfo, nullptr, &mHandle))
+        VK_CHECK(vkCreateImage(mDevice->GetLogicDevice(), &imageInfo, nullptr, &mHandle));
 
         VkMemoryRequirements memRequirements;
         vkGetImageMemoryRequirements(mDevice->GetLogicDevice(), mHandle, &memRequirements);
@@ -76,7 +76,7 @@ namespace RealSix
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = mDevice->FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-        VK_CHECK(vkAllocateMemory(mDevice->GetLogicDevice(), &allocInfo, nullptr, &mMemory))
+        VK_CHECK(vkAllocateMemory(mDevice->GetLogicDevice(), &allocInfo, nullptr, &mMemory));
 
         vkBindImageMemory(mDevice->GetLogicDevice(), mHandle, mMemory, 0);
     }
@@ -114,7 +114,7 @@ namespace RealSix
         viewInfo.subresourceRange.baseArrayLayer = 0;
         viewInfo.subresourceRange.layerCount = 1;
 
-        VK_CHECK(vkCreateImageView(mDevice->GetLogicDevice(), &viewInfo, nullptr, &mView))
+        VK_CHECK(vkCreateImageView(mDevice->GetLogicDevice(), &viewInfo, nullptr, &mView));
     }
 
     void GfxVulkanTexture::CreateSampler()
@@ -137,7 +137,7 @@ namespace RealSix
         samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
         samplerInfo.mipLodBias = 0.0f;
 
-        VK_CHECK(vkCreateSampler(mDevice->GetLogicDevice(), &samplerInfo, nullptr, &mSampler))
+        VK_CHECK(vkCreateSampler(mDevice->GetLogicDevice(), &samplerInfo, nullptr, &mSampler));
     }
 
 }

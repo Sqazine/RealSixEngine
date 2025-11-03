@@ -68,7 +68,7 @@ namespace RealSix
 
         GfxVulkanDevice *vulkanDevice = static_cast<GfxVulkanDevice *>(Renderer::GetGfxDevice());
 
-        VK_CHECK(vkCreateDescriptorPool(vulkanDevice->GetLogicDevice(), &poolInfo, nullptr, &mDescriptorPool))
+        VK_CHECK(vkCreateDescriptorPool(vulkanDevice->GetLogicDevice(), &poolInfo, nullptr, &mDescriptorPool));
 
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();

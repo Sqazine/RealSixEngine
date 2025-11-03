@@ -72,17 +72,17 @@ namespace RealSix::Logger
     {                                                                           \
         RealSix::Logger::Log(RealSix::Logger::Kind::ERROR, fmt, ##__VA_ARGS__); \
         abort();                                                                \
-    } while (false);
+    } while (false)
 
 #define REALSIX_LOG_WARN(fmt, ...)                                             \
     do                                                                         \
     {                                                                          \
         RealSix::Logger::Log(RealSix::Logger::Kind::WARN, fmt, ##__VA_ARGS__); \
-    } while (false);
+    } while (false)
 
 #define REALSIX_LOG_INFO(fmt, ...)                                             \
     do                                                                         \
     {                                                                          \
         RealSix::Logger::Log(RealSix::Logger::Kind::INFO, fmt, ##__VA_ARGS__); \
-    } while (false);
+    } while (false)
 }

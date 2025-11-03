@@ -125,7 +125,7 @@ namespace RealSix
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.layout = rawShader->GetPipelineLayout();
 
-        VK_CHECK(vkCreateGraphicsPipelines(mDevice->GetLogicDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &mHandle))
+        VK_CHECK(vkCreateGraphicsPipelines(mDevice->GetLogicDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &mHandle));
     }
 
     GfxVulkanComputePipeline::GfxVulkanComputePipeline(IGfxDevice *device, IGfxComputeShader *shader)

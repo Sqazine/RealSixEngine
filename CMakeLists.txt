@@ -54,11 +54,13 @@ option(REALSIX_BUILD_TEST "build test example" ON)
 option(REALSIX_BUILD_STATIC "build libRealSix static library" ON)
 
 set(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/3rd")
+set(CGLTF_INC_DIR "${THIRD_PARTY_DIR}/cgltf")
 set(SDL_INC_DIR "${THIRD_PARTY_DIR}/SDL/include")
 set(STB_INC_DIR "${THIRD_PARTY_DIR}/stb")
 set(IMGUI_INC_DIR "${THIRD_PARTY_DIR}/imgui")
 set(IMGUI_BACKEND_INC_DIR "${THIRD_PARTY_DIR}/imgui/backends")
 set(SPIRV_REFLECT_INC_DIR "${THIRD_PARTY_DIR}/SPIRV-Reflect")
+
 set(SPIRV_REFLECT_STATIC_LIB ON)
 
 find_package(Vulkan REQUIRED)
@@ -155,6 +157,7 @@ set(REALSIX_INC_DIRS
     ${CMAKE_SOURCE_DIR}/Resource
     ${CMAKE_SOURCE_DIR}/Script
 
+    ${CGLTF_INC_DIR}
     ${SDL_INC_DIR}
     ${STB_INC_DIR}
     ${SPIRV_REFLECT_INC_DIR}

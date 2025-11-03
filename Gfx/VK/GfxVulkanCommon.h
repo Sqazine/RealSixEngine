@@ -58,33 +58,29 @@ namespace RealSix
 #undef CASE
     }
 
-#define VK_CHECK(r)                                                                                    \
-    do                                                                                                 \
-    {                                                                                                  \
-        VkResult vkResult = (r);                                                                       \
-        if (vkResult != VK_SUCCESS)                                                                    \
-            REALSIX_LOG_ERROR(TEXT("[{}]File:{} Line:{}"), GetErrorCode(vkResult), __FILE__, __LINE__) \
-    } while (false);
+#define VK_CHECK(r)                                                                                     \
+    do                                                                                                  \
+    {                                                                                                   \
+        VkResult vkResult = (r);                                                                        \
+        if (vkResult != VK_SUCCESS)                                                                     \
+            REALSIX_LOG_ERROR(TEXT("[{}]File:{} Line:{}"), GetErrorCode(vkResult), __FILE__, __LINE__); \
+    } while (false)
 
 #define GET_VK_INSTANCE_PFN(instance, funcName)                                                             \
     do                                                                                                      \
     {                                                                                                       \
         funcName = reinterpret_cast<PFN_##funcName>(vkGetInstanceProcAddr(instance, #funcName));            \
         if (funcName == nullptr)                                                                            \
-        {                                                                                                   \
             REALSIX_LOG_WARN(TEXT("Failed to get vulkan instance extension function {}"), TEXT(#funcName)); \
-        }                                                                                                   \
-    } while (false);
+    } while (false)
 
 #define GET_VK_DEVICE_PFN(device, funcName)                                                               \
     do                                                                                                    \
     {                                                                                                     \
         funcName = reinterpret_cast<PFN_##funcName>(vkGetDeviceProcAddr(device, #funcName));              \
         if (funcName == nullptr)                                                                          \
-        {                                                                                                 \
             REALSIX_LOG_WARN(TEXT("Failed to get vulkan device extension function {}"), TEXT(#funcName)); \
-        }                                                                                                 \
-    } while (false);
+    } while (false)
 
     // Copy From Unreal Engine (See:Engine\Source\Runtime\VulkanRHI\Public\VulkanCommon.h)
     template <class T>

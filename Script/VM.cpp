@@ -13,7 +13,7 @@ namespace RealSix::Script
 	do                                                                                                                                                                                                           \
 	{                                                                                                                                                                                                            \
 		REALSIX_LOG_INFO(TEXT("<fn {}:0x{}>, ip: {}"), frame->closure->function->name, PointerAddressToString(frame->closure->function), frame->ip - 2 - frame->closure->function->chunk.opCodes.data()); \
-	} while (false);
+	} while (false)
 #else
 #define OUTPUT_OPCODE_LOCATION()
 #endif
@@ -606,6 +606,7 @@ namespace RealSix::Script
 			case OP_REF_INDEX_UPVALUE:
 			{
 				OUTPUT_OPCODE_LOCATION();
+				
 				auto index = READ_INS();
 				auto idxValue = POP_STACK();
 				Value *v = frame->closure->upvalues[index]->location;
@@ -625,7 +626,7 @@ namespace RealSix::Script
 			}
 			case OP_CALL:
 			{
-				OUTPUT_OPCODE_LOCATION()
+				OUTPUT_OPCODE_LOCATION();
 
 				auto argCount = READ_INS();
 				auto callee = PEEK_STACK(argCount);

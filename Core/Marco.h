@@ -56,7 +56,7 @@
             delete x;    \
             x = nullptr; \
         }                \
-    } while (false);
+    } while (false)
 
 #define SAFE_DELETE_ARRAY(x) \
     do                       \
@@ -66,7 +66,7 @@
             delete[] x;      \
             x = nullptr;     \
         }                    \
-    } while (false);
+    } while (false)
 
 #ifndef NDEBUG
 #define REALSIX_CHECK(expr, msg)    \
@@ -76,7 +76,7 @@
         {                           \
             REALSIX_LOG_ERROR(msg); \
         }                           \
-    } while (false);
+    } while (false)
 #else
 #define REALSIX_CHECK(expr, msg)
 #endif

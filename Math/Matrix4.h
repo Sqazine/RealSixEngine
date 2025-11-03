@@ -7,7 +7,7 @@
 #include "Math.hpp"
 #include "Vector4.h"
 #include "Quaternion.h"
-
+#include "Transform.h"
 #include "Config/Config.h"
 #include "Core/Marco.h"
 #include "Logger/Logger.h"
@@ -90,7 +90,7 @@ namespace RealSix
 		static Matrix4<T> LookAt(const Vector3<T> &position, const Vector3<T> &target, const Vector3<T> &up);
 		static Matrix3<T> ToMatrix3(const Matrix4<T> &matrix);
 		static Quaternion<T> ToQuaternion(const Matrix4<T> &matrix);
-		static Transform<T> ToTransform(const Matrix4<T> &matrix);
+		static Transform3<T> ToTransform(const Matrix4<T> &matrix);
 
 		static const Matrix4<T> IDENTITY;
 
@@ -744,9 +744,9 @@ namespace RealSix
 	}
 
 	template <typename T>
-	inline Transform<T> Matrix4<T>::ToTransform(const Matrix4<T> &matrix)
+	inline Transform3<T> Matrix4<T>::ToTransform(const Matrix4<T> &matrix)
 	{
-		Transform<T> result;
+		Transform3<T> result;
 		result.position = Vector3<T>(matrix.element03, matrix.element13, matrix.element23);
 		result.rotation = Matrix4<T>::ToQuaternion(matrix);
 

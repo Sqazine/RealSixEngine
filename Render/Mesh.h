@@ -9,6 +9,7 @@
 #include "Gfx/IGfxBuffer.h"
 #include "Gfx/IGfxPipeline.h"
 #include "Render/Renderer.h"
+#include "Animation/Skeleton.h"
 namespace RealSix
 {
     struct Vertex
@@ -114,7 +115,7 @@ namespace RealSix
     {
     public:
         Mesh() = default;
-        ~Mesh() = default;
+        virtual ~Mesh() = default;
 
         GfxVertexInputBinding GetVertexInputBinding()
         {
@@ -159,7 +160,7 @@ namespace RealSix
         const GfxVertexBuffer *GetVertexBuffer() const { return mVertexBuffer.get(); }
         const GfxIndexBuffer *GetIndexBuffer() const { return mIndexBuffer.get(); }
 
-    private:
+    protected:
         std::vector<VertexType> mVertices{};
         std::vector<IndexType> mIndices{};
 
@@ -168,5 +169,22 @@ namespace RealSix
     };
 
     using StaticMesh = Mesh<Vertex, uint32_t>;
-    using SkeletalMesh = Mesh<SkeletalVertex, uint32_t>;
+
+    class SkeletalMesh : public  Mesh<SkeletalVertex, uint32_t>
+    {
+    public:
+        SkeletalMesh() = default;
+        virtual ~SkeletalMesh() override = default;
+
+        SkeletalMesh(SkeletalMesh& other)
+        {
+            
+        }
+
+        void SetSkeleton(const Skeleton &skeleton) { mSkeleton = skeleton; }
+        const Skeleton &SetSkeleton() const { return mSkeleton; }
+
+    private:
+        Skeleton mSkeleton;
+    };
 }

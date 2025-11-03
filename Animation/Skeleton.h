@@ -14,6 +14,8 @@ namespace RealSix
         Skeleton(const Pose &rest, const Pose &bind, const std::vector<std::string> &names);
         ~Skeleton();
 
+        Skeleton(const Skeleton & other);
+
         void Set(const Pose &rest, const Pose &bind, const std::vector<std::string> &names);
 
         const Pose &GetBindPose() const;

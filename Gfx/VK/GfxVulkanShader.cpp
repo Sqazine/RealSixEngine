@@ -34,7 +34,7 @@ namespace RealSix
         createInfo.pCode = reinterpret_cast<const uint32_t *>(content);
 
         VkShaderModule shaderModule;
-        VK_CHECK(vkCreateShaderModule(mDevice->GetLogicDevice(), &createInfo, nullptr, &shaderModule))
+        VK_CHECK(vkCreateShaderModule(mDevice->GetLogicDevice(), &createInfo, nullptr, &shaderModule));
 
         return shaderModule;
     }
@@ -50,7 +50,7 @@ namespace RealSix
 
         VkDevice device = mDevice->GetLogicDevice();
 
-        VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &mPipelineLayout))
+        VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &mPipelineLayout));
     }
 
     std::vector<VkWriteDescriptorSet> GfxVulkanShader::GetWrites()
@@ -217,7 +217,7 @@ namespace RealSix
         poolInfo.pPoolSizes = poolSizes.data();
         poolInfo.maxSets = static_cast<uint32_t>(mDescriptorSetLayouts.size());
 
-        VK_CHECK(vkCreateDescriptorPool(mDevice->GetLogicDevice(), &poolInfo, nullptr, &mDescriptorPool))
+        VK_CHECK(vkCreateDescriptorPool(mDevice->GetLogicDevice(), &poolInfo, nullptr, &mDescriptorPool));
     }
 
     void GfxVulkanShader::AllocateDescriptorSets()
@@ -234,7 +234,7 @@ namespace RealSix
             allocInfo.descriptorSetCount = 1;
             allocInfo.pSetLayouts = &mDescriptorSetLayouts[i];
 
-            VK_CHECK(vkAllocateDescriptorSets(mDevice->GetLogicDevice(), &allocInfo, &mDescriptorSets[i]))
+            VK_CHECK(vkAllocateDescriptorSets(mDevice->GetLogicDevice(), &allocInfo, &mDescriptorSets[i]));
         }
     }
 
@@ -244,7 +244,7 @@ namespace RealSix
     do                                           \
     {                                            \
         assert(v == SPV_REFLECT_RESULT_SUCCESS); \
-    } while (false);
+    } while (false)
 
         SpirvReflectedData result;
 
@@ -461,7 +461,7 @@ namespace RealSix
                 layoutInfo.bindingCount = static_cast<uint32_t>(vkBindings.size());
                 layoutInfo.pBindings = vkBindings.data();
 
-                VK_CHECK(vkCreateDescriptorSetLayout(mDevice->GetLogicDevice(), &layoutInfo, nullptr, &mDescriptorSetLayouts[setSlot]))
+                VK_CHECK(vkCreateDescriptorSetLayout(mDevice->GetLogicDevice(), &layoutInfo, nullptr, &mDescriptorSetLayouts[setSlot]));
             }
         }
     }
@@ -630,7 +630,7 @@ namespace RealSix
             layoutInfo.bindingCount = static_cast<uint32_t>(vkBindings.size());
             layoutInfo.pBindings = vkBindings.data();
 
-            VK_CHECK(vkCreateDescriptorSetLayout(mDevice->GetLogicDevice(), &layoutInfo, nullptr, &mDescriptorSetLayouts[setSlot]))
+            VK_CHECK(vkCreateDescriptorSetLayout(mDevice->GetLogicDevice(), &layoutInfo, nullptr, &mDescriptorSetLayouts[setSlot]));
         }
     }
     void GfxVulkanComputeShader::DumpDescriptorWrites()
