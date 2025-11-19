@@ -9,6 +9,7 @@ target_compile_definitions(${NAME} PUBLIC ${COMPILE_DEFINITIONS})
 target_compile_definitions(${NAME} PRIVATE TEST_SHADER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders/")
 target_compile_definitions(${NAME} PRIVATE TEST_TEXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/")
 target_compile_definitions(${NAME} PRIVATE TEST_MODEL_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/models/")
+target_compile_definitions(${NAME} PRIVATE DESTINATION_DIR="${REALSIX_BINARY_DIR}/assets/")
 
 if(MSVC)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)

@@ -324,16 +324,23 @@ namespace RealSix
 
 	void GfxVulkanDevice::CreateLogicDevice()
 	{
-
 		VkPhysicalDeviceFeatures deviceFeatures{};
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
-		constexpr VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR,
-			.dynamicRendering = VK_TRUE,
-		};
+		const void *pExtensionFeature = nullptr;
 
-		const auto &finalSelectedSpec = mPhysicalDeviceSpecificationList[mSelectedPhysicalDeviceIndex];
+		VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeature;
+		ZeroVulkanStruct(bufferDeviceAddressFeature, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES);
+		bufferDeviceAddressFeature.bufferDeviceAddress = VK_TRUE;
+
+		VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature;
+		ZeroVulkanStruct(dynamicRenderingFeature, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR);
+		dynamicRenderingFeature.dynamicRendering  = VK_TRUE;
+		dynamicRenderingFeature.pNext = &bufferDeviceAddressFeature;
+
+		pExtensionFeature = (const void *)&dynamicRenderingFeature;
+
+		auto finalSelectedSpec = GetPhysicalDeviceSpec();
 
 		const float queuePriority = 1.0f;
 		VkDeviceQueueCreateInfo deviceQueueInfo;
@@ -346,7 +353,7 @@ namespace RealSix
 
 		VkDeviceCreateInfo deviceInfo;
 		ZeroVulkanStruct(deviceInfo, VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
-		deviceInfo.pNext = &dynamicRenderingFeature;
+		deviceInfo.pNext = pExtensionFeature;
 		deviceInfo.queueCreateInfoCount = 1;
 		deviceInfo.pQueueCreateInfos = &deviceQueueInfo;
 		deviceInfo.enabledExtensionCount = deviceExtensionList.size();
@@ -473,6 +480,11 @@ namespace RealSix
 		for (size_t i = 0; i < CountOf(gDeviceCommonExtensions); ++i)
 		{
 			result.emplace_back(gDeviceCommonExtensions[i]);
+		}
+
+		for (size_t i = 0; i < CountOf(gDeviceRayTracingExtensions); ++i)
+		{
+			result.emplace_back(gDeviceRayTracingExtensions[i]);
 		}
 
 		return result;

@@ -1,20 +1,23 @@
 #include "BasicMeshPass.h"
-
 #include "Gfx/IGfxCommandBuffer.h"
 #include "Gfx/IGfxPipeline.h"
 #include "Editor/EditorUIPass/EditorUIPass.h"
 #include "Resource/ResourceLoader.h"
+#include "Resource/FileSystem.h"
 namespace RealSix
 {
     void BasicMeshPass::Init()
     {
+        if (!FileSystem::Exists(TEXT(DESTINATION_DIR)))
+            FileSystem::CreateDirectory(TEXT(DESTINATION_DIR));
+
         std::string shaderCompile;
         shaderCompile = "slangc.exe " TEST_SHADER_DIR "BasicMeshPass.vert.slang"
-                        " -profile sm_6_6+spirv_1_6 -target spirv -o " TEST_SHADER_DIR "BasicMeshPass.vert.slang.spv"
+                        " -profile sm_6_6+spirv_1_6 -target spirv -o " DESTINATION_DIR "BasicMeshPass.vert.slang.spv"
                         " -emit-spirv-directly -fvk-use-entrypoint-name";
         system(shaderCompile.c_str());
         shaderCompile = "slangc.exe " TEST_SHADER_DIR "BasicMeshPass.frag.slang"
-                        " -profile sm_6_6+spirv_1_6 -target spirv -o " TEST_SHADER_DIR "BasicMeshPass.frag.slang.spv"
+                        " -profile sm_6_6+spirv_1_6 -target spirv -o " DESTINATION_DIR "BasicMeshPass.frag.slang.spv"
                         " -emit-spirv-directly -fvk-use-entrypoint-name";
         system(shaderCompile.c_str());
 
@@ -31,8 +34,8 @@ namespace RealSix
         bufferDesc.data = &mMeshUniformData;
         mMeshUniformDataBuffer.reset(GfxUniformBuffer::Create(Renderer::GetGfxDevice(), bufferDesc));
 
-        auto vertShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "BasicMeshPass.vert.slang.spv");
-        auto fragShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "BasicMeshPass.frag.slang.spv");
+        auto vertShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(DESTINATION_DIR "BasicMeshPass.vert.slang.spv");
+        auto fragShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(DESTINATION_DIR "BasicMeshPass.frag.slang.spv");
         mShader.reset(IGfxRasterShader::Create(Renderer::GetGfxDevice(), vertShaderContent, fragShaderContent));
 
         GfxRasterPipelineStateDesc pipelineState;

@@ -1,26 +1,29 @@
 #include "MandelbrotSetPass.h"
+#include <filesystem>
 #include "Resource/ResourceLoader.h"
 #include "Render/Mesh.h"
 #include "Gfx/IGfxCommandBuffer.h"
-#include "Editor/EditorUIPass/EditorUIPass.h"
-
+#include "Resource/FileSystem.h"
 #define WORKGROUP_SIZE 32
 
 namespace RealSix
 {
     void MandelbrotSetPass::Init()
     {
+        if (!FileSystem::Exists(TEXT(DESTINATION_DIR)))
+            FileSystem::CreateDirectory(TEXT(DESTINATION_DIR));
+
         std::string shaderCompile;
         shaderCompile = "slangc.exe " TEST_SHADER_DIR "ScreenSpaceQuad.vert.slang"
-                        " -profile sm_6_6+spirv_1_6 -target spirv -o " TEST_SHADER_DIR "ScreenSpaceQuad.vert.slang.spv"
+                        " -profile sm_6_6+spirv_1_6 -target spirv -o " DESTINATION_DIR "ScreenSpaceQuad.vert.slang.spv"
                         " -emit-spirv-directly -fvk-use-entrypoint-name";
         system(shaderCompile.c_str());
         shaderCompile = "slangc.exe " TEST_SHADER_DIR "MandelbrotSetDrawPass.frag.slang"
-                        " -profile sm_6_6+spirv_1_6 -target spirv -o " TEST_SHADER_DIR "MandelbrotSetDrawPass.frag.slang.spv"
+                        " -profile sm_6_6+spirv_1_6 -target spirv -o " DESTINATION_DIR "MandelbrotSetDrawPass.frag.slang.spv"
                         " -emit-spirv-directly -fvk-use-entrypoint-name";
         system(shaderCompile.c_str());
         shaderCompile = "slangc.exe " TEST_SHADER_DIR "MandelbrotSet.comp.slang"
-                        " -profile sm_6_6+spirv_1_6 -target spirv -o " TEST_SHADER_DIR "MandelbrotSet.comp.slang.spv"
+                        " -profile sm_6_6+spirv_1_6 -target spirv -o " DESTINATION_DIR "MandelbrotSet.comp.slang.spv"
                         " -emit-spirv-directly -fvk-use-entrypoint-name";
         system(shaderCompile.c_str());
 
@@ -39,15 +42,15 @@ namespace RealSix
         unifomrBufferDesc.data = &mUniform;
         mUniformBuffer.reset(GfxUniformBuffer::Create(Renderer::GetGfxDevice(), unifomrBufferDesc));
 
-        auto compShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "MandelbrotSet.comp.slang.spv");
+        auto compShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(DESTINATION_DIR "MandelbrotSet.comp.slang.spv");
         mComputeShader.reset(IGfxComputeShader::Create(Renderer::GetGfxDevice(), compShaderContent));
         mComputeShader->BindBuffer("imageData", mComputeImageBuffer->GetGfxBuffer());
         mComputeShader->BindBuffer("uniform", mUniformBuffer->GetGfxBuffer());
 
         mComputePipeline.reset(IGfxComputePipeline::Create(Renderer::GetGfxDevice(), mComputeShader.get()));
 
-        auto vertShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "ScreenSpaceQuad.vert.slang.spv");
-        auto fragShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "MandelbrotSetDrawPass.frag.slang.spv");
+        auto vertShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(DESTINATION_DIR "ScreenSpaceQuad.vert.slang.spv");
+        auto fragShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(DESTINATION_DIR "MandelbrotSetDrawPass.frag.slang.spv");
         mRasterShader.reset(IGfxRasterShader::Create(Renderer::GetGfxDevice(), vertShaderContent, fragShaderContent));
         mRasterShader->BindBuffer("imageData", mComputeImageBuffer->GetGfxBuffer());
         mRasterShader->BindBuffer("uniform", mUniformBuffer->GetGfxBuffer());
@@ -92,7 +95,7 @@ namespace RealSix
             swapChain->GetDepthAttachment().storeOp = GfxAttachmentStoreOp::DONT_CARE;
         }
 
-         auto cmdBuffer = Renderer::GetGfxDevice()->GetCurrentBackCommandBuffer();
+        auto cmdBuffer = Renderer::GetGfxDevice()->GetCurrentBackCommandBuffer();
         cmdBuffer
             ->BeginRenderPass(swapChain)
             ->BindRasterPipeline(mRasterPipeline.get())
