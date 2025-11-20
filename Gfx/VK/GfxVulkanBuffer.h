@@ -12,7 +12,15 @@ namespace RealSix
         VkBufferUsageFlags usage;
         VkMemoryPropertyFlags properties;
     };
-    class GfxVulkanBuffer : public GfxVulkanObject, public IGfxBuffer
+
+    enum class BufferType
+    {
+        GPU,
+        CPU,
+    };
+
+    class GfxVulkanBuffer : public GfxVulkanObject,
+        public IGfxBuffer
     {
     public:
         GfxVulkanBuffer(IGfxDevice *device, const GfxVulkanBufferDesc &desc);
@@ -22,11 +30,10 @@ namespace RealSix
         size_t GetSize() const { return mDesc.size; }
         VkDeviceMemory GetMemory() const { return mMemory; }
 
-        void *& GetMappedAddress() { return mMappedAddress; }
+        BufferType GetBufferType() const;
 
     private:
         GfxVulkanBufferDesc mDesc;
-        void *mMappedAddress = nullptr;
         VkBuffer mHandle;
         VkDeviceMemory mMemory;
     };

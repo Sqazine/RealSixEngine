@@ -3,7 +3,7 @@
 #include "Gfx/IGfxDevice.h"
 #include "GfxVulkanDevice.h"
 #include "GfxVulkanBuffer.h"
-namespace RealSix::GfxVulkanBufferCommon
+namespace RealSix::GfxVulkanBufferUtils
 {
     inline GfxVulkanBuffer *CreateStagingBuffer(IGfxDevice *device, float bufferSize)
     {
@@ -16,13 +16,16 @@ namespace RealSix::GfxVulkanBufferCommon
         return stagingBuffer;
     }
 
-    inline void SetCpuBufferData(GfxVulkanBuffer *buffer, size_t size, const void *data)
+    inline void SetBufferData(GfxVulkanBuffer *buffer, size_t size, const void *data)
     {
-        auto device = buffer->GetDevice()->GetLogicDevice();
-        auto &bufferAddress = buffer->GetMappedAddress();
-        vkMapMemory(device, buffer->GetMemory(), 0, size, 0, &bufferAddress);
-        std::memcpy(buffer->GetMappedAddress(), data, size);
-        vkUnmapMemory(device, buffer->GetMemory());
+        if (buffer->GetBufferType() == BufferType::CPU)
+        {
+            auto device = buffer->GetDevice()->GetLogicDevice();
+            void *bufferAddress = nullptr;
+            vkMapMemory(device, buffer->GetMemory(), 0, size, 0, &bufferAddress);
+            std::memcpy(bufferAddress, data, size);
+            vkUnmapMemory(device, buffer->GetMemory());
+        }
     }
 
     inline GfxVulkanBuffer *CreateVertexBuffer(IGfxDevice *device, const GfxBufferDesc &gfxDesc)
@@ -30,7 +33,7 @@ namespace RealSix::GfxVulkanBufferCommon
         std::unique_ptr<GfxVulkanBuffer> stagingBuffer;
         stagingBuffer.reset(CreateStagingBuffer(device, gfxDesc.bufferSize));
 
-        SetCpuBufferData(stagingBuffer.get(), (size_t)gfxDesc.bufferSize, gfxDesc.data);
+        SetBufferData(stagingBuffer.get(), (size_t)gfxDesc.bufferSize, gfxDesc.data);
 
         GfxVulkanBufferDesc desc;
         desc.size = gfxDesc.bufferSize;
@@ -42,9 +45,8 @@ namespace RealSix::GfxVulkanBufferCommon
         std::unique_ptr<GfxVulkanCommandBuffer> commandBuffer = std::make_unique<GfxVulkanCommandBuffer>(device, GfxCommandType::TRANSFER, true);
         commandBuffer->Begin()
             ->CopyBuffer(stagingBuffer.get(), result, desc.size)
-            ->End();
-
-        commandBuffer->Submit();
+            ->End()
+            ->Submit();
 
         stagingBuffer.reset();
         return result;
@@ -55,7 +57,7 @@ namespace RealSix::GfxVulkanBufferCommon
         std::unique_ptr<GfxVulkanBuffer> stagingBuffer;
         stagingBuffer.reset(CreateStagingBuffer(device, gfxDesc.bufferSize));
 
-        SetCpuBufferData(stagingBuffer.get(), (size_t)gfxDesc.bufferSize, gfxDesc.data);
+        SetBufferData(stagingBuffer.get(), (size_t)gfxDesc.bufferSize, gfxDesc.data);
 
         GfxVulkanBufferDesc desc;
         desc.size = gfxDesc.bufferSize;
@@ -67,9 +69,8 @@ namespace RealSix::GfxVulkanBufferCommon
         std::unique_ptr<GfxVulkanCommandBuffer> commandBuffer = std::make_unique<GfxVulkanCommandBuffer>(device, GfxCommandType::TRANSFER, true);
         commandBuffer->Begin()
             ->CopyBuffer(stagingBuffer.get(), result, desc.size)
-            ->End();
-
-        commandBuffer->Submit();
+            ->End()
+            ->Submit();
 
         stagingBuffer.reset();
         return result;
@@ -84,7 +85,7 @@ namespace RealSix::GfxVulkanBufferCommon
 
         GfxVulkanBuffer *result = new GfxVulkanBuffer(device, desc);
 
-        SetCpuBufferData(result, (size_t)desc.size, gfxDesc.data);
+        SetBufferData(result, (size_t)desc.size, gfxDesc.data);
         return result;
     }
 
@@ -102,14 +103,13 @@ namespace RealSix::GfxVulkanBufferCommon
             std::unique_ptr<GfxVulkanBuffer> stagingBuffer;
             stagingBuffer.reset(CreateStagingBuffer(device, gfxDesc.bufferSize));
 
-            SetCpuBufferData(stagingBuffer.get(), (size_t)gfxDesc.bufferSize, gfxDesc.data);
+            SetBufferData(stagingBuffer.get(), (size_t)gfxDesc.bufferSize, gfxDesc.data);
 
             std::unique_ptr<GfxVulkanCommandBuffer> commandBuffer = std::make_unique<GfxVulkanCommandBuffer>(device, GfxCommandType::TRANSFER, true);
             commandBuffer->Begin()
                 ->CopyBuffer(stagingBuffer.get(), result, desc.size)
-                ->End();
-
-            commandBuffer->Submit();
+                ->End()
+                ->Submit();
 
             stagingBuffer.reset();
         }

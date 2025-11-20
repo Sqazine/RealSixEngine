@@ -37,4 +37,12 @@ namespace RealSix
         vkDestroyBuffer(device, mHandle, nullptr);
         vkFreeMemory(device, mMemory, nullptr);
     }
+
+    BufferType GfxVulkanBuffer::GetBufferType() const
+    {
+        if (mDesc.properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+            return BufferType::CPU;
+        else
+            return BufferType::GPU;
+    }
 }

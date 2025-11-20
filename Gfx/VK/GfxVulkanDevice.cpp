@@ -396,6 +396,7 @@ namespace RealSix
 			REALSIX_LOG_ERROR(TEXT("No present queue found for the selected physical device!"));
 		}
 	}
+	
 #ifndef NDEBUG
 	void GfxVulkanDevice::CheckInstanceValidationLayersIsSatisfied()
 	{
