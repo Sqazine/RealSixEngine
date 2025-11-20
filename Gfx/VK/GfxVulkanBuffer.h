@@ -6,34 +6,30 @@
 
 namespace RealSix
 {
-    struct GfxVulkanBufferDesc
-    {
-        size_t size;
-        VkBufferUsageFlags usage;
-        VkMemoryPropertyFlags properties;
-    };
-
-    enum class BufferType
-    {
-        GPU,
-        CPU,
-    };
 
     class GfxVulkanBuffer : public GfxVulkanObject,
-        public IGfxBuffer
+                            public IGfxBuffer
     {
     public:
-        GfxVulkanBuffer(IGfxDevice *device, const GfxVulkanBufferDesc &desc);
+        GfxVulkanBuffer(IGfxDevice *device, size_t size,
+                        VkBufferUsageFlags usage,
+                        VkMemoryPropertyFlags properties);
         ~GfxVulkanBuffer() override;
 
         VkBuffer GetHandle() const { return mHandle; }
-        size_t GetSize() const { return mDesc.size; }
+        size_t GetSize() const { return mSize; }
+        size_t GetAllocatedSize() const { return mAllocatedSize; }
         VkDeviceMemory GetMemory() const { return mMemory; }
 
-        BufferType GetBufferType() const;
+        bool IsCpuBuffer() const;
 
     private:
-        GfxVulkanBufferDesc mDesc;
+        size_t mSize;
+        size_t mAllocatedSize;
+
+        VkBufferUsageFlags mUsage;
+        VkMemoryPropertyFlags mMemoryProperties;
+
         VkBuffer mHandle;
         VkDeviceMemory mMemory;
     };

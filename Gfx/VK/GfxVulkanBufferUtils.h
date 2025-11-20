@@ -7,18 +7,15 @@ namespace RealSix::GfxVulkanBufferUtils
 {
     inline GfxVulkanBuffer *CreateStagingBuffer(IGfxDevice *device, float bufferSize)
     {
-        GfxVulkanBufferDesc desc;
-        desc.size = bufferSize;
-        desc.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        desc.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-        GfxVulkanBuffer *stagingBuffer = new GfxVulkanBuffer(device, desc);
+        GfxVulkanBuffer *stagingBuffer = new GfxVulkanBuffer(device, bufferSize,
+                                                             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         return stagingBuffer;
     }
 
     inline void SetBufferData(GfxVulkanBuffer *buffer, size_t size, const void *data)
     {
-        if (buffer->GetBufferType() == BufferType::CPU)
+        if (buffer->IsCpuBuffer() && data != nullptr && size > 0)
         {
             auto device = buffer->GetDevice()->GetLogicDevice();
             void *bufferAddress = nullptr;
@@ -35,16 +32,13 @@ namespace RealSix::GfxVulkanBufferUtils
 
         SetBufferData(stagingBuffer.get(), (size_t)gfxDesc.bufferSize, gfxDesc.data);
 
-        GfxVulkanBufferDesc desc;
-        desc.size = gfxDesc.bufferSize;
-        desc.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        desc.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-        GfxVulkanBuffer *result = new GfxVulkanBuffer(device, desc);
+        GfxVulkanBuffer *result = new GfxVulkanBuffer(device, gfxDesc.bufferSize,
+                                                      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         std::unique_ptr<GfxVulkanCommandBuffer> commandBuffer = std::make_unique<GfxVulkanCommandBuffer>(device, GfxCommandType::TRANSFER, true);
         commandBuffer->Begin()
-            ->CopyBuffer(stagingBuffer.get(), result, desc.size)
+            ->CopyBuffer(stagingBuffer.get(), result, stagingBuffer->GetSize())
             ->End()
             ->Submit();
 
@@ -59,16 +53,11 @@ namespace RealSix::GfxVulkanBufferUtils
 
         SetBufferData(stagingBuffer.get(), (size_t)gfxDesc.bufferSize, gfxDesc.data);
 
-        GfxVulkanBufferDesc desc;
-        desc.size = gfxDesc.bufferSize;
-        desc.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-        desc.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-        GfxVulkanBuffer *result = new GfxVulkanBuffer(device, desc);
+        GfxVulkanBuffer *result = new GfxVulkanBuffer(device, gfxDesc.bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         std::unique_ptr<GfxVulkanCommandBuffer> commandBuffer = std::make_unique<GfxVulkanCommandBuffer>(device, GfxCommandType::TRANSFER, true);
         commandBuffer->Begin()
-            ->CopyBuffer(stagingBuffer.get(), result, desc.size)
+            ->CopyBuffer(stagingBuffer.get(), result, stagingBuffer->GetSize())
             ->End()
             ->Submit();
 
@@ -78,25 +67,17 @@ namespace RealSix::GfxVulkanBufferUtils
 
     inline GfxVulkanBuffer *CreateUniformBuffer(IGfxDevice *device, const GfxBufferDesc &gfxDesc)
     {
-        GfxVulkanBufferDesc desc;
-        desc.size = gfxDesc.bufferSize;
-        desc.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-        desc.properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        GfxVulkanBuffer *result = new GfxVulkanBuffer(device, gfxDesc.bufferSize,
+                                                      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-        GfxVulkanBuffer *result = new GfxVulkanBuffer(device, desc);
-
-        SetBufferData(result, (size_t)desc.size, gfxDesc.data);
+        SetBufferData(result, (size_t)gfxDesc.bufferSize, gfxDesc.data);
         return result;
     }
 
     inline GfxVulkanBuffer *CreateShaderStorageBuffer(IGfxDevice *device, const GfxBufferDesc &gfxDesc)
     {
-        GfxVulkanBufferDesc desc;
-        desc.size = gfxDesc.bufferSize;
-        desc.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-        desc.properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-        GfxVulkanBuffer *result = new GfxVulkanBuffer(device, desc);
+        GfxVulkanBuffer *result = new GfxVulkanBuffer(device, gfxDesc.bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         if (gfxDesc.data != nullptr)
         {
@@ -107,7 +88,7 @@ namespace RealSix::GfxVulkanBufferUtils
 
             std::unique_ptr<GfxVulkanCommandBuffer> commandBuffer = std::make_unique<GfxVulkanCommandBuffer>(device, GfxCommandType::TRANSFER, true);
             commandBuffer->Begin()
-                ->CopyBuffer(stagingBuffer.get(), result, desc.size)
+                ->CopyBuffer(stagingBuffer.get(), result, stagingBuffer->GetSize())
                 ->End()
                 ->Submit();
 

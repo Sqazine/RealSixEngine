@@ -54,6 +54,8 @@ namespace RealSix
 
     void BasicMeshPass::Execute(FrameGraph &frameGraph)
     {
+        mCamera->SetAspect(Renderer::GetGfxDevice()->GetSwapChain()->GetAspect());
+
         bool isFirstTask = frameGraph.GetSlotOf<BasicMeshPass>() == 0;
 
         auto swapChain = Renderer::GetGfxDevice()->GetSwapChain();

@@ -33,8 +33,8 @@ namespace RealSix
     {
         GfxVulkanCommandBuffer *cmdBuffer =static_cast<GfxVulkanCommandBuffer*>(GetCurrentBackCommandBuffer());
 
-        auto CurFence = cmdBuffer->GetFence();
-        CurFence->Wait(true, UINT64_MAX);
+        auto curFence = cmdBuffer->GetFence();
+        curFence->Wait(true, UINT64_MAX);
 
         auto result = vkAcquireNextImageKHR(mDevice->GetLogicDevice(), mHandle, UINT64_MAX, mPresentSemaphore[mCurrentFrameIndex]->GetHandle(), VK_NULL_HANDLE, &mNextFrameIndex);
 
@@ -50,7 +50,7 @@ namespace RealSix
             return;
         }
 
-        CurFence->Reset();
+        curFence->Reset();
 
         cmdBuffer->Begin();
         cmdBuffer->TransitionImageLayout(GetCurrentSwapChainBackTexture(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
