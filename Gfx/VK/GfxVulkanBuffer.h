@@ -21,6 +21,8 @@ namespace RealSix
         size_t GetAllocatedSize() const { return mAllocatedSize; }
         VkDeviceMemory GetMemory() const { return mMemory; }
 
+        size_t GetAddress() const override { return mAddress; }
+
         bool IsCpuBuffer() const;
 
     private:
@@ -30,7 +32,9 @@ namespace RealSix
         VkBufferUsageFlags mUsage;
         VkMemoryPropertyFlags mMemoryProperties;
 
-        VkBuffer mHandle;
-        VkDeviceMemory mMemory;
+        VkBuffer mHandle{VK_NULL_HANDLE};
+        VkDeviceMemory mMemory{VK_NULL_HANDLE};
+
+        size_t mAddress{0};
     };
 }

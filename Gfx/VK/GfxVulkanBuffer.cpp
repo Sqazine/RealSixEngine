@@ -14,7 +14,7 @@ namespace RealSix
         ZeroVulkanStruct(bufferInfo, VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO);
         bufferInfo.pNext = nullptr;
         bufferInfo.size = mSize;
-        bufferInfo.usage = mUsage;
+        bufferInfo.usage = mUsage | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         VK_CHECK(vkCreateBuffer(rawDevice, &bufferInfo, nullptr, &mHandle));
@@ -24,14 +24,24 @@ namespace RealSix
 
         mAllocatedSize = memRequirements.size;
 
+        VkMemoryAllocateFlagsInfo flagsInfo{};
+        ZeroVulkanStruct(flagsInfo, VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO);
+        flagsInfo.pNext = nullptr;
+        flagsInfo.deviceMask = -1;
+        flagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
         VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        ZeroVulkanStruct(allocInfo, VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO);
+        allocInfo.pNext = &flagsInfo;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = mDevice->FindMemoryType(memRequirements.memoryTypeBits, mMemoryProperties);
-
         VK_CHECK(vkAllocateMemory(rawDevice, &allocInfo, nullptr, &mMemory));
-
         vkBindBufferMemory(rawDevice, mHandle, mMemory, 0);
+
+        VkBufferDeviceAddressInfoKHR bufferAddressInfo{};
+        ZeroVulkanStruct(bufferAddressInfo, VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO);
+        bufferAddressInfo.buffer = mHandle;
+        mAddress = GetDevice()->vkGetBufferDeviceAddressKHR(GetDevice()->GetLogicDevice(), &bufferAddressInfo);
     }
 
     GfxVulkanBuffer::~GfxVulkanBuffer()

@@ -20,6 +20,8 @@ namespace RealSix
     public:
         IGfxBuffer() = default;
         virtual ~IGfxBuffer() = default;
+
+        virtual size_t GetAddress() const = 0;
     };
 
     class GfxVertexBuffer
