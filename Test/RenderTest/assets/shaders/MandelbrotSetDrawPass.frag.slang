@@ -16,9 +16,9 @@ ConstantBuffer<Uniform> uniform;
 StructuredBuffer<float4> imageData;
 
 [shader("pixel")]
-PixelOutput main(VSOutput vertInput)
+PixelOutput main(VertexShaderParameter vertexShaderParameter)
 {
-    int2 actualUV = int2(int(vertInput.texcoord0.x * uniform.width), int(vertInput.texcoord0.y * uniform.height));
+    int2 actualUV = int2(int(vertexShaderParameter.uv0.x * uniform.width), int(vertexShaderParameter.uv0.y * uniform.height));
 
     PixelOutput output;
     output.color = imageData[int(uniform.width) * actualUV.y + actualUV.x];

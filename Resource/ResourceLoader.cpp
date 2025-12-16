@@ -1,5 +1,5 @@
 #include "ResourceLoader.hpp"
-#include "IO.hpp"
+#include "FileSystem.hpp"
 namespace RealSix
 {
     StaticMesh *ResourceLoader::GetBuiltinTriangleMesh()
@@ -347,47 +347,23 @@ namespace RealSix
 
         std::vector<uint32_t> indices =
             {
-                0,
-                1,
-                2,
-                0,
-                2,
-                3,
+                0,1,2,
+                0,2,3,
 
-                4,
-                5,
-                6,
-                4,
-                6,
-                7,
+                4,5,6,
+                4,6,7,
 
-                8,
-                9,
-                10,
-                8,
-                10,
-                11,
+                8,9,10,
+                8,10,11,
 
-                12,
-                13,
-                14,
-                12,
-                14,
-                15,
+                12,13,14,
+                12,14,15,
 
-                16,
-                17,
-                18,
-                16,
-                18,
-                19,
+                16,17,18,
+                16,18,19,
 
-                20,
-                21,
-                22,
-                20,
-                22,
-                23,
+                20,21,22,
+                20,22,23,
             };
 
         std::vector<StaticVertex> vertices(24);
@@ -507,7 +483,7 @@ namespace RealSix
     String ResourceLoader::GetShaderContentFromDisk(StringView path)
     {
         if (mShaderContentCache.find(path) == mShaderContentCache.end())
-            mShaderContentCache[path] = ReadTextFile(path);
+            mShaderContentCache[path] = FileSystem::ReadTextFile(path);
         return mShaderContentCache[path];
     }
 
@@ -515,7 +491,7 @@ namespace RealSix
     {
         if (mTextureCache.find(path) == mTextureCache.end())
         {
-            GfxTextureDesc textureDesc = ReadTexture(path);
+            GfxTextureDesc textureDesc = FileSystem::ReadTexture(path);
             mTextureCache[path].reset(IGfxTexture::Create(Renderer::GetGfxDevice(), textureDesc));
         }
         return mTextureCache[path].get();

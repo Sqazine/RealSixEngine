@@ -13,7 +13,7 @@
 #include "Script/VM.hpp"
 #include "Script/Context.hpp"
 #include "Config/Config.hpp"
-#include "Resource/IO.hpp"
+#include "Resource/FileSystem.hpp"
 
 using namespace RealSix;
 
@@ -83,7 +83,7 @@ void Run( StringView content)
 	if (ScriptConfig::GetInstance().IsSerializeBinaryChunk())
 	{
 		auto data = mainFunc->chunk.Serialize();
-		WriteBinaryFile(ScriptConfig::GetInstance().GetSerializeBinaryFilePath(), data);
+		FileSystem::WriteBinaryFile(ScriptConfig::GetInstance().GetSerializeBinaryFilePath(), data);
 	}
 	else
 	{
@@ -122,7 +122,7 @@ void Repl()
 
 void RunFile(StringView path)
 {
-	String content = ReadUnicodeTextFile(path);
+	String content = FileSystem::ReadUnicodeTextFile(path);
 	Run(content);
 }
 

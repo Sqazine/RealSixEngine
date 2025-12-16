@@ -18,12 +18,12 @@ ConstantBuffer<CameraData> cameraData : register(b0, space0);
 ConstantBuffer<MeshUBO> meshUBO : register(b1, space0);
 
 [shader("vertex")]
-VSOutput main(VertexInput vsInput)
+VertexShaderParameter main(VertexInput vsInput)
 {
-    VSOutput vsOutput;
-    vsOutput.position = mul(cameraData.proj, mul(cameraData.view, mul(meshUBO.model, float4(vsInput.inPosition, 1.0))));
-    vsOutput.color = vsInput.inColor;
-    vsOutput.texcoord0 = vsInput.inTexCoord;
+    VertexShaderParameter vsOutput;
+    vsOutput.positionWS = mul(cameraData.proj, mul(cameraData.view, mul(meshUBO.model, float4(vsInput.position, 1.0))));
+    vsOutput.color = vsInput.color;
+    vsOutput.uv0 = vsInput.uv0;
 
     return vsOutput;
 }

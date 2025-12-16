@@ -4,7 +4,7 @@
 #include "GfxVulkanBuffer.hpp"
 #include "GfxVulkanTexture.hpp"
 #include "String.hpp"
-#include "Resource/IO.hpp"
+#include "Resource/FileSystem.hpp"
 #include "Resource/FileSystem.hpp"
 namespace RealSix
 {
@@ -110,7 +110,7 @@ namespace RealSix
 
         String path = "ShaderSource/" + std::to_string(mSourceCodeHash) + ".slang";
 
-        WriteBinaryFile(path, fullContent);
+        FileSystem::WriteBinaryFile(path, fullContent);
 
         if (!FileSystem::Exists("ShaderBinary"))
             FileSystem::CreateDirectory("ShaderBinary");
@@ -122,7 +122,7 @@ namespace RealSix
                              " -emit-spirv-directly -fvk-use-entrypoint-name";
         system(shaderCompile.CString());
 
-        return ReadBinaryFile(destPath);
+        return FileSystem::ReadBinaryFile(destPath);
     }
 
     GfxVulkanShader::GfxVulkanShader(IGfxDevice *device)

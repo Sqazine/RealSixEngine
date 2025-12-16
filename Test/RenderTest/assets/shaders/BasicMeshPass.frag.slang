@@ -9,9 +9,9 @@ struct PixelOutput
 Sampler2D texSampler : register(s1);
 
 [shader("pixel")]
-PixelOutput main(VSOutput vertInput)
+PixelOutput main(VertexShaderParameter vertexShaderParameter)
 {
     PixelOutput pixelOutput;
-    pixelOutput.color = texSampler.Sample(vertInput.texcoord0);
+    pixelOutput.color = texSampler.Sample(vertexShaderParameter.uv0);
     return pixelOutput;
 }
