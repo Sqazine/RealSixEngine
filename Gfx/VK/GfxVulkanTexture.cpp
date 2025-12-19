@@ -1,6 +1,6 @@
 #include "GfxVulkanTexture.hpp"
 #include "GfxVulkanDevice.hpp"
-#include "GfxVulkanBufferUtils.hpp"
+#include "GfxVulkanAllocator.hpp"
 namespace RealSix
 {
     GfxVulkanTexture::GfxVulkanTexture(IGfxDevice *device, const GfxTextureDesc &desc, VkImage swapchainImageRawHandle)
@@ -85,9 +85,9 @@ namespace RealSix
     {
         float imageSize = mDesc.width * mDesc.height * GetFormatByteCount(mDesc.format);
         std::unique_ptr<GfxVulkanBuffer> stagingBuffer;
-        stagingBuffer.reset(GfxVulkanBufferUtils::CreateStagingBuffer(mDevice, imageSize));
+        stagingBuffer.reset(GfxVulkanAllocator::CreateStagingBuffer(mDevice, imageSize));
 
-        GfxVulkanBufferUtils::SetBufferData(stagingBuffer.get(), (size_t)imageSize, mDesc.data);
+        GfxVulkanAllocator::SetBufferData(stagingBuffer.get(), (size_t)imageSize, mDesc.data);
 
         std::unique_ptr<GfxVulkanCommandBuffer> commandBuffer = std::make_unique<GfxVulkanCommandBuffer>(mDevice, GfxCommandType::TRANSFER, true);
         commandBuffer->Begin();

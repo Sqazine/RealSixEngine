@@ -2,7 +2,7 @@
 #include "Config/Config.hpp"
 #include "Core/Logger.hpp"
 #include "Core/Marco.hpp"
-#include "Gfx/VK/GfxVulkanBufferUtils.hpp"
+#include "Gfx/VK/GfxVulkanAllocator.hpp"
 namespace RealSix
 {
     GfxVertexBuffer *GfxVertexBuffer::Create(IGfxDevice *device, const GfxBufferDesc &desc)
@@ -13,7 +13,7 @@ namespace RealSix
         {
         case GfxBackend::VULKAN:
         {
-            vertexBuffer->mGfxBuffer.reset(GfxVulkanBufferUtils::CreateVertexBuffer(device, desc));
+            vertexBuffer->mGfxBuffer.reset(GfxVulkanAllocator::CreateVertexBuffer(device, desc));
             return vertexBuffer;
         }
         case GfxBackend::D3D12:
@@ -38,7 +38,7 @@ namespace RealSix
         {
         case GfxBackend::VULKAN:
         {
-            indexBuffer->mGfxBuffer.reset(GfxVulkanBufferUtils::CreateIndexBuffer(device, desc));
+            indexBuffer->mGfxBuffer.reset(GfxVulkanAllocator::CreateIndexBuffer(device, desc));
             return indexBuffer;
         }
         case GfxBackend::D3D12:
@@ -61,7 +61,7 @@ namespace RealSix
         {
         case GfxBackend::VULKAN:
         {
-            uniformBuffer->mGfxBuffer.reset(GfxVulkanBufferUtils::CreateUniformBuffer(device, desc));
+            uniformBuffer->mGfxBuffer.reset(GfxVulkanAllocator::CreateUniformBuffer(device, desc));
             return uniformBuffer;
         }
         case GfxBackend::D3D12:
@@ -84,7 +84,7 @@ namespace RealSix
         case GfxBackend::VULKAN:
         {
             auto vulkanGfxBuffer = static_cast<GfxVulkanBuffer *>(mGfxBuffer.get());
-            GfxVulkanBufferUtils::SetBufferData(vulkanGfxBuffer, desc.bufferSize, desc.data);
+            GfxVulkanAllocator::SetBufferData(vulkanGfxBuffer, desc.bufferSize, desc.data);
             break;
         }
         case GfxBackend::D3D12:
@@ -105,7 +105,7 @@ namespace RealSix
         {
         case GfxBackend::VULKAN:
         {
-            storageBuffer->mGfxBuffer.reset(GfxVulkanBufferUtils::CreateShaderStorageBuffer(device, desc));
+            storageBuffer->mGfxBuffer.reset(GfxVulkanAllocator::CreateShaderStorageBuffer(device, desc));
             return storageBuffer;
         }
         case GfxBackend::D3D12:
