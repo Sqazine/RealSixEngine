@@ -28,7 +28,7 @@ namespace RealSix
         return result;
     }
 
-    Pose MakeAdditivePose(const Skeleton &skeleton, Clip &clip)
+    Pose MakeAdditivePose(const Skeleton &skeleton, AnimationTransformClip &clip)
     {
         Pose result = skeleton.GetRestPose();
         clip.Sample(result, clip.GetStartTime());

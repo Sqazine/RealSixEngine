@@ -216,12 +216,12 @@ namespace RealSix::GLTFLoader
         return result;
     }
 
-    std::vector<Clip> LoadAnimationsClips(cgltf_data *data)
+    std::vector<AnimationTransformClip> LoadAnimationsClips(cgltf_data *data)
     {
         uint32_t numClips = data->animations_count;
         uint32_t numNodes = data->nodes_count;
 
-        std::vector<Clip> result;
+        std::vector<AnimationTransformClip> result;
         result.resize(numClips);
 
         for (uint32_t i = 0; i < numClips; ++i)

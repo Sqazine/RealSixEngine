@@ -48,7 +48,7 @@ namespace RealSix
         file.close();
     }
 
-    void AnimationTexture::Bake(Skeleton &skeleton, Clip &clip)
+    void AnimationTexture::Bake(Skeleton &skeleton, AnimationTransformClip &clip)
     {
         Pose pose = skeleton.GetBindPose();
         for (uint32_t x = 0; x < mSize; ++x)

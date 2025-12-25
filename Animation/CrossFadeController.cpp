@@ -20,7 +20,7 @@ namespace RealSix
         mWasSkeletonSet = true;
     }
 
-    void CrossFadeController::Play(Clip *target)
+    void CrossFadeController::Play(AnimationTransformClip *target)
     {
         mCrossFadeTargets.clear();
         mClip = target;
@@ -28,7 +28,7 @@ namespace RealSix
         mTime = target->GetStartTime();
     }
 
-    void CrossFadeController::FadeTo(Clip *target, float fadeTime)
+    void CrossFadeController::FadeTo(AnimationTransformClip *target, float fadeTime)
     {
         if (mClip == nullptr)
         {
@@ -38,7 +38,7 @@ namespace RealSix
 
         if (mCrossFadeTargets.size() >= 1)
         {
-            Clip *clip = mCrossFadeTargets.back().mClip;
+            AnimationTransformClip *clip = mCrossFadeTargets.back().mClip;
             if (clip == target)
                 return;
         }
@@ -89,7 +89,7 @@ namespace RealSix
         return mPose;
     }
 
-    const Clip *CrossFadeController::GetCurrentClip() const
+    const AnimationTransformClip *CrossFadeController::GetCurrentClip() const
     {
         return mClip;
     }

@@ -7,7 +7,7 @@
 #include "Math/Quaternion.hpp"
 #include "Math/Vector4.hpp"
 #include "Skeleton.hpp"
-#include "Clip.hpp"
+#include "AnimationClip.hpp"
 
 namespace RealSix
 {
@@ -20,7 +20,7 @@ namespace RealSix
         void Load(StringView path);
         void Save(StringView path);
 
-        void Bake(Skeleton &skeleton, Clip &clip);
+        void Bake(Skeleton &skeleton, AnimationTransformClip &clip);
 
         uint32_t TextureSize() const;
 

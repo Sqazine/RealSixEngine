@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include "Pose.hpp"
-#include "Clip.hpp"
+#include "AnimationClip.hpp"
 
 namespace RealSix
 {
@@ -13,13 +13,13 @@ namespace RealSix
         {
         }
 
-        CrossFadeTarget(Clip *target, const Pose &pose, float duration)
+        CrossFadeTarget(AnimationTransformClip *target, const Pose &pose, float duration)
             : mClip(target), mTime(target->GetStartTime()), mPose(pose), mDuration(duration), mElapsed(0.0f)
         {
         }
 
         Pose mPose;
-        Clip *mClip;
+        AnimationTransformClip *mClip;
         float mTime;
         float mDuration;
         float mElapsed;

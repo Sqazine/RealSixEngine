@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "Pose.hpp"
-#include "Clip.hpp"
+#include "AnimationClip.hpp"
 #include "Skeleton.hpp"
 
 namespace RealSix
@@ -10,6 +10,6 @@ namespace RealSix
     //混合两个姿势的局部SRT
     Pose Blend(const Pose &a, const Pose &b, float t, int root);
 
-    Pose MakeAdditivePose(const Skeleton &skeleton, Clip &clip);
+    Pose MakeAdditivePose(const Skeleton &skeleton, AnimationTransformClip &clip);
     Pose AddAdditivePose(const Pose &inPose, const Pose &addPose, const Pose &additiveBasePose, int blendRoot);
 }

@@ -15,7 +15,7 @@
 #include "Math/Transform.hpp"
 #include "Animation/Pose.hpp"
 #include "Animation/Track.hpp"
-#include "Animation/Clip.hpp"
+#include "Animation/AnimationClip.hpp"
 #include "Animation/Skeleton.hpp"
 #include "Render/Mesh.hpp"
 
@@ -31,7 +31,7 @@ namespace RealSix::GLTFLoader
 
     std::vector<String> LoadBoneNames(cgltf_data *data);
 
-    std::vector<Clip> LoadAnimationsClips(cgltf_data *data);
+    std::vector<AnimationTransformClip> LoadAnimationsClips(cgltf_data *data);
 
     std::vector<SkeletalMesh*> LoadSkeletalMeshes(cgltf_data *data);
 } // namespace GLTFLoader

@@ -8,11 +8,11 @@ namespace RealSix
 {
 
     template <typename TRACK>
-    class TClip
+    class TAnimationClip
     {
     public:
-        TClip(/* args */);
-        ~TClip();
+        TAnimationClip(/* args */);
+        ~TAnimationClip();
 
         uint32_t GetIdAtIndex(uint32_t index) const;
         void SetIdAtIndex(uint32_t index, uint32_t id);
@@ -45,36 +45,36 @@ namespace RealSix
         /* data */
     };
 
-    typedef TClip<TransformTrack> Clip;
-    typedef TClip<FastTransformTrack> FastClip;
+    using AnimationTransformClip =  TAnimationClip<TransformTrack>;
+    using FastAnimationTransformClip =  TAnimationClip<FastTransformTrack>;
 
     template <typename TRACK>
-    inline TClip<TRACK>::TClip(/* args */)
+    inline TAnimationClip<TRACK>::TAnimationClip(/* args */)
         : mName("No name given"), mStartTime(0.0f), mEndTime(0.0f), mLooping(true)
     {
     }
 
     template <typename TRACK>
-    inline TClip<TRACK>::~TClip()
+    inline TAnimationClip<TRACK>::~TAnimationClip()
     {
     }
     template <typename TRACK>
-    inline uint32_t TClip<TRACK>::GetIdAtIndex(uint32_t index) const
+    inline uint32_t TAnimationClip<TRACK>::GetIdAtIndex(uint32_t index) const
     {
         return mTransformTracks[index].GetBoneID();
     }
     template <typename TRACK>
-    inline void TClip<TRACK>::SetIdAtIndex(uint32_t index, uint32_t id)
+    inline void TAnimationClip<TRACK>::SetIdAtIndex(uint32_t index, uint32_t id)
     {
         mTransformTracks[index].SetBoneID(id);
     }
     template <typename TRACK>
-    inline uint32_t TClip<TRACK>::GetSize() const
+    inline uint32_t TAnimationClip<TRACK>::GetSize() const
     {
         return mTransformTracks.size();
     }
     template <typename TRACK>
-    inline float TClip<TRACK>::Sample(Pose &inPose, float inTime)
+    inline float TAnimationClip<TRACK>::Sample(Pose &inPose, float inTime)
     {
         if (GetDuration() == 0.0f)
             return 0.0f;
@@ -93,7 +93,7 @@ namespace RealSix
         return inTime;
     }
     template <typename TRACK>
-    inline TRACK &TClip<TRACK>::operator[](uint32_t id)
+    inline TRACK &TAnimationClip<TRACK>::operator[](uint32_t id)
     {
         for (int i = 0; i < mTransformTracks.size(); ++i)
         {
@@ -107,7 +107,7 @@ namespace RealSix
         return mTransformTracks.back();
     }
     template <typename TRACK>
-    inline void TClip<TRACK>::RecalculateDuration()
+    inline void TAnimationClip<TRACK>::RecalculateDuration()
     {
         mStartTime = 0.0f;
         mEndTime = 0.0f;
@@ -136,42 +136,42 @@ namespace RealSix
         }
     }
     template <typename TRACK>
-    inline const String &TClip<TRACK>::GetName() const
+    inline const String &TAnimationClip<TRACK>::GetName() const
     {
         return mName;
     }
     template <typename TRACK>
-    inline void TClip<TRACK>::SetName(const String &name)
+    inline void TAnimationClip<TRACK>::SetName(const String &name)
     {
         mName = name;
     }
     template <typename TRACK>
-    inline float TClip<TRACK>::GetDuration() const
+    inline float TAnimationClip<TRACK>::GetDuration() const
     {
         return mEndTime - mStartTime;
     }
     template <typename TRACK>
-    inline float TClip<TRACK>::GetStartTime() const
+    inline float TAnimationClip<TRACK>::GetStartTime() const
     {
         return mStartTime;
     }
     template <typename TRACK>
-    inline float TClip<TRACK>::GetEndTime() const
+    inline float TAnimationClip<TRACK>::GetEndTime() const
     {
         return mEndTime;
     }
     template <typename TRACK>
-    inline bool TClip<TRACK>::GetLooping() const
+    inline bool TAnimationClip<TRACK>::GetLooping() const
     {
         return mLooping;
     }
     template <typename TRACK>
-    inline void TClip<TRACK>::SetLooping(bool isLoop)
+    inline void TAnimationClip<TRACK>::SetLooping(bool isLoop)
     {
         mLooping = isLoop;
     }
     template <typename TRACK>
-    inline float TClip<TRACK>::AdjustTimeToFitRange(float inTime)
+    inline float TAnimationClip<TRACK>::AdjustTimeToFitRange(float inTime)
     {
         if (mLooping)
         {
@@ -195,9 +195,9 @@ namespace RealSix
         return inTime;
     }
 
-    inline FastClip OptimizeClip(Clip &input)
+    inline FastAnimationTransformClip OptimizeClip(AnimationTransformClip &input)
     {
-        FastClip result;
+        FastAnimationTransformClip result;
         result.SetName(input.GetName());
         result.SetLooping(input.GetLooping());
         for (uint32_t i = 0; i < input.GetSize(); ++i)

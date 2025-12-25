@@ -5,7 +5,7 @@ set(EDITOR_NAME "${PROJECT_NAME}Editor")
 
 project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
-configure_file(Config/Version.hpp.in generated/Version.hpp @ONLY)
+configure_file(Core/Version.hpp.in generated/Version.hpp @ONLY)
 set(GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 set(CMAKE_CXX_STANDARD 23)

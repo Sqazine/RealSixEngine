@@ -14,19 +14,19 @@ namespace RealSix
 
         void SetSkeleton(const Skeleton &skeleton);
 
-        void Play(Clip *target);
+        void Play(AnimationTransformClip *target);
 
-        void FadeTo(Clip *target, float fadeTime);
+        void FadeTo(AnimationTransformClip *target, float fadeTime);
 
         void Update(float deltaTime);
 
         const Pose &GetCurrentPose() const;
 
-        const Clip *GetCurrentClip() const;
+        const AnimationTransformClip *GetCurrentClip() const;
 
     protected:
         std::vector<CrossFadeTarget> mCrossFadeTargets;
-        Clip *mClip;
+        AnimationTransformClip *mClip;
         float mTime;
         Pose mPose;
         Skeleton mSkeleton;
