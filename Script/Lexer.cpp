@@ -141,7 +141,7 @@ namespace RealSix::Script
 		else if (c == "?")
 			AddToken(TokenKind::QUESTION);
 		else if (c == "\"")
-			String();
+			ScanString();
 		else if (c == "\'")
 			ScanCharacter();
 		else if (c == " " || c == "\t" || c == "\r")
@@ -342,20 +342,18 @@ namespace RealSix::Script
 	{
 		auto literal = mSource.SubStr(mStartPos, mCurPos - mStartPos);
 
-		SourceLocation srcLoc;
-		srcLoc.line = mLine;
-		srcLoc.column = mColumn - literal.Size();
-		srcLoc.pos = mCurPos - literal.Size();
-
-		mTokens.push_back(new Token(type, literal, srcLoc));
+		AddToken(type, literal);
 	}
 	void Lexer::AddToken(TokenKind type, StringView literal)
 	{
-		SourceLocation srcLoc;
-		srcLoc.line = mLine;
-		srcLoc.column = mColumn - literal.Size();
-		srcLoc.pos = mCurPos - literal.Size();
-		mTokens.push_back(new Token(type, literal, srcLoc));
+		SourceLocation location;
+		location.line = mLine;
+		location.column = mColumn - literal.Size();
+		location.pos = mCurPos - literal.Size();
+		location.sourceCode = mSource;
+		location.filePath = mFilePath;
+
+		mTokens.push_back(new Token(type, literal, location));
 	}
 
 	bool Lexer::IsAtEnd()

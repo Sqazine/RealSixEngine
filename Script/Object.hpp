@@ -19,7 +19,6 @@ namespace RealSix::Script
 #define IS_NATIVE_FUNCTION_OBJ(obj) ((obj)->kind == ::RealSix::Script::ObjectKind::NATIVE_FUNCTION)
 #define IS_REF_OBJ(obj) ((obj)->kind == ::RealSix::Script::ObjectKind::REF)
 #define IS_CLASS_OBJ(obj) ((obj)->kind == ::RealSix::Script::ObjectKind::CLASS)
-#define IS_CLASS_INSTANCE_OBJ(obj) ((obj)->kind == ::RealSix::Script::ObjectKind::CLASS_INSTANCE)
 #define IS_CLASS_CLOSURE_BIND_OBJ(obj) ((obj)->kind == ::RealSix::Script::ObjectKind::CLASS_CLOSURE_BIND)
 #define IS_ENUM_OBJ(obj) ((obj)->kind == ::RealSix::Script::ObjectKind::ENUM)
 #define IS_MODULE_OBJ(obj) ((obj)->kind == ::RealSix::Script::ObjectKind::MODULE)
@@ -34,7 +33,6 @@ namespace RealSix::Script
 #define TO_NATIVE_FUNCTION_OBJ(obj) ((::RealSix::Script::NativeFunctionObject *)(obj))
 #define TO_REF_OBJ(obj) ((::RealSix::Script::RefObject *)(obj))
 #define TO_CLASS_OBJ(obj) ((::RealSix::Script::ClassObject *)(obj))
-#define TO_CLASS_INSTANCE_OBJ(obj) ((::RealSix::Script::ClassInstanceObject *)(obj))
 #define TO_CLASS_CLOSURE_BIND_OBJ(obj) ((::RealSix::Script::ClassClosureBindObject *)(obj))
 #define TO_ENUM_OBJ(obj) ((::RealSix::Script::EnumObject *)(obj))
 #define TO_MODULE_OBJ(obj) ((::RealSix::Script::ModuleObject *)(obj))
@@ -54,7 +52,6 @@ namespace RealSix::Script
 #define IS_NATIVE_FUNCTION_VALUE(v) (IS_OBJECT_VALUE(v) && IS_NATIVE_FUNCTION_OBJ((v).object))
 #define IS_REF_VALUE(v) (IS_OBJECT_VALUE(v) && IS_REF_OBJ((v).object))
 #define IS_CLASS_VALUE(v) (IS_OBJECT_VALUE(v) && IS_CLASS_OBJ((v).object))
-#define IS_CLASS_INSTANCE_VALUE(v) (IS_OBJECT_VALUE(v) && IS_CLASS_INSTANCE_OBJ((v).object))
 #define IS_CLASS_CLOSURE_BIND_VALUE(v) (IS_OBJECT_VALUE(v) && IS_CLASS_CLOSURE_BIND_OBJ((v).object))
 #define IS_ENUM_VALUE(v) (IS_OBJECT_VALUE(v) && IS_ENUM_OBJ((v).object))
 #define IS_MODULE_VALUE(v) (IS_OBJECT_VALUE(v) && IS_MODULE_OBJ((v).object))
@@ -90,7 +87,6 @@ namespace RealSix::Script
         NATIVE_FUNCTION,
         REF,
         CLASS,
-        CLASS_INSTANCE,
         CLASS_CLOSURE_BIND,
         ENUM,
         MODULE
@@ -264,34 +260,15 @@ namespace RealSix::Script
         bool IsEqualTo(Object *other) override;
         std::vector<uint8_t> Serialize() const override;
 
-        bool GetDeclMember(const String &name, Value &retV);
-        bool GetParentDeclMember(const String &name, Value &retV);
+        bool GetMember(const String &name, Value &retV);
+        bool GetParentMember(const String &name, Value &retV);
 
         String name{};
         std::map<int32_t, ClosureObject *> constructors{}; // argument count as key for now
-        std::unordered_map<String, Value> defaultMembers{};
+        std::unordered_map<String, Value> members{};
         std::unordered_map<String, Value> functions{};
         std::unordered_map<String, Value> enums{};
         std::map<String, ClassObject *> parents{};
-    };
-
-    struct REALSIX_API ClassInstanceObject : public Object
-    {
-        ClassInstanceObject();
-        ClassInstanceObject(ClassObject *klass);
-        ~ClassInstanceObject() override = default;
-        
-        String ToString() const override;
-        void Blacken() override;
-        bool IsEqualTo(Object *other) override;
-        std::vector<uint8_t> Serialize() const override;
-
-        bool GetMember(const String &name, Value &retV,bool parentMemberOnly = false);
-        bool GetParentMember(const String &name, Value &retV);
-
-        ClassObject *klass;
-        std::unordered_map<String, Value> members{};
-        std::map<String, ClassInstanceObject *> parentInstances{};
     };
 
     struct REALSIX_API ClassClosureBindObject : public Object

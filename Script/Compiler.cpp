@@ -892,9 +892,8 @@ namespace RealSix::Script
 		auto callee = (CallExpr *)expr->callee;
 		CompileExpr(callee->callee, RWState::READ);
 
-		EmitOpCode(OP_CLASS_INSTANCE, expr->callee->tagToken);
-		// EmitOpCode(OP_CALL, expr->callee->tagToken);
-		// Emit(0);
+		EmitOpCode(OP_CALL, expr->callee->tagToken);
+		Emit(0);
 		if (!callee->arguments.empty())
 		{
 			for (const auto &arg : callee->arguments)
@@ -1287,7 +1286,7 @@ namespace RealSix::Script
 	{
 		auto symbol = mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, decl->name);
 
-		// mFunctionList.emplace_back(new FunctionObject(decl->name));
+		mFunctionList.emplace_back(new FunctionObject(decl->name));
 		mSymbolTable = new SymbolTable(mSymbolTable);
 
 		mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, "");
@@ -1334,8 +1333,8 @@ namespace RealSix::Script
 		for (const auto &parent : decl->parents)
 		{
 			CompileIdentifierExpr(parent.second, RWState::READ);
-			// EmitOpCode(OP_CALL, parent.second->tagToken);
-			// Emit(0);
+			EmitOpCode(OP_CALL, parent.second->tagToken);
+			Emit(0);
 			EmitConstant(new StrObject(parent.second->literal), parent.second->tagToken);
 		}
 
@@ -1358,14 +1357,14 @@ namespace RealSix::Script
 		Emit(fnCount);
 		Emit(enumCount);
 
-		// EmitReturn(1, decl->tagToken);
+		EmitReturn(1, decl->tagToken);
 
 		mSymbolTable = mSymbolTable->enclosing;
 
-		// auto function = mFunctionList.back();
-		// mFunctionList.pop_back();
+		auto function = mFunctionList.back();
+		mFunctionList.pop_back();
 
-		// EmitClosure(function, decl->tagToken);
+		EmitClosure(function, decl->tagToken);
 
 		return symbol;
 	}

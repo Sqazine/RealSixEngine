@@ -703,18 +703,17 @@ namespace RealSix::Script
 						PUSH_CALL_FRAME(newframe);
 					}
 				}
-				else if (IS_CLASS_INSTANCE_VALUE(callee)) // class constructor(for initializing class instance)
+				else if (IS_CLASS_VALUE(callee)) // class constructor(for initializing class instance)
 				{
-					auto classInstance = TO_CLASS_INSTANCE_VALUE(callee);
-					auto klass = classInstance->klass;
+					auto klass = TO_CLASS_VALUE(callee);
 
 					auto iter = klass->constructors.find(argCount);
 					if (iter == klass->constructors.end())
 						REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Not matching argument count of class: {}'s constructors.", klass->name);
 
-					auto ctor = iter->second;
+					auto constructor = iter->second;
 					// init a new frame
-					CallFrame newframe(ctor, STACK_TOP() - argCount - 1);
+					CallFrame newframe(constructor, STACK_TOP() - argCount - 1);
 					PUSH_CALL_FRAME(newframe);
 				}
 				else if (IS_NATIVE_FUNCTION_VALUE(callee)) // native function
@@ -768,7 +767,7 @@ namespace RealSix::Script
 					name = POP_STACK();
 					auto v = POP_STACK();
 					v.permission = Permission::MUTABLE;
-					classObj->defaultMembers[TO_STR_VALUE(name)->value] = v;
+					classObj->members[TO_STR_VALUE(name)->value] = v;
 				}
 
 				for (int32_t i = 0; i < constCount; ++i)
@@ -776,7 +775,7 @@ namespace RealSix::Script
 					name = POP_STACK();
 					auto v = POP_STACK();
 					v.permission = Permission::IMMUTABLE;
-					classObj->defaultMembers[TO_STR_VALUE(name)->value] = v;
+					classObj->members[TO_STR_VALUE(name)->value] = v;
 				}
 
 				for (int32_t i = 0; i < fnCount; ++i)
@@ -796,18 +795,6 @@ namespace RealSix::Script
 				}
 
 				PUSH_STACK(classObj);
-				break;
-			}
-			case OP_CLASS_INSTANCE:
-			{
-				OUTPUT_OPCODE_LOCATION();
-				auto classObject = TO_CLASS_VALUE(POP_STACK());
-
-				auto instance = Allocator::GetInstance().CreateObject<ClassInstanceObject>(classObject);
-
-				CreateParentClassInstance(instance);
-
-				PUSH_STACK(instance);
 				break;
 			}
 			case OP_STRUCT:
@@ -834,22 +821,22 @@ namespace RealSix::Script
 
 				auto propName = TO_STR_VALUE(POP_STACK())->value;
 
-				if (IS_CLASS_INSTANCE_VALUE(peekValue))
+				if (IS_CLASS_VALUE(peekValue))
 				{
-					ClassInstanceObject *classInstance = TO_CLASS_INSTANCE_VALUE(peekValue);
+					ClassObject *klass = TO_CLASS_VALUE(peekValue);
 
 					Value member;
-					if (classInstance->GetMember(propName, member))
+					if (klass->GetMember(propName, member))
 					{
 						POP_STACK(); // pop class object
 						if (IS_CLOSURE_VALUE(member))
-							member = Allocator::GetInstance().CreateObject<ClassClosureBindObject>(classInstance, TO_CLOSURE_VALUE(member));
+							member = Allocator::GetInstance().CreateObject<ClassClosureBindObject>(klass, TO_CLOSURE_VALUE(member));
 
 						PUSH_STACK(member);
 						break;
 					}
 					else
-						REALSIX_SCRIPT_LOG_ERROR(relatedToken, "No member: {} in class object:{}", propName, classInstance->klass->name);
+						REALSIX_SCRIPT_LOG_ERROR(relatedToken, "No member: {} in class object:{}", propName, klass->name);
 				}
 				else if (IS_ENUM_VALUE(peekValue))
 				{
@@ -902,21 +889,21 @@ namespace RealSix::Script
 					peekValue = *(TO_REF_VALUE(peekValue)->pointer);
 
 				auto propName = TO_STR_VALUE(POP_STACK())->value;
-				if (IS_CLASS_INSTANCE_VALUE(peekValue))
+				if (IS_CLASS_VALUE(peekValue))
 				{
-					auto classInstance = TO_CLASS_INSTANCE_VALUE(peekValue);
+					auto klass = TO_CLASS_VALUE(peekValue);
 					POP_STACK(); // pop class value
 
 					Value member;
-					if (classInstance->GetMember(propName, member))
+					if (klass->GetMember(propName, member))
 					{
 						if (member.permission == Permission::IMMUTABLE)
-							REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Constant cannot be assigned twice: {}'s member: {} is a constant value", classInstance->klass->name, propName);
+							REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Constant cannot be assigned twice: {}'s member: {} is a constant value", klass->name, propName);
 						else
-							classInstance->members[propName] = PEEK_STACK(0);
+							klass->members[propName] = PEEK_STACK(0);
 					}
 					else
-						REALSIX_SCRIPT_LOG_ERROR(relatedToken, "No member named: {} in class: {}", propName, classInstance->klass->name);
+						REALSIX_SCRIPT_LOG_ERROR(relatedToken, "No member named: {} in class: {}", propName, klass->name);
 				}
 				else if (IS_STRUCT_VALUE(peekValue))
 				{
@@ -937,14 +924,14 @@ namespace RealSix::Script
 			case OP_GET_BASE:
 			{
 				OUTPUT_OPCODE_LOCATION();
-				if (!IS_CLASS_INSTANCE_VALUE(PEEK_STACK(1)))
+				if (!IS_CLASS_VALUE(PEEK_STACK(1)))
 					REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Invalid class call:not a valid class instance.");
 				auto propName = TO_STR_VALUE(POP_STACK())->value;
-				auto classInstance = TO_CLASS_INSTANCE_VALUE(POP_STACK());
+				auto klass = TO_CLASS_VALUE(POP_STACK());
 				Value member;
-				bool hasValue = classInstance->GetParentMember(propName, member);
+				bool hasValue = klass->GetParentMember(propName, member);
 				if (!hasValue)
-					REALSIX_SCRIPT_LOG_ERROR(relatedToken, "No member: {} in class: {}'s parent class(es).", propName, classInstance->klass->name);
+					REALSIX_SCRIPT_LOG_ERROR(relatedToken, "No member: {} in class: {}'s parent class(es).", propName, klass->name);
 				PUSH_STACK(member);
 				break;
 			}
@@ -1132,18 +1119,5 @@ namespace RealSix::Script
 	bool VM::IsFalsey(const Value &v) noexcept
 	{
 		return IS_NULL_VALUE(v) || (IS_BOOL_VALUE(v) && !TO_BOOL_VALUE(v));
-	}
-
-	void VM::CreateParentClassInstance(ClassInstanceObject *classInstance)
-	{
-		auto klass = classInstance->klass;
-		for (const auto &[k, v] : klass->parents)
-		{
-			auto parentClassInstance = Allocator::GetInstance().CreateObject<ClassInstanceObject>(v);
-			PUSH_STACK(parentClassInstance);
-			CreateParentClassInstance(parentClassInstance);
-			classInstance->parentInstances[k] = parentClassInstance;
-			POP_STACK();
-		}
 	}
 }

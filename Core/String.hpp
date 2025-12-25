@@ -40,7 +40,7 @@ namespace RealSix
 		size_t Size() const;
 		size_t FindFirstOf(const char *subStr, size_t offset = 0);
 		size_t FindLastOf(const String &subStr, size_t offset = std::string::npos);
-		size_t Find(const String &subStr, size_t offset = std::string::npos);
+		size_t Find(const String &subStr, size_t offset = 0);
 		size_t Find(char ch);
 
 		String &Append(const String &str, size_t idx, size_t count);

@@ -232,8 +232,8 @@ namespace RealSix::Script
         auto memModule = new ModuleObject("mem");
         auto timeModule = new ModuleObject("time");
 
-        ioModule->members["print"] = new NativeFunctionObject(PRINT_LAMBDA(Logger::Print));
-        ioModule->members["println"] = new NativeFunctionObject(PRINT_LAMBDA(Logger::Println));
+        ioModule->members["print"] = new NativeFunctionObject(PRINT_LAMBDA(RealSix::Logger::Print));
+        ioModule->members["println"] = new NativeFunctionObject(PRINT_LAMBDA(RealSix::Logger::Println));
 
         dsModule->members["sizeof"] = SizeOfFunction;
         dsModule->members["insert"] = InsertFunction;

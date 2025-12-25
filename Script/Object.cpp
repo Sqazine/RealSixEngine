@@ -468,7 +468,7 @@ namespace RealSix::Script
 			result = result.SubStr(0, result.Size() - 1);
 		}
 		result += "\n{\n";
-		for (const auto &[k, v] : defaultMembers)
+		for (const auto &[k, v] : members)
 			result += "  " + k + ":" + v.ToString() + "\n";
 
 		return result + "}\n";
@@ -477,7 +477,11 @@ namespace RealSix::Script
 	void ClassObject::Blacken()
 	{
 		Object::Blacken();
-		for (auto &[k, v] : defaultMembers)
+		for (auto &[k, v] : members)
+			v.Mark();
+		for (auto &[k, v] : functions)
+			v.Mark();
+		for (auto &[k, v] : enums)
 			v.Mark();
 		for (auto &[k, v] : parents)
 			v->Mark();
@@ -492,7 +496,11 @@ namespace RealSix::Script
 		auto klass = TO_CLASS_OBJ(other);
 		if (name != klass->name)
 			return false;
-		if (defaultMembers != klass->defaultMembers)
+		if (members != klass->members)
+			return false;
+		if (functions != klass->functions)
+			return false;
+		if (enums != klass->enums)
 			return false;
 		if (parents != klass->parents)
 			return false;
@@ -505,8 +513,16 @@ namespace RealSix::Script
 		return std::vector<uint8_t>();
 	}
 
-	bool ClassObject::GetDeclMember(const String &name, Value &retV)
+	bool ClassObject::GetMember(const String &name, Value &retV)
 	{
+		{
+			auto iter = members.find(name);
+			if (iter != members.end())
+			{
+				retV = iter->second;
+				return true;
+			}
+		}
 		{
 			auto iter = functions.find(name);
 			if (iter != functions.end())
@@ -523,10 +539,10 @@ namespace RealSix::Script
 				return true;
 			}
 		}
-		return GetParentDeclMember(name, retV);
+		return GetParentMember(name, retV);
 	}
 
-	bool ClassObject::GetParentDeclMember(const String &name, Value &retV)
+	bool ClassObject::GetParentMember(const String &name, Value &retV)
 	{
 
 		for (const auto &[k, v] : parents)
@@ -536,90 +552,7 @@ namespace RealSix::Script
 				retV = v;
 				return true;
 			}
-			if (v->GetDeclMember(name, retV))
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	ClassInstanceObject::ClassInstanceObject()
-		: Object(ObjectKind::CLASS_INSTANCE), klass(nullptr)
-	{
-	}
-
-	ClassInstanceObject::ClassInstanceObject(ClassObject *klass)
-		: Object(ObjectKind::CLASS_INSTANCE), klass(klass)
-	{
-		if (!klass->defaultMembers.empty())
-			members = klass->defaultMembers;
-	}
-
-	String ClassInstanceObject::ToString() const
-	{
-		return "<instance of " + klass->name + ":0x" + PointerAddressToString((void *)this) + ">\n{\n";
-	}
-
-	void ClassInstanceObject::Blacken()
-	{
-		Object::Blacken();
-		for (auto &[k, v] : members)
-			v.Mark();
-	}
-
-	bool ClassInstanceObject::IsEqualTo(Object *other)
-	{
-		if (!IS_CLASS_INSTANCE_OBJ(other))
-			return false;
-		auto klassInstance = TO_CLASS_INSTANCE_OBJ(other);
-		if (members != klassInstance->members)
-			return false;
-		return true;
-	}
-
-	std::vector<uint8_t> ClassInstanceObject::Serialize() const
-	{
-		// TODO: Not finished yet, need to handle enum serialization
-		return std::vector<uint8_t>();
-	}
-
-	bool ClassInstanceObject::GetMember(const String &name, Value &retV, bool parentMemberOnly)
-	{
-		auto iter = members.find(name);
-		if (iter != members.end())
-		{
-			retV = iter->second;
-			return true;
-		}
-
-		bool satisfied = GetParentMember(name, retV);
-		if (parentMemberOnly)
-		{
-			return satisfied;
-		}
-		else
-		{
-			if (satisfied)
-				return true;
-			else
-				return klass->GetDeclMember(name, retV);
-		}
-	}
-
-	bool ClassInstanceObject::GetParentMember(const String &name, Value &retV)
-	{
-
-		for (const auto &[k, v] : parentInstances)
-		{
-			if (name == k)
-			{
-				retV = v;
-				return true;
-			}
-
-			if (v->GetMember(name, retV, true))
+			if (v->GetMember(name, retV))
 			{
 				return true;
 			}

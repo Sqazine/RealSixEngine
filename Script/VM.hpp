@@ -18,7 +18,5 @@ namespace RealSix::Script
         void Execute();
 
         bool IsFalsey(const Value &v) noexcept;
-
-        void CreateParentClassInstance(ClassInstanceObject* classInstance);
     };
 }
