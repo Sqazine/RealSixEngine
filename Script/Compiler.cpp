@@ -1316,18 +1316,16 @@ namespace RealSix::Script
 			}
 		}
 
-		for (const auto &varMember : decl->variables)
+		for (const auto &varMember : decl->constants)
 		{
 			auto varDecl = varMember.second;
-			if (varDecl->permission == Permission::IMMUTABLE)
-				constCount += CompileVars(varDecl, true);
+			constCount += CompileVars(varDecl, true);
 		}
 
 		for (const auto &varMember : decl->variables)
 		{
 			auto varDecl = varMember.second;
-			if (varDecl->permission == Permission::MUTABLE)
-				varCount += CompileVars(varDecl, true);
+			varCount += CompileVars(varDecl, true);
 		}
 
 		for (const auto &parent : decl->parents)

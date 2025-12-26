@@ -548,6 +548,7 @@ namespace RealSix::Script
 		String name;
 		std::vector<std::pair<MemberPrivilege, IdentifierExpr *>> parents;
 		std::vector<std::pair<MemberPrivilege, VarDecl *>> variables;
+		std::vector<std::pair<MemberPrivilege, VarDecl *>> constants;
 		std::vector<std::pair<MemberPrivilege, FunctionMember>> functions;
 		std::vector<std::pair<MemberPrivilege, EnumDecl *>> enumerations;
 	};

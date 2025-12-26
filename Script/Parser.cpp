@@ -311,8 +311,10 @@ namespace RealSix::Script
 		{
 			auto privilege = ParseClassMemberPrivilege();
 
-			if (IsMatchCurToken(TokenKind::LET) || IsMatchCurToken(TokenKind::CONST))
+			if (IsMatchCurToken(TokenKind::LET) )
 				classStmt->variables.emplace_back(privilege, (VarDecl *)ParseVarDecl());
+				else if(IsMatchCurToken(TokenKind::CONST))
+				classStmt->constants.emplace_back(privilege, (VarDecl *)ParseVarDecl());
 			else if (IsMatchCurToken(TokenKind::ENUM))
 				classStmt->enumerations.emplace_back(privilege, (EnumDecl *)ParseEnumDecl());
 			else if (IsMatchCurTokenAndStepOnce(TokenKind::FUNCTION))
