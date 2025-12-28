@@ -11,6 +11,7 @@
 [submodule "3rd/imgui"]
 	path = 3rd/imgui
 	url = https://github.com/ocornut/imgui.git
+	branch = docking
 [submodule "3rd/cgltf"]
 	path = 3rd/cgltf
 	url = https://github.com/jkuhlmann/cgltf.git

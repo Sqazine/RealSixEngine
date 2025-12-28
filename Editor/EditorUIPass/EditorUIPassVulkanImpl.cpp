@@ -76,6 +76,7 @@ namespace RealSix
         ImGuiIO &io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Gamepad Controls
 
         // Setup Dear ImGui style
         ImGui::StyleColorsDark();
@@ -109,14 +110,13 @@ namespace RealSix
         init_info.Queue = vulkanDevice->GetGraphicsQueue();
         init_info.PipelineCache = VK_NULL_HANDLE;
         init_info.DescriptorPool = mDescriptorPool;
-        init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         init_info.Allocator = nullptr;
         init_info.MinImageCount = vulkanDevice->GetSwapChain()->GetBackBufferCount();
         init_info.ImageCount = vulkanDevice->GetSwapChain()->GetBackBufferCount();
         init_info.CheckVkResultFn = check_vk_result;
         init_info.UseDynamicRendering = true;
-        init_info.PipelineRenderingCreateInfo = pipelineRenderingInfo;
-        init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(GfxConfig::GetInstance().GetMsaa());
+        init_info.PipelineInfoMain.PipelineRenderingCreateInfo = pipelineRenderingInfo;
+        init_info.PipelineInfoMain.MSAASamples = static_cast<VkSampleCountFlagBits>(GfxConfig::GetInstance().GetMsaa());
         ImGui_ImplVulkan_Init(&init_info);
 
         // Load Fonts
@@ -163,7 +163,7 @@ namespace RealSix
             {
                 swapChain->GetColorAttachment().loadOp = GfxAttachmentLoadOp::LOAD;
                 swapChain->GetColorAttachment().storeOp = GfxAttachmentStoreOp::STORE;
-                
+
                 swapChain->GetDepthAttachment().loadOp = GfxAttachmentLoadOp::LOAD;
                 swapChain->GetDepthAttachment().storeOp = GfxAttachmentStoreOp::STORE;
             }
@@ -173,6 +173,15 @@ namespace RealSix
             vulkanCommandBuffer->BeginRenderPass(swapChain);
             ImGui_ImplVulkan_RenderDrawData(draw_data, vulkanCommandBuffer->GetHandle());
             vulkanCommandBuffer->EndRenderPass();
+
+            // Update and Render additional Platform Windows
+            ImGuiIO &io = ImGui::GetIO();
+            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                ImGui::UpdatePlatformWindows();
+                ImGui::RenderPlatformWindowsDefault();
+                // TODO for OpenGL: restore current GL context.
+            }
         }
     }
 }
