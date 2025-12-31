@@ -42,11 +42,11 @@ namespace RealSix::Script
 	{
 	public:
 		SymbolTable()
-			: mSymbolCount(0), mGlobalSymbolCount(0), mLocalSymbolCount(0), mUpValueCount(0), enclosing(nullptr), mScopeDepth(0), mTableDepth(0)
+			: mSymbolCount(0), mUpValueCount(0), enclosing(nullptr), mScopeDepth(0), mTableDepth(0)
 		{
 		}
 		SymbolTable(SymbolTable *enclosing)
-			: mSymbolCount(0), mGlobalSymbolCount(0), mLocalSymbolCount(0), mUpValueCount(0), enclosing(enclosing)
+			: mSymbolCount(0), mUpValueCount(0), enclosing(enclosing)
 		{
 			mScopeDepth = enclosing->mScopeDepth + 1;
 			mTableDepth = enclosing->mTableDepth + 1;
@@ -72,20 +72,15 @@ namespace RealSix::Script
 			auto *symbol = &mSymbols[mSymbolCount++];
 			symbol->name = name;
 			symbol->permission = permission;
+			symbol->index = mSymbolCount - 1;
 			symbol->functionSymInfo = functionInfo;
+			symbol->scopeDepth = mScopeDepth;
 			symbol->relatedToken = relatedToken;
 
 			if (mScopeDepth == 0)
-			{
 				symbol->location = SymbolLocation::GLOBAL;
-				symbol->index = mGlobalSymbolCount++;
-			}
 			else
-			{
 				symbol->location = SymbolLocation::LOCAL;
-				symbol->index = mLocalSymbolCount++;
-			}
-			symbol->scopeDepth = mScopeDepth;
 			return *symbol;
 		}
 
@@ -128,8 +123,6 @@ namespace RealSix::Script
 
 		std::array<Symbol, UINT8_COUNT> mSymbols;
 		uint8_t mSymbolCount;
-		uint8_t mGlobalSymbolCount;
-		uint8_t mLocalSymbolCount;
 		std::array<UpValue, UINT8_COUNT> mUpValues;
 		int32_t mUpValueCount;
 		uint8_t mScopeDepth; // Depth of scope nesting(related to code {} scope)
@@ -194,14 +187,6 @@ namespace RealSix::Script
 		mFunctionList.emplace_back(new FunctionObject(MAIN_ENTRY_FUNCTION_NAME));
 
 		mSymbolTable = new SymbolTable();
-
-		auto symbol = &mSymbolTable->mSymbols[mSymbolTable->mSymbolCount++];
-		symbol->location = SymbolLocation::LOCAL;
-		symbol->index = mSymbolTable->mLocalSymbolCount++;
-		symbol->permission = Permission::IMMUTABLE;
-		symbol->scopeDepth = 0;
-		symbol->name = MAIN_ENTRY_FUNCTION_NAME;
-
 		for (const auto &lib : LibraryManager::GetInstance().GetLibraries())
 			mSymbolTable->Define(nullptr, Permission::IMMUTABLE, lib->name);
 	}
@@ -1291,8 +1276,8 @@ namespace RealSix::Script
 
 		mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, "");
 
-		uint8_t enumCount =0;
-		uint8_t fnCount =0;
+		uint8_t enumCount = 0;
+		uint8_t fnCount = 0;
 		uint8_t varCount = 0;
 		uint8_t constCount = 0;
 		uint8_t constructorCount = 0;
