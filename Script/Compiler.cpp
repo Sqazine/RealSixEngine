@@ -36,8 +36,10 @@ namespace RealSix::Script
 		FunctionSymbolInfo functionSymInfo;
 		UpValue upvalue; // available only while type is SymbolLocation::UPVALUE
 		bool isCaptured = false;
+		int16_t staticIndex = -1;// -1 means not static symbol,>=0 means static slot index
 		const Token *relatedToken;
 	};
+
 	class SymbolTable
 	{
 	public:
@@ -56,7 +58,7 @@ namespace RealSix::Script
 			SAFE_DELETE(enclosing);
 		}
 
-		Symbol Define(const Token *relatedToken, Permission permission, const String &name, const FunctionSymbolInfo &functionInfo = {})
+		Symbol Define(const Token *relatedToken, Permission permission, const String &name, const FunctionSymbolInfo &functionInfo = {}, int16_t staticIndex = -1)
 		{
 			if (mSymbolCount >= mSymbols.size())
 				REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Too many symbols in current scope.");
@@ -76,6 +78,7 @@ namespace RealSix::Script
 			symbol->functionSymInfo = functionInfo;
 			symbol->scopeDepth = mScopeDepth;
 			symbol->relatedToken = relatedToken;
+			symbol->staticIndex = staticIndex;
 
 			if (mScopeDepth == 0)
 				symbol->location = SymbolLocation::GLOBAL;
@@ -183,6 +186,7 @@ namespace RealSix::Script
 
 		mCurContinueStmtAddress = -1;
 		mCurBreakStmtAddress = -1;
+		mStaticVarCount = 0;
 
 		mFunctionList.emplace_back(new FunctionObject(MAIN_ENTRY_FUNCTION_NAME));
 
@@ -191,12 +195,12 @@ namespace RealSix::Script
 			mSymbolTable->Define(nullptr, Permission::IMMUTABLE, lib->name);
 	}
 
-	void Compiler::CompileDecl(Stmt *decl)
+	void Compiler::CompileDecl(Stmt *decl, bool isStatic)
 	{
 		switch (decl->kind)
 		{
 		case AstKind::VAR:
-			CompileVarDecl((VarDecl *)decl);
+			CompileVarDecl((VarDecl *)decl, isStatic);
 			break;
 		case AstKind::FUNCTION:
 			CompileFunctionDecl((FunctionDecl *)decl);
@@ -210,14 +214,17 @@ namespace RealSix::Script
 		case AstKind::MODULE:
 			CompileModuleDecl((ModuleDecl *)decl);
 			break;
+		case AstKind::STATIC:
+			CompileStaticDecl((StaticDecl *)decl);
+			break;
 		default:
 			CompileStmt(decl);
 			break;
 		}
 	}
-	void Compiler::CompileVarDecl(VarDecl *decl)
+	void Compiler::CompileVarDecl(VarDecl *decl, bool isStatic)
 	{
-		CompileVars(decl, false);
+		CompileVars(decl, false, isStatic);
 	}
 
 	void Compiler::CompileFunctionDecl(FunctionDecl *decl)
@@ -341,6 +348,11 @@ namespace RealSix::Script
 		mSymbolTable = mSymbolTable->enclosing;
 
 		EmitSymbol(symbol);
+	}
+
+	void Compiler::CompileStaticDecl(StaticDecl *decl)
+	{
+		CompileDecl(decl->body, true);
 	}
 
 	void Compiler::CompileStmt(Stmt *stmt)
@@ -906,20 +918,29 @@ namespace RealSix::Script
 	{
 		OpCode getOp, setOp;
 		auto symbol = mSymbolTable->Resolve(expr->tagToken, expr->literal, paramCount);
-		if (symbol.location == SymbolLocation::GLOBAL)
+
+		if (symbol.staticIndex >= 0)
 		{
-			getOp = OP_GET_GLOBAL;
-			setOp = OP_SET_GLOBAL;
+			getOp = OP_GET_STATIC;
+			setOp = OP_SET_STATIC;
 		}
-		else if (symbol.location == SymbolLocation::LOCAL)
+		else
 		{
-			getOp = OP_GET_LOCAL;
-			setOp = OP_SET_LOCAL;
-		}
-		else if (symbol.location == SymbolLocation::UPVALUE)
-		{
-			getOp = OP_GET_UPVALUE;
-			setOp = OP_SET_UPVALUE;
+			if (symbol.location == SymbolLocation::GLOBAL)
+			{
+				getOp = OP_GET_GLOBAL;
+				setOp = OP_SET_GLOBAL;
+			}
+			else if (symbol.location == SymbolLocation::LOCAL)
+			{
+				getOp = OP_GET_LOCAL;
+				setOp = OP_SET_LOCAL;
+			}
+			else if (symbol.location == SymbolLocation::UPVALUE)
+			{
+				getOp = OP_GET_UPVALUE;
+				setOp = OP_SET_UPVALUE;
+			}
 		}
 
 		if (state == RWState::WRITE)
@@ -927,7 +948,9 @@ namespace RealSix::Script
 			if (symbol.permission == Permission::MUTABLE)
 			{
 				EmitOpCode(setOp, expr->tagToken);
-				if (symbol.location == SymbolLocation::UPVALUE)
+				if(symbol.staticIndex >= 0)
+					Emit(static_cast<uint8_t>(symbol.staticIndex));
+				else if (symbol.location == SymbolLocation::UPVALUE)
 					Emit(symbol.upvalue.index);
 				else
 					Emit(symbol.index);
@@ -938,7 +961,9 @@ namespace RealSix::Script
 		else
 		{
 			EmitOpCode(getOp, expr->tagToken);
-			if (symbol.location == SymbolLocation::UPVALUE)
+			if(symbol.staticIndex >= 0)
+				Emit(static_cast<uint8_t>(symbol.staticIndex));
+			else if (symbol.location == SymbolLocation::UPVALUE)
 				Emit(symbol.upvalue.index);
 			else
 				Emit(symbol.index);
@@ -1140,7 +1165,7 @@ namespace RealSix::Script
 		return functionSymbol;
 	}
 
-	uint32_t Compiler::CompileVars(VarDecl *decl, bool IsInClassOrModuleScope)
+	uint32_t Compiler::CompileVars(VarDecl *decl, bool IsInClassOrModuleScope, bool isStatic)
 	{
 		uint32_t varCount = 0;
 
@@ -1240,16 +1265,27 @@ namespace RealSix::Script
 						token = ((VarArgExpr *)((VarDescExpr *)k)->name)->argName->tagToken;
 					}
 
-					auto symbol = mSymbolTable->Define(token, decl->permission, literal);
-					if (symbol.location == SymbolLocation::GLOBAL)
+					auto symbol = mSymbolTable->Define(token, decl->permission, literal, {}, isStatic?mStaticVarCount++:-1);
+
+					if (isStatic)
 					{
-						EmitOpCode(OP_SET_GLOBAL, symbol.relatedToken);
-						Emit(symbol.index);
+						EmitOpCode(OP_DEF_STATIC, symbol.relatedToken);
+						Emit(symbol.staticIndex);
 						EmitOpCode(OP_POP, symbol.relatedToken);
 					}
-					else if (IsInClassOrModuleScope)
+					else
 					{
-						EmitConstant(new StrObject(literal), token);
+
+						if (symbol.location == SymbolLocation::GLOBAL)
+						{
+							EmitOpCode(OP_SET_GLOBAL, symbol.relatedToken);
+							Emit(symbol.index);
+							EmitOpCode(OP_POP, symbol.relatedToken);
+						}
+						else if (IsInClassOrModuleScope)
+						{
+							EmitConstant(new StrObject(literal), token);
+						}
 					}
 					varCount++;
 				}

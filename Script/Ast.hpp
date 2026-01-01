@@ -45,6 +45,7 @@ namespace RealSix::Script
 		CONTINUE,
 		ENUM,
 		FUNCTION,
+		STATIC,
 		CLASS,
 		MODULE,
 		ASTSTMTS,
@@ -507,6 +508,19 @@ namespace RealSix::Script
 		std::vector<Type> returnTypes;
 	};
 
+	struct StaticDecl : public Stmt
+	{
+		StaticDecl(Token *tagToken);
+		StaticDecl(Token *tagToken, Stmt *stmt);
+		~StaticDecl() override;
+
+#ifndef NDEBUG
+		String ToString() override;
+#endif
+
+		Stmt *body;
+	};
+
 	struct ClassDecl : public Stmt
 	{
 		enum FunctionKind
@@ -536,6 +550,7 @@ namespace RealSix::Script
 		ClassDecl(Token *tagToken,
 				  String name,
 				  const std::vector<std::pair<MemberPrivilege, IdentifierExpr *>> &parents,
+				  const std::vector<std::pair<MemberPrivilege, StaticDecl *>> &statics,
 				  const std::vector<std::pair<MemberPrivilege, VarDecl *>> &variables,
 				  const std::vector<std::pair<MemberPrivilege, FunctionMember>> &functions,
 				  const std::vector<std::pair<MemberPrivilege, EnumDecl *>> &enumerations = {});
@@ -547,6 +562,7 @@ namespace RealSix::Script
 
 		String name;
 		std::vector<std::pair<MemberPrivilege, IdentifierExpr *>> parents;
+		std::vector<std::pair<MemberPrivilege, StaticDecl *>> statics;
 		std::vector<std::pair<MemberPrivilege, VarDecl *>> variables;
 		std::vector<std::pair<MemberPrivilege, VarDecl *>> constants;
 		std::vector<std::pair<MemberPrivilege, FunctionMember>> functions;

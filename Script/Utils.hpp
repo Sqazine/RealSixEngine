@@ -7,7 +7,7 @@
 #include "Core/Marco.hpp"
 
 #define STACK_MAX 1024
-#define GLOBAL_VARIABLE_MAX 512
+#define VARIABLE_MAX 512
 
 #define UINT8_COUNT (UINT8_MAX + 1)
 

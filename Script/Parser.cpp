@@ -194,6 +194,8 @@ namespace RealSix::Script
 			return ParseEnumDecl();
 		case TokenKind::MODULE:
 			return ParseModuleDecl();
+		case TokenKind::STATIC:
+			return ParseStaticDecl();
 		default:
 			return ParseStmt();
 		}
@@ -282,16 +284,16 @@ namespace RealSix::Script
 
 	Stmt *Parser::ParseClassDecl()
 	{
-		auto classStmt = new ClassDecl(GetCurToken());
+		auto classDecl = new ClassDecl(GetCurToken());
 
 		Consume(TokenKind::CLASS, "Expect 'class' keyword");
 
-		classStmt->name = ((IdentifierExpr *)ParseIdentifierExpr())->literal;
+		classDecl->name = ((IdentifierExpr *)ParseIdentifierExpr())->literal;
 
 		ClassInfo classInfo;
 		classInfo.hasSuperClass = false;
 		classInfo.enclosing = mCurClassInfo;
-		classInfo.name = classStmt->name;
+		classInfo.name = classDecl->name;
 		mCurClassInfo = &classInfo;
 
 		if (IsMatchCurTokenAndStepOnce(TokenKind::COLON))
@@ -299,7 +301,7 @@ namespace RealSix::Script
 			do
 			{
 				auto privilege = ParseClassMemberPrivilege();
-				classStmt->parents.emplace_back(std::make_pair(privilege, (IdentifierExpr *)ParseIdentifierExpr()));
+				classDecl->parents.emplace_back(std::make_pair(privilege, (IdentifierExpr *)ParseIdentifierExpr()));
 			} while (IsMatchCurTokenAndStepOnce(TokenKind::COMMA));
 
 			mCurClassInfo->hasSuperClass = true;
@@ -311,23 +313,25 @@ namespace RealSix::Script
 		{
 			auto privilege = ParseClassMemberPrivilege();
 
-			if (IsMatchCurToken(TokenKind::LET) )
-				classStmt->variables.emplace_back(privilege, (VarDecl *)ParseVarDecl());
-				else if(IsMatchCurToken(TokenKind::CONST))
-				classStmt->constants.emplace_back(privilege, (VarDecl *)ParseVarDecl());
+			if (IsMatchCurToken(TokenKind::LET))
+				classDecl->variables.emplace_back(privilege, (VarDecl *)ParseVarDecl());
+			else if (IsMatchCurToken(TokenKind::CONST))
+				classDecl->constants.emplace_back(privilege, (VarDecl *)ParseVarDecl());
+			else if (IsMatchCurToken(TokenKind::STATIC))
+				classDecl->statics.emplace_back(privilege, (StaticDecl *)ParseStaticDecl());
 			else if (IsMatchCurToken(TokenKind::ENUM))
-				classStmt->enumerations.emplace_back(privilege, (EnumDecl *)ParseEnumDecl());
+				classDecl->enumerations.emplace_back(privilege, (EnumDecl *)ParseEnumDecl());
 			else if (IsMatchCurTokenAndStepOnce(TokenKind::FUNCTION))
 			{
 				auto fn = (FunctionDecl *)ParseFunctionDecl();
-				if (fn->name->literal == classStmt->name)
+				if (fn->name->literal == classDecl->name)
 					REALSIX_SCRIPT_LOG_ERROR(fn->name->tagToken, "The class member function name :{} conflicts with its class:{}, only constructor function name is allowed to same with its class's name", fn->name->literal);
-				classStmt->functions.emplace_back(privilege, std::move(ClassDecl::FunctionMember(ClassDecl::FunctionKind::MEMBER, fn)));
+				classDecl->functions.emplace_back(privilege, std::move(ClassDecl::FunctionMember(ClassDecl::FunctionKind::MEMBER, fn)));
 			}
-			else if (GetCurToken()->literal == classStmt->name) // constructor
+			else if (GetCurToken()->literal == classDecl->name) // constructor
 			{
 				auto fn = (FunctionDecl *)ParseFunctionDecl();
-				classStmt->functions.emplace_back(privilege, std::move(ClassDecl::FunctionMember(ClassDecl::FunctionKind::CONSTRUCTOR, fn)));
+				classDecl->functions.emplace_back(privilege, std::move(ClassDecl::FunctionMember(ClassDecl::FunctionKind::CONSTRUCTOR, fn)));
 			}
 			else
 				Consume({TokenKind::LET, TokenKind::FUNCTION, TokenKind::CONST}, "UnExpect identifier '" + GetCurToken()->literal + "'.");
@@ -337,7 +341,7 @@ namespace RealSix::Script
 
 		mCurClassInfo = mCurClassInfo->enclosing;
 
-		return classStmt;
+		return classDecl;
 	}
 	Stmt *Parser::ParseEnumDecl()
 	{
@@ -411,6 +415,16 @@ namespace RealSix::Script
 		Consume(TokenKind::RBRACE, "Expect '}'.");
 
 		return moduleDecl;
+	}
+
+	Stmt *Parser::ParseStaticDecl()
+	{
+		Consume(TokenKind::STATIC, "Expect 'static' keyword.");
+
+		auto staticDecl = new StaticDecl(GetCurToken());
+		staticDecl->body = ParseDecl();
+
+		return staticDecl;
 	}
 
 	Stmt *Parser::ParseStmt()
@@ -1268,7 +1282,7 @@ namespace RealSix::Script
 		}
 	}
 
-	std::vector<Expr *> Parser::ParseSwitchOrMatchConditionExprList(Expr* expr)
+	std::vector<Expr *> Parser::ParseSwitchOrMatchConditionExprList(Expr *expr)
 	{
 		std::vector<Expr *> conditions;
 		do

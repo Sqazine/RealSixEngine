@@ -11,7 +11,7 @@ namespace RealSix::Script
     struct CallFrame
     {
         CallFrame() = default;
-        CallFrame(ClosureObject *closure, Value *slots):closure(closure),slots(slots),ip(closure->function->chunk.opCodes.data()),argumentsHash(0){}
+        CallFrame(ClosureObject *closure, Value *slots) : closure(closure), slots(slots), ip(closure->function->chunk.opCodes.data()), argumentsHash(0) {}
         ~CallFrame() = default;
 
         ClosureObject *closure = nullptr;
@@ -22,6 +22,7 @@ namespace RealSix::Script
         size_t argumentsHash;
         // -- Function cache relative
     };
+
     class REALSIX_API Allocator : public Singleton<Allocator>
     {
     public:
@@ -79,6 +80,8 @@ namespace RealSix::Script
         Value *GetGlobalVariable(size_t idx);
         void SetGlobalVariable(size_t idx, const Value &v);
 
+        Value *GetStaticVariable(size_t idx);
+		bool& IsStaticVariableInitialized(size_t idx) { return mStaticVariableInitializedList[idx]; }
     private:
         friend class VM;
         friend class Compiler;
@@ -105,7 +108,10 @@ namespace RealSix::Script
         void MarkGrayObjects();
         void Sweep();
 
-        Value mGlobalVariableList[GLOBAL_VARIABLE_MAX];
+        Value mGlobalVariableList[VARIABLE_MAX];
+
+        Value mStaticVariableList[VARIABLE_MAX];
+		bool mStaticVariableInitializedList[VARIABLE_MAX];
 
         Value *mStackTop;
         Value mValueStack[STACK_MAX];
@@ -124,6 +130,9 @@ namespace RealSix::Script
     };
 
 #define GET_GLOBAL_VARIABLE(idx) (Allocator::GetInstance().GetGlobalVariable(idx))
+
+#define GET_STATIC_VARIABLE(idx) (Allocator::GetInstance().GetStaticVariable(idx))
+#define GET_STATIC_VARIABLE_INITIALIZED(idx) (Allocator::GetInstance().IsStaticVariableInitialized(idx))
 
 #define PUSH_STACK(v) (Allocator::GetInstance().PushStack(v))
 #define POP_STACK() (Allocator::GetInstance().PopStack())

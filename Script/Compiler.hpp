@@ -25,12 +25,13 @@ namespace RealSix::Script
 			WRITE,
 		};
 
-		void CompileDecl(Stmt *decl);
-		void CompileVarDecl(VarDecl *decl);
+		void CompileDecl(Stmt *decl,bool isStatic = false);
+		void CompileVarDecl(VarDecl *decl,bool isStatic = false);
 		void CompileFunctionDecl(FunctionDecl *decl);
 		void CompileClassDecl(ClassDecl *decl);
 		void CompileEnumDecl(EnumDecl *decl);
 		void CompileModuleDecl(ModuleDecl *decl);
+		void CompileStaticDecl(StaticDecl *decl);
 
 		void CompileStmt(Stmt *stmt);
 		void CompileExprStmt(ExprStmt *stmt);
@@ -66,7 +67,7 @@ namespace RealSix::Script
 		void CompileFactorialExpr(FactorialExpr *expr, const RWState &state = RWState::READ);
 
 		Symbol CompileFunction(FunctionDecl *decl, ClassDecl::FunctionKind kind = ClassDecl::FunctionKind::NONE);
-		uint32_t CompileVars(VarDecl *decl, bool IsInClassOrModuleScope);
+		uint32_t CompileVars(VarDecl *decl, bool IsInClassOrModuleScope,bool isStatic = false);
 		Symbol CompileClass(ClassDecl *decl);
 
 		uint64_t EmitOpCode(OpCode opCode, const Token *token);
@@ -98,5 +99,6 @@ namespace RealSix::Script
 		SymbolTable *mSymbolTable;
 
 		int64_t mCurBreakStmtAddress, mCurContinueStmtAddress;
+		size_t mStaticVarCount;
 	};
 }

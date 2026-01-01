@@ -1,0 +1,11 @@
+fn Test()
+{
+    static let a = 0;//function static member
+    io.println("{}",a++);
+}
+
+Test();
+Test();
+Test();
+Test();
+Test();

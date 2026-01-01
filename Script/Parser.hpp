@@ -66,6 +66,7 @@ namespace RealSix::Script
 		Stmt *ParseClassDecl();
 		Stmt *ParseEnumDecl();
 		Stmt *ParseModuleDecl();
+		Stmt *ParseStaticDecl();
 
 		Stmt *ParseStmt();
 		Stmt *ParseExprStmt();

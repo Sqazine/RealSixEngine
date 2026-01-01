@@ -184,11 +184,11 @@ namespace RealSix::Script
         std::unordered_map<size_t, std::vector<Value>> caches;
         // -- Function cache relative
 
+        String name{};
         uint8_t arity{0};
         VarArg varArg{VarArg::NONE};
         int8_t upValueCount{0};
         Chunk chunk{};
-        String name{};
     };
 
     struct REALSIX_API UpValueObject : public Object

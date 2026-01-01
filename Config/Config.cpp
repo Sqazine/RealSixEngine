@@ -128,7 +128,7 @@ namespace RealSix
     ScriptConfig &ScriptConfig::SetDebugGC(bool toggle)
     {
         mDebugGC = toggle;
-        return *this;
+        return *this; 
     }
     bool ScriptConfig::IsDebugGC() const
     {

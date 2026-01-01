@@ -11,22 +11,22 @@ namespace RealSix::Script
 	LiteralExpr::LiteralExpr(Token *tagToken, int64_t value)
 		: Expr(tagToken, AstKind::LITERAL), i64Value(value)
 	{
-		type = Type(TypeKind::I64,tagToken->sourceLocation);
+		type = Type(TypeKind::I64, tagToken->sourceLocation);
 	}
 	LiteralExpr::LiteralExpr(Token *tagToken, double value)
 		: Expr(tagToken, AstKind::LITERAL), f64Value(value)
 	{
-		type = Type(TypeKind::F64,tagToken->sourceLocation);
+		type = Type(TypeKind::F64, tagToken->sourceLocation);
 	}
 	LiteralExpr::LiteralExpr(Token *tagToken, bool value)
 		: Expr(tagToken, AstKind::LITERAL), boolean(value)
 	{
-		type = Type(TypeKind::BOOL,tagToken->sourceLocation);
+		type = Type(TypeKind::BOOL, tagToken->sourceLocation);
 	}
 	LiteralExpr::LiteralExpr(Token *tagToken, StringView value)
 		: Expr(tagToken, AstKind::LITERAL), str(value)
 	{
-		type = Type(TypeKind::STR,tagToken->sourceLocation);
+		type = Type(TypeKind::STR, tagToken->sourceLocation);
 	}
 	LiteralExpr::~LiteralExpr()
 	{
@@ -80,7 +80,7 @@ namespace RealSix::Script
 	VarDescExpr::VarDescExpr(Token *tagToken)
 		: Expr(tagToken, AstKind::VAR_DESC), name(nullptr)
 	{
-		type = Type(TypeKind::ANY,tagToken->sourceLocation);
+		type = Type(TypeKind::ANY, tagToken->sourceLocation);
 	}
 	VarDescExpr::VarDescExpr(Token *tagToken, const Type &type, Expr *name)
 		: Expr(tagToken, AstKind::VAR_DESC), name(name)
@@ -843,12 +843,14 @@ namespace RealSix::Script
 	ClassDecl::ClassDecl(Token *tagToken,
 						 String name,
 						 const std::vector<std::pair<MemberPrivilege, IdentifierExpr *>> &parents,
+						  const std::vector<std::pair<MemberPrivilege, StaticDecl *>> &statics,
 						 const std::vector<std::pair<MemberPrivilege, VarDecl *>> &variables,
 						 const std::vector<std::pair<MemberPrivilege, FunctionMember>> &functions,
 						 const std::vector<std::pair<MemberPrivilege, EnumDecl *>> &enumerations)
 		: Stmt(tagToken, AstKind::CLASS),
 		  name(name),
 		  variables(variables),
+		  statics(statics),
 		  functions(functions),
 		  enumerations(enumerations),
 		  parents(parents)
@@ -858,6 +860,7 @@ namespace RealSix::Script
 	ClassDecl::~ClassDecl()
 	{
 		std::vector<std::pair<MemberPrivilege, IdentifierExpr *>>().swap(parents);
+		std::vector<std::pair<MemberPrivilege, StaticDecl *>>().swap(statics);
 		std::vector<std::pair<MemberPrivilege, VarDecl *>>().swap(variables);
 		std::vector<std::pair<MemberPrivilege, FunctionMember>>().swap(functions);
 		std::vector<std::pair<MemberPrivilege, EnumDecl *>>().swap(enumerations);
@@ -876,11 +879,35 @@ namespace RealSix::Script
 		result += "{";
 		for (auto enumeration : enumerations)
 			result += enumeration.second->ToString();
+		for (auto staticMember : statics)
+			result += staticMember.second->ToString();
 		for (auto variable : variables)
 			result += variable.second->ToString();
 		for (auto fn : functions)
 			result += fn.second.decl->ToString();
 		return result + "}";
+	}
+#endif
+
+	StaticDecl::StaticDecl(Token *tagToken)
+		: Stmt(tagToken, AstKind::STATIC), body(nullptr)
+	{
+	}
+
+	StaticDecl::StaticDecl(Token *tagToken, Stmt *stmt)
+		: Stmt(tagToken, AstKind::STATIC), body(stmt)
+	{
+	}
+
+	StaticDecl::~StaticDecl()
+	{
+		SAFE_DELETE(body);
+	}
+
+#ifndef NDEBUG
+	String StaticDecl::ToString()
+	{
+		return "static " + body->ToString();
 	}
 #endif
 }

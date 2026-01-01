@@ -18,7 +18,9 @@ namespace RealSix::Script
 
         mOpenUpValues = nullptr;
 
-        memset(mGlobalVariableList, 0, sizeof(Value) * GLOBAL_VARIABLE_MAX);
+        memset(mGlobalVariableList, 0, sizeof(Value) * VARIABLE_MAX);
+        memset(mStaticVariableList, 0, sizeof(Value) * VARIABLE_MAX);
+        memset(mStaticVariableInitializedList, 0, sizeof(bool) * VARIABLE_MAX);
     }
 
     void Allocator::Destroy()
@@ -169,6 +171,11 @@ namespace RealSix::Script
         mGlobalVariableList[idx] = v;
     }
 
+    Value *Allocator::GetStaticVariable(size_t idx)
+    {
+        return &mStaticVariableList[idx];
+    }
+
     void Allocator::StopGC()
     {
         m_IsStopGC = true;
@@ -213,7 +220,7 @@ namespace RealSix::Script
         for (UpValueObject *upvalue = mOpenUpValues; upvalue != nullptr; upvalue = upvalue->nextUpValue)
             upvalue->Mark();
 
-        for (int32_t i = 0; i < GLOBAL_VARIABLE_MAX; ++i)
+        for (int32_t i = 0; i < VARIABLE_MAX; ++i)
             if (mGlobalVariableList[i] != Value())
                 mGlobalVariableList[i].Mark();
     }
