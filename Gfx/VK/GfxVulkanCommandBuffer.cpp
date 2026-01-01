@@ -4,7 +4,7 @@
 #include "GfxVulkanDevice.hpp"
 #include "GfxVulkanShader.hpp"
 #include "GfxVulkanPipeline.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Core/Logger.hpp"
 namespace RealSix
 {

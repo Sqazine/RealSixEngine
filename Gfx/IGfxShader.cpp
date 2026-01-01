@@ -1,5 +1,5 @@
 #include "IGfxShader.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Core/Logger.hpp"
 #include "Gfx/VK/GfxVulkanShader.hpp"
 namespace RealSix

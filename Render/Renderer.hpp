@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Platform/Window.hpp"
 #include "Gfx/IGfxDevice.hpp"
 #include "FrameGraph/FrameGraph.hpp"

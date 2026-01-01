@@ -12,7 +12,7 @@
 #include "Script/Compiler.hpp"
 #include "Script/VM.hpp"
 #include "Script/Context.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Resource/FileSystem.hpp"
 
 using namespace RealSix;

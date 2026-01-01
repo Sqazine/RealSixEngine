@@ -3,7 +3,7 @@
 #include "Version.hpp"
 #include "Core/Logger.hpp"
 #include "Platform/PlatformInfo.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 namespace RealSix
 {
 #ifndef NDEBUG

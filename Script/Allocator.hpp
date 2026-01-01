@@ -4,7 +4,7 @@
 #include "Value.hpp"
 #include "Common.hpp"
 #include "Logger.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 
 namespace RealSix::Script
 {

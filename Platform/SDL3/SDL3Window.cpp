@@ -1,7 +1,7 @@
 #include "SDL3Window.hpp"
 #include "Platform/PlatformInfo.hpp"
 #include "SDL3/SDL_vulkan.h"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 namespace RealSix
 {
     SDL3Window::SDL3Window()

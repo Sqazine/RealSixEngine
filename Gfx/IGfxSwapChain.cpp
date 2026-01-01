@@ -1,6 +1,6 @@
 #include "IGfxSwapChain.hpp"
 #include "IGfxDevice.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Core/Logger.hpp"
 #include "Gfx/VK/GfxVulkanSwapChain.hpp"
 

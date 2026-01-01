@@ -2,7 +2,7 @@
 #include "GfxVulkanUtils.hpp"
 #include "GfxVulkanDevice.hpp"
 #include "GfxVulkanShader.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 
 namespace RealSix
 {

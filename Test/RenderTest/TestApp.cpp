@@ -1,6 +1,6 @@
 #include "TestApp.hpp"
 #include "Core/Logger.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Platform/PlatformInfo.hpp"
 #include "Editor/EditorUIPass/EditorUIPass.hpp"
 #include "BasicMeshPass.hpp"

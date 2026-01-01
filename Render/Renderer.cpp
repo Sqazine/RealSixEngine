@@ -1,5 +1,5 @@
 #include "Renderer.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 
 namespace RealSix
 {

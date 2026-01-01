@@ -2,7 +2,7 @@
 #include <utility>
 #include "Core/Logger.hpp"
 #include "Gfx/VK/GfxVulkanDevice.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 
 namespace RealSix
 {

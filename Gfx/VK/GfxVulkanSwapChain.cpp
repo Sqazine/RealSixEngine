@@ -1,7 +1,7 @@
 #include "GfxVulkanSwapChain.hpp"
 #include "GfxVulkanDevice.hpp"
 #include "Platform/PlatformInfo.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Math/Math.hpp"
 #include "Core/Marco.hpp"
 namespace RealSix

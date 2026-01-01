@@ -8,7 +8,7 @@
 #include "Vector4.hpp"
 #include "Quaternion.hpp"
 #include "Transform.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Core/Marco.hpp"
 #include "Core/Logger.hpp"
 namespace RealSix

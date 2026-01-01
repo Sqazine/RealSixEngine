@@ -1,6 +1,6 @@
 #include "EditorApp.hpp"
 #include "Core/Logger.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Platform/PlatformInfo.hpp"
 #include "EditorUIPass/EditorUIPass.hpp"
 namespace RealSix

@@ -1,6 +1,6 @@
 #include "IGfxCommandBuffer.hpp"
 #include "GfxVulkanCommandBuffer.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Core/Logger.hpp"
 #include "Core/Marco.hpp"
 namespace RealSix

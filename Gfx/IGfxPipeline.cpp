@@ -1,5 +1,5 @@
 #include "IGfxPipeline.hpp"
-#include "Config/Config.hpp"
+#include "Core/Config.hpp"
 #include "Core/Logger.hpp"
 #include "Gfx/VK/GfxVulkanPipeline.hpp"
 namespace RealSix

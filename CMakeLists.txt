@@ -94,7 +94,6 @@ endif()
 file(GLOB GENERATED_SRC "${GENERATED_DIR}/*.cpp" "${GENERATED_DIR}/*.h" "${GENERATED_DIR}/*.hpp"  "${GENERATED_DIR}/*.inl")
 file(GLOB ANIMATION_SRC "${CMAKE_SOURCE_DIR}/Animation/*.cpp" "${CMAKE_SOURCE_DIR}/Animation/*.h" "${CMAKE_SOURCE_DIR}/Animation/*.hpp"  "${CMAKE_SOURCE_DIR}/Animation/*.inl")
 file(GLOB ANIMATION_IK_SRC "${CMAKE_SOURCE_DIR}/Animation/IK/*.cpp" "${CMAKE_SOURCE_DIR}/Animation/IK/*.h"  "${CMAKE_SOURCE_DIR}/Animation/IK/*.hpp"  "${CMAKE_SOURCE_DIR}/Animation/IK/*.inl")
-file(GLOB CONFIG_SRC "${CMAKE_SOURCE_DIR}/Config/*.cpp" "${CMAKE_SOURCE_DIR}/Config/*.h" "${CMAKE_SOURCE_DIR}/Config/*.hpp" "${CMAKE_SOURCE_DIR}/Config/*.inl")
 file(GLOB CORE_SRC "${CMAKE_SOURCE_DIR}/Core/*.cpp" "${CMAKE_SOURCE_DIR}/Core/*.h" "${CMAKE_SOURCE_DIR}/Core/*.hpp" "${CMAKE_SOURCE_DIR}/Core/*.inl")
 file(GLOB EDITOR_SRC "${CMAKE_SOURCE_DIR}/Editor/*.cpp" "${CMAKE_SOURCE_DIR}/Editor/*.h" "${CMAKE_SOURCE_DIR}/Editor/*.hpp" "${CMAKE_SOURCE_DIR}/Editor/*.inl")
 file(GLOB EDITOR_UI_PASS_SRC "${CMAKE_SOURCE_DIR}/Editor/EditorUIPass/*.cpp" "${CMAKE_SOURCE_DIR}/Editor/EditorUIPass/*.h" "${CMAKE_SOURCE_DIR}/Editor/EditorUIPass/*.hpp" "${CMAKE_SOURCE_DIR}/Editor/EditorUIPass/*.inl")
@@ -114,7 +113,6 @@ file(GLOB IMGUI_BACKEND_SRC "${IMGUI_BACKEND_INC_DIR}/imgui_impl_sdl3.h" "${IMGU
 source_group("generated" FILES ${GENERATED_SRC})
 source_group("Animation" FILES ${ANIMATION_SRC})
 source_group("Animation/IK" FILES ${ANIMATION_IK_SRC})
-source_group("Config" FILES ${CONFIG_SRC})
 source_group("Core" FILES ${CORE_SRC})
 source_group("Editor" FILES ${EDITOR_SRC})
 source_group("Editor/EditorUIPass" FILES ${EDITOR_UI_PASS_SRC})
@@ -135,7 +133,6 @@ set(REALSIX_SRC
     ${GENERATED_SRC}
     ${ANIMATION_SRC}
     ${ANIMATION_IK_SRC}
-    ${CONFIG_SRC}
     ${CORE_SRC}
     ${GFX_SRC}
     ${GFX_VULKAN_SRC}
