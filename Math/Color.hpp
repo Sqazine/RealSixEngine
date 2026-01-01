@@ -10,10 +10,6 @@ namespace RealSix
             {
                 float r, g, b, a;
             };
-            struct
-            {
-                float r, g, b, a;
-            };
             std::array<float,4> data;
         };
         Color();
@@ -38,7 +34,7 @@ namespace RealSix
         Color &operator*=(const Color &right);
         Color &operator=(const Color &right);
 
-        Color ToSRGB() const;
+        Color ToSRGB(float gamma = 2.2f) const;
 
         static const Color Black;
         static const Color White;
