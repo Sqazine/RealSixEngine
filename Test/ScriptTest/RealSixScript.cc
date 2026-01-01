@@ -1,6 +1,7 @@
-#include "Core/String.hpp"
 #include "Version.hpp"
-#include "Script/Logger.hpp"
+#include "Core/String.hpp"
+#include "Core/Config.hpp"
+#include "Resource/FileSystem.hpp"
 #include "Script/Token.hpp"
 #include "Script/Ast.hpp"
 #include "Script/Lexer.hpp"
@@ -12,8 +13,6 @@
 #include "Script/Compiler.hpp"
 #include "Script/VM.hpp"
 #include "Script/Context.hpp"
-#include "Core/Config.hpp"
-#include "Resource/FileSystem.hpp"
 
 using namespace RealSix;
 

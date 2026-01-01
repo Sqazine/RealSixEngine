@@ -169,4 +169,19 @@ namespace RealSix::Script
     {
         return HashValueList(start, end - start);
     }
+
+	Value *GetEndOfRefValuePtr(Value *v)
+	{
+		auto result = v;
+		while (IS_REF_VALUE(*result))
+			result = TO_REF_VALUE(*result)->pointer;
+		return result;
+	}
+
+	void GetActualValueIfIsRefValue(const Value &v, Value &result)
+	{
+		result = v;
+		while (IS_REF_VALUE(result))
+			result = *TO_REF_VALUE(result)->pointer;
+	}
 }

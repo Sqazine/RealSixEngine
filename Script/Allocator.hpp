@@ -77,11 +77,11 @@ namespace RealSix::Script
 
         void SetValueFromStackTopOffset(int32_t offset, const Value &value);
 
-        Value *GetGlobalVariable(size_t idx);
-        void SetGlobalVariable(size_t idx, const Value &v);
+        Value *GetGlobalValueReference(size_t idx);
+        void SetGlobalValue(size_t idx, const Value &v);
 
-        Value *GetStaticVariable(size_t idx);
-		bool& IsStaticVariableInitialized(size_t idx) { return mStaticVariableInitializedList[idx]; }
+        Value *GetStaticValueReference(size_t idx);
+		bool& IsStaticValueInitialized(size_t idx) { return mStaticValueInitializedList[idx]; }
     private:
         friend class VM;
         friend class Compiler;
@@ -108,10 +108,10 @@ namespace RealSix::Script
         void MarkGrayObjects();
         void Sweep();
 
-        Value mGlobalVariableList[VARIABLE_MAX];
+        Value mGlobalValueList[VARIABLE_MAX];
 
-        Value mStaticVariableList[VARIABLE_MAX];
-		bool mStaticVariableInitializedList[VARIABLE_MAX];
+        Value mStaticValueList[VARIABLE_MAX];
+		bool mStaticValueInitializedList[VARIABLE_MAX];
 
         Value *mStackTop;
         Value mValueStack[STACK_MAX];
@@ -129,10 +129,10 @@ namespace RealSix::Script
         size_t mNextGCByteSize;
     };
 
-#define GET_GLOBAL_VARIABLE(idx) (Allocator::GetInstance().GetGlobalVariable(idx))
+#define GET_GLOBAL_VALUE_REFERENCE(idx) (Allocator::GetInstance().GetGlobalValueReference(idx))
 
-#define GET_STATIC_VARIABLE(idx) (Allocator::GetInstance().GetStaticVariable(idx))
-#define GET_STATIC_VARIABLE_INITIALIZED(idx) (Allocator::GetInstance().IsStaticVariableInitialized(idx))
+#define GET_STATIC_VALUE_REFERENCE(idx) (Allocator::GetInstance().GetStaticValueReference(idx))
+#define GET_STATIC_VALUE_INITIALIZED(idx) (Allocator::GetInstance().IsStaticValueInitialized(idx))
 
 #define PUSH_STACK(v) (Allocator::GetInstance().PushStack(v))
 #define POP_STACK() (Allocator::GetInstance().PopStack())

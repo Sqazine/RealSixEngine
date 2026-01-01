@@ -12,7 +12,7 @@ namespace RealSix::Script
         for (size_t i = 0; i < LibraryManager::GetInstance().GetLibraries().size(); ++i)
         {
             ModuleObject *lib = LibraryManager::GetInstance().GetLibraries()[i];
-            Allocator::GetInstance().SetGlobalVariable(i, lib);
+            Allocator::GetInstance().SetGlobalValue(i, lib);
         }
     }
     void Context::Destroy()

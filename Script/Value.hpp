@@ -54,4 +54,7 @@ namespace RealSix::Script
 
 	size_t HashValueList(Value *start, size_t count);
 	size_t HashValueList(Value *start, Value *end);
+
+	extern "C" REALSIX_API Value *GetEndOfRefValuePtr(Value *v);
+	extern "C" REALSIX_API void GetActualValueIfIsRefValue(const Value &v, Value &result);
 }

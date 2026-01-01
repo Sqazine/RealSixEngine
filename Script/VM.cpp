@@ -55,12 +55,10 @@ namespace RealSix::Script
 #define COMMON_BINARY(op)                                                                                                                                                                                           \
 	do                                                                                                                                                                                                              \
 	{                                                                                                                                                                                                               \
-		Value right = POP_STACK();                                                                                                                                                                                  \
-		Value left = POP_STACK();                                                                                                                                                                                   \
-		if (IS_REF_VALUE(left))                                                                                                                                                                                     \
-			left = *TO_REF_VALUE(left)->pointer;                                                                                                                                                                    \
-		if (IS_REF_VALUE(right))                                                                                                                                                                                    \
-			right = *TO_REF_VALUE(right)->pointer;                                                                                                                                                                  \
+		Value right;                                                                                                                                                                                                \
+		Value left;                                                                                                                                                                                                 \
+		GetActualValueIfIsRefValue(POP_STACK(), right);                                                                                                                                                             \
+		GetActualValueIfIsRefValue(POP_STACK(), left);                                                                                                                                                              \
 		if (IS_INT_VALUE(left) && IS_INT_VALUE(right))                                                                                                                                                              \
 			PUSH_STACK(TO_INT_VALUE(left) op TO_INT_VALUE(right));                                                                                                                                                  \
 		else if (IS_FLOAT_VALUE(left) && IS_FLOAT_VALUE(right))                                                                                                                                                     \
@@ -77,12 +75,10 @@ namespace RealSix::Script
 #define INTEGER_BINARY(op)                                                                                                                                         \
 	do                                                                                                                                                             \
 	{                                                                                                                                                              \
-		Value right = POP_STACK();                                                                                                                                 \
-		Value left = POP_STACK();                                                                                                                                  \
-		if (IS_REF_VALUE(left))                                                                                                                                    \
-			left = *TO_REF_VALUE(left)->pointer;                                                                                                                   \
-		if (IS_REF_VALUE(right))                                                                                                                                   \
-			right = *TO_REF_VALUE(right)->pointer;                                                                                                                 \
+		Value right;                                                                                                                                               \
+		Value left;                                                                                                                                                \
+		GetActualValueIfIsRefValue(POP_STACK(), right);                                                                                                            \
+		GetActualValueIfIsRefValue(POP_STACK(), left);                                                                                                             \
 		if (IS_INT_VALUE(left) && IS_INT_VALUE(right))                                                                                                             \
 			PUSH_STACK(TO_INT_VALUE(left) op TO_INT_VALUE(right));                                                                                                 \
 		else                                                                                                                                                       \
@@ -93,12 +89,10 @@ namespace RealSix::Script
 #define COMPARE_BINARY(op)                                                            \
 	do                                                                                \
 	{                                                                                 \
-		Value right = POP_STACK();                                                    \
-		Value left = POP_STACK();                                                     \
-		if (IS_REF_VALUE(left))                                                       \
-			left = *TO_REF_VALUE(left)->pointer;                                      \
-		if (IS_REF_VALUE(right))                                                      \
-			right = *TO_REF_VALUE(right)->pointer;                                    \
+		Value right;                                                                  \
+		Value left;                                                                   \
+		GetActualValueIfIsRefValue(POP_STACK(), right);                               \
+		GetActualValueIfIsRefValue(POP_STACK(), left);                                \
 		if (IS_INT_VALUE(left) && IS_INT_VALUE(right))                                \
 			PUSH_STACK(TO_INT_VALUE(left) op TO_INT_VALUE(right) ? true : false);     \
 		else if (IS_FLOAT_VALUE(left) && IS_FLOAT_VALUE(right))                       \
@@ -115,12 +109,10 @@ namespace RealSix::Script
 #define LOGIC_BINARY(op)                                                                                                                                             \
 	do                                                                                                                                                               \
 	{                                                                                                                                                                \
-		Value right = POP_STACK();                                                                                                                                   \
-		Value left = POP_STACK();                                                                                                                                    \
-		if (IS_REF_VALUE(left))                                                                                                                                      \
-			left = *TO_REF_VALUE(left)->pointer;                                                                                                                     \
-		if (IS_REF_VALUE(right))                                                                                                                                     \
-			right = *TO_REF_VALUE(right)->pointer;                                                                                                                   \
+		Value right;                                                                                                                                                 \
+		Value left;                                                                                                                                                  \
+		GetActualValueIfIsRefValue(POP_STACK(), right);                                                                                                              \
+		GetActualValueIfIsRefValue(POP_STACK(), left);                                                                                                               \
 		if (IS_BOOL_VALUE(left) && IS_BOOL_VALUE(right))                                                                                                             \
 			PUSH_STACK(TO_BOOL_VALUE(left) op TO_BOOL_VALUE(right) ? Value(true) : Value(false));                                                                    \
 		else                                                                                                                                                         \
@@ -212,19 +204,17 @@ namespace RealSix::Script
 				auto pos = READ_INS();
 				auto v = PEEK_STACK(0);
 
-				auto globalValue = GET_GLOBAL_VARIABLE(pos);
+				auto globalValue = GET_GLOBAL_VALUE_REFERENCE(pos);
 
-				if (IS_REF_VALUE(*globalValue))
-					*TO_REF_VALUE(*globalValue)->pointer = v;
-				else
-					*globalValue = v;
+				globalValue = GetEndOfRefValuePtr(globalValue);
+				*globalValue = v;
 				break;
 			}
 			case OP_GET_GLOBAL:
 			{
 				OUTPUT_OPCODE_LOCATION();
 				auto pos = READ_INS();
-				PUSH_STACK(*GET_GLOBAL_VARIABLE(pos));
+				PUSH_STACK(*GET_GLOBAL_VALUE_REFERENCE(pos));
 				break;
 			}
 			case OP_DEF_STATIC:
@@ -232,16 +222,13 @@ namespace RealSix::Script
 				OUTPUT_OPCODE_LOCATION();
 				auto pos = READ_INS();
 				auto v = PEEK_STACK(0);
-				auto staticValue = GET_STATIC_VARIABLE(pos);
-				bool& staticValueInitizlied = GET_STATIC_VARIABLE_INITIALIZED(pos);
+				auto staticValue = GET_STATIC_VALUE_REFERENCE(pos);
+				bool &staticValueInitizlied = GET_STATIC_VALUE_INITIALIZED(pos);
 
-				if(!staticValueInitizlied)
-				{ 
+				if (!staticValueInitizlied)
+				{
 					staticValueInitizlied = true;
-					if (IS_REF_VALUE(*staticValue))
-						*TO_REF_VALUE(*staticValue)->pointer = v;
-					else
-						*staticValue = v;
+					*staticValue = v;
 				}
 				break;
 			}
@@ -251,33 +238,27 @@ namespace RealSix::Script
 				auto pos = READ_INS();
 				auto v = PEEK_STACK(0);
 
-				auto staticValue = GET_STATIC_VARIABLE(pos);
-
-				if (IS_REF_VALUE(*staticValue))
-					*TO_REF_VALUE(*staticValue)->pointer = v;
-				else
-					*staticValue = v;
+				auto staticValue = GET_STATIC_VALUE_REFERENCE(pos);
+				staticValue = GetEndOfRefValuePtr(staticValue);
+				*staticValue = v;
 				break;
 			}
 			case OP_GET_STATIC:
 			{
 				OUTPUT_OPCODE_LOCATION();
 				auto pos = READ_INS();
-				PUSH_STACK(*GET_STATIC_VARIABLE(pos));
+				PUSH_STACK(*GET_STATIC_VALUE_REFERENCE(pos));
 				break;
 			}
 			case OP_SET_LOCAL:
 			{
 				OUTPUT_OPCODE_LOCATION();
 				auto pos = READ_INS();
-				auto value = PEEK_STACK(0);
+				auto v = PEEK_STACK(0);
 
 				auto slot = frame->slots + pos;
-
-				if (IS_REF_VALUE((*slot)))
-					*TO_REF_VALUE((*slot))->pointer = value;
-				else
-					*slot = value; // now assume base ptr on the stack bottom
+				slot = GetEndOfRefValuePtr(slot);
+				*slot = v;
 				break;
 			}
 			case OP_GET_LOCAL:
@@ -312,13 +293,14 @@ namespace RealSix::Script
 			case OP_ADD:
 			{
 				OUTPUT_OPCODE_LOCATION();
-				Value left = PEEK_STACK(0);
-				Value right = PEEK_STACK(1);
+
+				Value left;
+				Value right;
 				Value result;
-				if (IS_REF_VALUE(left))
-					left = *TO_REF_VALUE(left)->pointer;
-				if (IS_REF_VALUE(right))
-					right = *TO_REF_VALUE(right)->pointer;
+
+				GetActualValueIfIsRefValue(PEEK_STACK(0), left);
+				GetActualValueIfIsRefValue(PEEK_STACK(1), right);
+
 				if (IS_INT_VALUE(left) && IS_INT_VALUE(right))
 					result = TO_INT_VALUE(left) + TO_INT_VALUE(right);
 				else if (IS_FLOAT_VALUE(left) && IS_FLOAT_VALUE(right))
@@ -399,9 +381,8 @@ namespace RealSix::Script
 			case OP_NOT:
 			{
 				OUTPUT_OPCODE_LOCATION();
-				auto value = POP_STACK();
-				if (IS_REF_VALUE(value))
-					value = *TO_REF_VALUE(value)->pointer;
+				Value value;
+				GetActualValueIfIsRefValue(POP_STACK(),value);
 				if (!IS_BOOL_VALUE(value))
 					REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Invalid op:!{}, only bool type is available.", value.ToString());
 				PUSH_STACK(!TO_BOOL_VALUE(value));
@@ -410,21 +391,19 @@ namespace RealSix::Script
 			case OP_EQUAL:
 			{
 				OUTPUT_OPCODE_LOCATION();
-				Value left = POP_STACK();
-				Value right = POP_STACK();
-				if (IS_REF_VALUE(left))
-					left = *TO_REF_VALUE(left)->pointer;
-				if (IS_REF_VALUE(right))
-					right = *TO_REF_VALUE(right)->pointer;
+				Value right;
+				Value left;
+				GetActualValueIfIsRefValue(POP_STACK(), right);
+				GetActualValueIfIsRefValue(POP_STACK(), left);
 				PUSH_STACK(left == right);
 				break;
 			}
 			case OP_MINUS:
 			{
 				OUTPUT_OPCODE_LOCATION();
-				auto value = POP_STACK();
-				if (IS_REF_VALUE(value))
-					value = *TO_REF_VALUE(value)->pointer;
+				Value value;
+				GetActualValueIfIsRefValue(POP_STACK(),value);
+				
 				if (IS_INT_VALUE(value))
 					PUSH_STACK(-TO_INT_VALUE(value));
 				else if (IS_FLOAT_VALUE(value))
@@ -436,9 +415,10 @@ namespace RealSix::Script
 			case OP_FACTORIAL:
 			{
 				OUTPUT_OPCODE_LOCATION();
-				auto value = POP_STACK();
-				if (IS_REF_VALUE(value))
-					value = *TO_REF_VALUE(value)->pointer;
+
+				Value value;
+				GetActualValueIfIsRefValue(POP_STACK(),value);
+				
 				if (IS_INT_VALUE(value))
 					PUSH_STACK(Factorial(TO_INT_VALUE(value)));
 				else
@@ -583,7 +563,7 @@ namespace RealSix::Script
 			{
 				OUTPUT_OPCODE_LOCATION();
 				auto index = READ_INS();
-				PUSH_STACK(Allocator::GetInstance().CreateObject<RefObject>(GET_GLOBAL_VARIABLE(index)));
+				PUSH_STACK(Allocator::GetInstance().CreateObject<RefObject>(GET_GLOBAL_VALUE_REFERENCE(index)));
 				break;
 			}
 			case OP_REF_LOCAL:
@@ -606,7 +586,7 @@ namespace RealSix::Script
 				auto index = READ_INS();
 				auto idxValue = POP_STACK();
 
-				auto globalValue = GET_GLOBAL_VARIABLE(index);
+				auto globalValue = GET_GLOBAL_VALUE_REFERENCE(index);
 
 				if (IS_DICT_VALUE(*globalValue))
 					PUSH_STACK(Allocator::GetInstance().CreateObject<RefObject>(&TO_DICT_VALUE(*globalValue)->elements[idxValue]));
@@ -853,10 +833,8 @@ namespace RealSix::Script
 			case OP_GET_PROPERTY:
 			{
 				OUTPUT_OPCODE_LOCATION();
-				auto peekValue = PEEK_STACK(1);
-
-				if (IS_REF_VALUE(peekValue))
-					peekValue = *(TO_REF_VALUE(peekValue)->pointer);
+				Value peekValue;
+				GetActualValueIfIsRefValue(PEEK_STACK(1),peekValue);
 
 				auto propName = TO_STR_VALUE(POP_STACK())->value;
 
@@ -922,10 +900,9 @@ namespace RealSix::Script
 			case OP_SET_PROPERTY:
 			{
 				OUTPUT_OPCODE_LOCATION();
-				auto peekValue = PEEK_STACK(1);
-
-				if (IS_REF_VALUE(peekValue))
-					peekValue = *(TO_REF_VALUE(peekValue)->pointer);
+				
+				Value peekValue;
+				GetActualValueIfIsRefValue(PEEK_STACK(1),peekValue);
 
 				auto propName = TO_STR_VALUE(POP_STACK())->value;
 				if (IS_CLASS_VALUE(peekValue))
