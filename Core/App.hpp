@@ -34,7 +34,7 @@ namespace RealSix
         virtual void RenderGizmo();
         virtual void RenderUI();
         virtual void PostTick();
-        virtual void Destroy();
+        virtual void CleanUp();
 
         AppState mState;
 

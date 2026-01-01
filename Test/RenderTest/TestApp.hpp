@@ -24,7 +24,7 @@ namespace RealSix
         void RenderUI() override;
         void RenderEditorUI() override;
         void PostTick() override;
-        void Destroy() override;
+        void CleanUp() override;
 
         void AddPasses(FrameGraph &frameGraph);
 

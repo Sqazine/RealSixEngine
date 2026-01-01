@@ -40,9 +40,9 @@ namespace RealSix
     {
     }
 
-    void EditorApp::Destroy()
+    void EditorApp::CleanUp()
     {
-        App::Destroy();
+        App::CleanUp();
     }
 
     void EditorApp::PreTick()

@@ -4,11 +4,11 @@
 namespace RealSix
 {
     class EditorApp;
-    class EditorUIPassVulkanImpl : public EditorUIPass
+    class EditorUIPassImguiVulkanImpl : public EditorUIPass
     {
     public:
-        EditorUIPassVulkanImpl(EditorApp *editorApp);
-        ~EditorUIPassVulkanImpl() override;
+        EditorUIPassImguiVulkanImpl(EditorApp *editorApp);
+        ~EditorUIPassImguiVulkanImpl() override;
 
         void Init() override;
         void BeginRender() override;

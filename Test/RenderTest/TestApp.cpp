@@ -106,9 +106,9 @@ namespace RealSix
         }
     }
 
-    void TestApp::Destroy()
+    void TestApp::CleanUp()
     {
-        App::Destroy();
+        App::CleanUp();
     }
 
     void TestApp::PreTick()

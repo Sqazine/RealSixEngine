@@ -111,7 +111,7 @@ namespace RealSix
         return *this;
     }
 
-    Color Color::ToSRGB(float gamma = 2.2f) const
+    Color Color::ToSRGB(float gamma) const
     {
         return Color(Math::Pow(r, gamma), Math::Pow(g, gamma), Math::Pow(b, gamma), Math::Pow(a, gamma));
     }

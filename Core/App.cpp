@@ -19,7 +19,7 @@ namespace RealSix
 			}
 			PostTick();
 		}
-		Destroy();
+		CleanUp();
 	}
 
 	void App::Quit()
@@ -78,9 +78,9 @@ namespace RealSix
 	{
 	}
 
-	void App::Destroy()
+	void App::CleanUp()
 	{
-		PlatformInfo::GetInstance().Destroy();
+		PlatformInfo::GetInstance().CleanUp();
 	}
 
 	void App::PreTick()

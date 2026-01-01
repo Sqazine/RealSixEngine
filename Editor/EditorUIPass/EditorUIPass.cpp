@@ -1,7 +1,7 @@
 #include "EditorUIPass.hpp"
 #include "Core/Config.hpp"
 #include "Core/Logger.hpp"
-#include "EditorUIPassVulkanImpl.hpp"
+#include "EditorUIPassImguiVulkanImpl.hpp"
 #include "EditorApp.hpp"
 namespace RealSix
 {
@@ -12,7 +12,7 @@ namespace RealSix
         {
         case GfxBackend::VULKAN:
         {
-            return new EditorUIPassVulkanImpl(editorApp);
+            return new EditorUIPassImguiVulkanImpl(editorApp);
         }
         case GfxBackend::D3D12:
             REALSIX_LOG_ERROR("Not implemented D3D12 device creation yet");

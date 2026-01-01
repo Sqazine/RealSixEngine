@@ -90,7 +90,7 @@ namespace RealSix
             mVulkanPlatformInfo.reset(VulkanPlatformInfo::Create());
         }
 
-        void Destroy()
+        void CleanUp()
         {
             mHardwareInfo.reset();
         }

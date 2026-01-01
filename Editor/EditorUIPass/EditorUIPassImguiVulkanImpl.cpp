@@ -1,4 +1,4 @@
-#include "EditorUIPassVulkanImpl.hpp"
+#include "EditorUIPassImguiVulkanImpl.hpp"
 #ifndef IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
 #define IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
 #endif
@@ -23,7 +23,7 @@ namespace RealSix
             abort();
     }
 
-    EditorUIPassVulkanImpl::EditorUIPassVulkanImpl(EditorApp *editorApp)
+    EditorUIPassImguiVulkanImpl::EditorUIPassImguiVulkanImpl(EditorApp *editorApp)
         : mEditorApp(editorApp)
     {
         auto sdlInputSystem = static_cast<SDL3InputSystem *>(mEditorApp->GetInputSystem());
@@ -31,7 +31,7 @@ namespace RealSix
                                               { ImGui_ImplSDL3_ProcessEvent(&event); });
     }
 
-    EditorUIPassVulkanImpl::~EditorUIPassVulkanImpl()
+    EditorUIPassImguiVulkanImpl::~EditorUIPassImguiVulkanImpl()
     {
         GfxVulkanDevice *vulkanDevice = static_cast<GfxVulkanDevice *>(Renderer::GetGfxDevice());
         vulkanDevice->WaitIdle();
@@ -43,7 +43,7 @@ namespace RealSix
         vkDestroyDescriptorPool(vulkanDevice->GetLogicDevice(), mDescriptorPool, nullptr);
     }
 
-    void EditorUIPassVulkanImpl::Init()
+    void EditorUIPassImguiVulkanImpl::Init()
     {
         std::vector<VkDescriptorPoolSize> poolSizes = {
             {VK_DESCRIPTOR_TYPE_SAMPLER, 1000},
@@ -135,14 +135,14 @@ namespace RealSix
         // IM_ASSERT(font != NULL);
     }
 
-    void EditorUIPassVulkanImpl::BeginRender()
+    void EditorUIPassImguiVulkanImpl::BeginRender()
     {
         ImGui_ImplSDL3_NewFrame();
         ImGui_ImplVulkan_NewFrame();
         ImGui::NewFrame();
     }
 
-    void EditorUIPassVulkanImpl::EndRender(bool onlyEditorPass)
+    void EditorUIPassImguiVulkanImpl::EndRender(bool onlyEditorPass)
     {
         // Rendering
         ImGui::Render();

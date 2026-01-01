@@ -21,7 +21,10 @@ namespace RealSix
         IGfxBuffer() = default;
         virtual ~IGfxBuffer() = default;
 
-        virtual size_t GetAddress() const = 0;
+        virtual size_t GetGpuAddress() const = 0;
+
+    protected:
+        size_t mGpuAddress{0};
     };
 
     class GfxVertexBuffer

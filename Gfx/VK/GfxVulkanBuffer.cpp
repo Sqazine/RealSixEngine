@@ -41,7 +41,7 @@ namespace RealSix
         VkBufferDeviceAddressInfoKHR bufferAddressInfo{};
         ZeroVulkanStruct(bufferAddressInfo, VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO);
         bufferAddressInfo.buffer = mHandle;
-        mAddress = GetDevice()->vkGetBufferDeviceAddressKHR(GetDevice()->GetLogicDevice(), &bufferAddressInfo);
+        mGpuAddress = GetDevice()->vkGetBufferDeviceAddressKHR(GetDevice()->GetLogicDevice(), &bufferAddressInfo);
     }
 
     GfxVulkanBuffer::~GfxVulkanBuffer()

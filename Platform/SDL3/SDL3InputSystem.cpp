@@ -336,6 +336,14 @@ namespace RealSix
             case SDL_EVENT_QUIT:
                 pWindow->SetEvent(Window::Event::CLOSE);
                 break;
+            case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+                {
+                    if(event.window.windowID == SDL_GetWindowID(static_cast<SDL3Window*>(pWindow)->GetHandle()))
+                    {
+                        pWindow->SetEvent(Window::Event::CLOSE);
+                    }
+                    break;
+                }
             case SDL_EVENT_WINDOW_MINIMIZED:
                 pWindow->SetEvent(Window::Event::MIN);
                 break;
