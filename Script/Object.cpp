@@ -231,12 +231,13 @@ namespace RealSix::Script
 	}
 
 	FunctionObject::FunctionObject()
-		: Object(ObjectKind::FUNCTION), arity(0), upValueCount(0), varArg(VarArg::NONE)
+		: FunctionObject("")
 	{
 	}
 	FunctionObject::FunctionObject(StringView name)
 		: Object(ObjectKind::FUNCTION), arity(0), upValueCount(0), name(name), varArg(VarArg::NONE)
 	{
+		memset(staticValueList, 0, sizeof(StaticValue) * VARIABLE_MAX);
 	}
 
 	String FunctionObject::ToString() const

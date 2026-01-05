@@ -164,6 +164,12 @@ namespace RealSix::Script
         std::unordered_map<String, Value> elements{};
     };
 
+        struct StaticValue
+    {
+        Value value;
+        bool initialized{false};
+    };
+
     struct REALSIX_API FunctionObject : public Object
     {
         FunctionObject();
@@ -189,6 +195,7 @@ namespace RealSix::Script
         VarArg varArg{VarArg::NONE};
         int8_t upValueCount{0};
         Chunk chunk{};
+        StaticValue staticValueList[VARIABLE_MAX]; // For static variables in function scope
     };
 
     struct REALSIX_API UpValueObject : public Object

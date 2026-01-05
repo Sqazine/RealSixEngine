@@ -98,6 +98,5 @@ namespace RealSix::Script
 		SymbolTable *mSymbolTable;
 
 		int64_t mCurBreakStmtAddress, mCurContinueStmtAddress;
-		size_t mStaticVarCount;
 	};
 }

@@ -33,7 +33,7 @@ namespace RealSix::Script
 
         bool IsStatic() const
         {
-            return staticIndex >= 0;
+            return isStatic;
         }
 
         String name;
@@ -44,7 +44,7 @@ namespace RealSix::Script
         FunctionSymbolInfo functionSymInfo;
         UpValue upvalue; // available only while type is SymbolLocation::UPVALUE
         bool isCaptured = false;
-        int16_t staticIndex = -1; // -1 means not static symbol,>=0 means static slot index
+        bool isStatic = false;
         const Token *relatedToken;
     };
 
@@ -66,7 +66,7 @@ namespace RealSix::Script
             SAFE_DELETE(enclosing);
         }
 
-        Symbol Define(const Token *relatedToken, Permission permission, const String &name, const FunctionSymbolInfo &functionInfo = {}, int16_t staticIndex = -1)
+        Symbol Define(const Token *relatedToken, Permission permission, const String &name, const FunctionSymbolInfo &functionInfo = {}, bool isStatic = false)
         {
             if (mSymbolCount >= mSymbols.size())
                 REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Too many symbols in current scope.");
@@ -86,7 +86,7 @@ namespace RealSix::Script
             symbol->functionSymInfo = functionInfo;
             symbol->scopeDepth = mScopeDepth;
             symbol->relatedToken = relatedToken;
-            symbol->staticIndex = staticIndex;
+            symbol->isStatic = isStatic;
 
             if (mScopeDepth == 0)
                 symbol->location = SymbolLocation::GLOBAL;
@@ -194,7 +194,6 @@ namespace RealSix::Script
 
 		mCurContinueStmtAddress = -1;
 		mCurBreakStmtAddress = -1;
-		mStaticVarCount = 0;
 
 		mFunctionList.emplace_back(new FunctionObject(MAIN_ENTRY_FUNCTION_NAME));
 
@@ -956,9 +955,7 @@ namespace RealSix::Script
 			if (symbol.permission == Permission::MUTABLE)
 			{
 				EmitOpCode(setOp, expr->tagToken);
-				if(symbol.IsStatic())
-					Emit(static_cast<uint8_t>(symbol.staticIndex));
-				else if (symbol.location == SymbolLocation::UPVALUE)
+				if (symbol.location == SymbolLocation::UPVALUE)
 					Emit(symbol.upvalue.index);
 				else
 					Emit(symbol.index);
@@ -969,9 +966,7 @@ namespace RealSix::Script
 		else
 		{
 			EmitOpCode(getOp, expr->tagToken);
-			if(symbol.IsStatic())
-				Emit(static_cast<uint8_t>(symbol.staticIndex));
-			else if (symbol.location == SymbolLocation::UPVALUE)
+			if (symbol.location == SymbolLocation::UPVALUE)
 				Emit(symbol.upvalue.index);
 			else
 				Emit(symbol.index);
@@ -1273,12 +1268,12 @@ namespace RealSix::Script
 						token = ((VarArgExpr *)((VarDescExpr *)k)->name)->argName->tagToken;
 					}
 
-					auto symbol = mSymbolTable->Define(token, decl->permission, literal, {}, isStatic?mStaticVarCount++:-1);
+					auto symbol = mSymbolTable->Define(token, decl->permission, literal, {}, isStatic);
 
-					if (isStatic)
+					if (symbol.IsStatic())
 					{
 						EmitOpCode(OP_DEF_STATIC, symbol.relatedToken);
-						Emit(symbol.staticIndex);
+						Emit(symbol.index);
 						EmitOpCode(OP_POP, symbol.relatedToken);
 					}
 					else
