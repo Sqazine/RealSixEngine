@@ -7,151 +7,159 @@
 namespace RealSix::Script
 {
 	enum class SymbolLocation
-	{
-		GLOBAL,
-		LOCAL,
-		UPVALUE,
-	};
+    {
+        GLOBAL,
+        LOCAL,
+        UPVALUE,
+    };
 
-	struct UpValue
-	{
-		uint8_t index = 0;
-		uint8_t location = 0;
-		uint8_t depth = -1;
-	};
+    struct UpValue
+    {
+        uint8_t index = 0;
+        uint8_t location = 0;
+        uint8_t depth = -1;
+    };
 
-	struct FunctionSymbolInfo
-	{
-		int8_t paramCount = -1;
-		VarArg varArg = VarArg::NONE;
-	};
+    struct FunctionSymbolInfo
+    {
+        int8_t paramCount = -1;
+        VarArg varArg = VarArg::NONE;
+    };
 
-	struct Symbol
-	{
-		String name;
-		SymbolLocation location = SymbolLocation::GLOBAL;
-		Permission permission = Permission::IMMUTABLE;
-		uint8_t index = 0;
-		int8_t scopeDepth = -1;
-		FunctionSymbolInfo functionSymInfo;
-		UpValue upvalue; // available only while type is SymbolLocation::UPVALUE
-		bool isCaptured = false;
-		int16_t staticIndex = -1;// -1 means not static symbol,>=0 means static slot index
-		const Token *relatedToken;
-	};
+    struct Symbol
+    {
+        Symbol() = default;
+        ~Symbol() = default;
 
-	class SymbolTable
-	{
-	public:
-		SymbolTable()
-			: mSymbolCount(0), mUpValueCount(0), enclosing(nullptr), mScopeDepth(0), mTableDepth(0)
-		{
-		}
-		SymbolTable(SymbolTable *enclosing)
-			: mSymbolCount(0), mUpValueCount(0), enclosing(enclosing)
-		{
-			mScopeDepth = enclosing->mScopeDepth + 1;
-			mTableDepth = enclosing->mTableDepth + 1;
-		}
-		~SymbolTable()
-		{
-			SAFE_DELETE(enclosing);
-		}
+        bool IsStatic() const
+        {
+            return staticIndex >= 0;
+        }
 
-		Symbol Define(const Token *relatedToken, Permission permission, const String &name, const FunctionSymbolInfo &functionInfo = {}, int16_t staticIndex = -1)
-		{
-			if (mSymbolCount >= mSymbols.size())
-				REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Too many symbols in current scope.");
-			for (int16_t i = mSymbolCount - 1; i >= 0; --i)
-			{
-				auto isSameParamCount = (mSymbols[i].functionSymInfo.paramCount < 0 || functionInfo.paramCount < 0) ? true : mSymbols[i].functionSymInfo.paramCount == functionInfo.paramCount;
-				if (mSymbols[i].scopeDepth == -1 || mSymbols[i].scopeDepth < mScopeDepth)
-					break;
-				if (mSymbols[i].name == name && isSameParamCount)
-					REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Redefinition symbol:{}", name);
-			}
+        String name;
+        SymbolLocation location = SymbolLocation::GLOBAL;
+        Permission permission = Permission::IMMUTABLE;
+        uint8_t index = 0;
+        int8_t scopeDepth = -1;
+        FunctionSymbolInfo functionSymInfo;
+        UpValue upvalue; // available only while type is SymbolLocation::UPVALUE
+        bool isCaptured = false;
+        int16_t staticIndex = -1; // -1 means not static symbol,>=0 means static slot index
+        const Token *relatedToken;
+    };
 
-			auto *symbol = &mSymbols[mSymbolCount++];
-			symbol->name = name;
-			symbol->permission = permission;
-			symbol->index = mSymbolCount - 1;
-			symbol->functionSymInfo = functionInfo;
-			symbol->scopeDepth = mScopeDepth;
-			symbol->relatedToken = relatedToken;
-			symbol->staticIndex = staticIndex;
+    class SymbolTable
+    {
+    public:
+        SymbolTable()
+            : mSymbolCount(0), mUpValueCount(0), enclosing(nullptr), mScopeDepth(0), mTableDepth(0)
+        {
+        }
+        SymbolTable(SymbolTable *enclosing)
+            : mSymbolCount(0), mUpValueCount(0), enclosing(enclosing)
+        {
+            mScopeDepth = enclosing->mScopeDepth + 1;
+            mTableDepth = enclosing->mTableDepth + 1;
+        }
+        ~SymbolTable()
+        {
+            SAFE_DELETE(enclosing);
+        }
 
-			if (mScopeDepth == 0)
-				symbol->location = SymbolLocation::GLOBAL;
-			else
-				symbol->location = SymbolLocation::LOCAL;
-			return *symbol;
-		}
+        Symbol Define(const Token *relatedToken, Permission permission, const String &name, const FunctionSymbolInfo &functionInfo = {}, int16_t staticIndex = -1)
+        {
+            if (mSymbolCount >= mSymbols.size())
+                REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Too many symbols in current scope.");
+            for (int16_t i = mSymbolCount - 1; i >= 0; --i)
+            {
+                auto isSameParamCount = (mSymbols[i].functionSymInfo.paramCount < 0 || functionInfo.paramCount < 0) ? true : mSymbols[i].functionSymInfo.paramCount == functionInfo.paramCount;
+                if (mSymbols[i].scopeDepth == -1 || mSymbols[i].scopeDepth < mScopeDepth)
+                    break;
+                if (mSymbols[i].name == name && isSameParamCount)
+                    REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Redefinition symbol:{}", name);
+            }
 
-		Symbol Resolve(const Token *relatedToken, const String &name, int8_t paramCount = -1, int8_t d = 0)
-		{
+            auto *symbol = &mSymbols[mSymbolCount++];
+            symbol->name = name;
+            symbol->permission = permission;
+            symbol->index = mSymbolCount - 1;
+            symbol->functionSymInfo = functionInfo;
+            symbol->scopeDepth = mScopeDepth;
+            symbol->relatedToken = relatedToken;
+            symbol->staticIndex = staticIndex;
 
-			for (int16_t i = mSymbolCount - 1; i >= 0; --i)
-			{
-				auto isSameParamCount = (mSymbols[i].functionSymInfo.paramCount < 0 || paramCount < 0) ? true : mSymbols[i].functionSymInfo.paramCount == paramCount;
+            if (mScopeDepth == 0)
+                symbol->location = SymbolLocation::GLOBAL;
+            else
+                symbol->location = SymbolLocation::LOCAL;
+            return *symbol;
+        }
 
-				if (mSymbols[i].name == name && mSymbols[i].scopeDepth <= mScopeDepth)
-				{
-					if (isSameParamCount || mSymbols[i].functionSymInfo.varArg > VarArg::NONE)
-					{
-						if (mSymbols[i].scopeDepth == -1)
-							REALSIX_SCRIPT_LOG_ERROR(relatedToken, "symbol not defined yet!");
+        Symbol Resolve(const Token *relatedToken, const String &name, int8_t paramCount = -1, int8_t d = 0)
+        {
 
-						if (d == 1)
-							mSymbols[i].isCaptured = true;
+            for (int16_t i = mSymbolCount - 1; i >= 0; --i)
+            {
+                auto isSameParamCount = (mSymbols[i].functionSymInfo.paramCount < 0 || paramCount < 0) ? true : mSymbols[i].functionSymInfo.paramCount == paramCount;
 
-						return mSymbols[i];
-					}
-				}
-			}
+                if (mSymbols[i].name == name && mSymbols[i].scopeDepth <= mScopeDepth)
+                {
+                    if (isSameParamCount || mSymbols[i].functionSymInfo.varArg > VarArg::NONE)
+                    {
+                        if (mSymbols[i].scopeDepth == -1)
+                            REALSIX_SCRIPT_LOG_ERROR(relatedToken, "symbol not defined yet!");
 
-			if (enclosing)
-			{
-				Symbol result = enclosing->Resolve(relatedToken, name, paramCount, ++d);
-				if (d > 0 && result.location != SymbolLocation::GLOBAL)
-				{
-					result.location = SymbolLocation::UPVALUE;
-					result.upvalue = AddUpValue(relatedToken, result.index, enclosing->mTableDepth);
-				}
-				return result;
-			}
+                        if (d == 1)
+                            mSymbols[i].isCaptured = true;
 
-			REALSIX_SCRIPT_LOG_ERROR(relatedToken, "No symbol: \"{}\" in current scope.", name);
-			return Symbol(); // Return an empty symbol, this should never be reached
-		}
+                        return mSymbols[i];
+                    }
+                }
+            }
 
-		std::array<Symbol, UINT8_COUNT> mSymbols;
-		uint8_t mSymbolCount;
-		std::array<UpValue, UINT8_COUNT> mUpValues;
-		int32_t mUpValueCount;
-		uint8_t mScopeDepth; // Depth of scope nesting(related to code {} scope)
-		SymbolTable *enclosing;
+            if (enclosing)
+            {
+                Symbol result = enclosing->Resolve(relatedToken, name, paramCount, ++d);
+                if (d > 0 && result.location != SymbolLocation::GLOBAL)
+                {
+                    result.location = SymbolLocation::UPVALUE;
+                    result.upvalue = AddUpValue(relatedToken, result.index, enclosing->mTableDepth);
+                }
+                return result;
+            }
 
-	private:
-		UpValue AddUpValue(const Token *relatedToken, uint8_t location, uint8_t depth)
-		{
-			for (int32_t i = 0; i < mUpValueCount; ++i)
-			{
-				UpValue *upvalue = &mUpValues[i];
-				if (upvalue->location == location && upvalue->depth == depth)
-					return *upvalue;
-			}
+            REALSIX_SCRIPT_LOG_ERROR(relatedToken, "No symbol: \"{}\" in current scope.", name);
+            return Symbol(); // Return an empty symbol, this should never be reached
+        }
 
-			if (mUpValueCount == UINT8_COUNT)
-				REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Too many closure upvalues in function.");
-			mUpValues[mUpValueCount].location = location;
-			mUpValues[mUpValueCount].depth = depth;
-			mUpValues[mUpValueCount].index = mUpValueCount;
-			mUpValueCount++;
-			return mUpValues[mUpValueCount - 1];
-		}
-		uint8_t mTableDepth; // Depth of symbol table nesting(related to symboltable's enclosing)
-	};
+        std::array<Symbol, UINT8_COUNT> mSymbols;
+        uint8_t mSymbolCount;
+        std::array<UpValue, UINT8_COUNT> mUpValues;
+        int32_t mUpValueCount;
+        uint8_t mScopeDepth; // Depth of scope nesting(related to code {} scope)
+        SymbolTable *enclosing;
 
+    private:
+        UpValue AddUpValue(const Token *relatedToken, uint8_t location, uint8_t depth)
+        {
+            for (int32_t i = 0; i < mUpValueCount; ++i)
+            {
+                UpValue *upvalue = &mUpValues[i];
+                if (upvalue->location == location && upvalue->depth == depth)
+                    return *upvalue;
+            }
+
+            if (mUpValueCount == UINT8_COUNT)
+                REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Too many closure upvalues in function.");
+            mUpValues[mUpValueCount].location = location;
+            mUpValues[mUpValueCount].depth = depth;
+            mUpValues[mUpValueCount].index = mUpValueCount;
+            mUpValueCount++;
+            return mUpValues[mUpValueCount - 1];
+        }
+        uint8_t mTableDepth; // Depth of symbol table nesting(related to symboltable's enclosing)
+    };
+	
 	Compiler::Compiler()
 		: mSymbolTable(nullptr)
 	{
@@ -919,7 +927,7 @@ namespace RealSix::Script
 		OpCode getOp, setOp;
 		auto symbol = mSymbolTable->Resolve(expr->tagToken, expr->literal, paramCount);
 
-		if (symbol.staticIndex >= 0)
+		if (symbol.IsStatic())
 		{
 			getOp = OP_GET_STATIC;
 			setOp = OP_SET_STATIC;
@@ -948,7 +956,7 @@ namespace RealSix::Script
 			if (symbol.permission == Permission::MUTABLE)
 			{
 				EmitOpCode(setOp, expr->tagToken);
-				if(symbol.staticIndex >= 0)
+				if(symbol.IsStatic())
 					Emit(static_cast<uint8_t>(symbol.staticIndex));
 				else if (symbol.location == SymbolLocation::UPVALUE)
 					Emit(symbol.upvalue.index);
@@ -961,7 +969,7 @@ namespace RealSix::Script
 		else
 		{
 			EmitOpCode(getOp, expr->tagToken);
-			if(symbol.staticIndex >= 0)
+			if(symbol.IsStatic())
 				Emit(static_cast<uint8_t>(symbol.staticIndex));
 			else if (symbol.location == SymbolLocation::UPVALUE)
 				Emit(symbol.upvalue.index);

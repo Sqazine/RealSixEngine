@@ -2,7 +2,6 @@
 #include "Chunk.hpp"
 #include "Ast.hpp"
 #include "Object.hpp"
-#include "Common.hpp"
 #include "Core/Common.hpp"
 namespace RealSix::Script
 {
