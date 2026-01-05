@@ -11,7 +11,7 @@ namespace RealSix::Script
     {
     public:
         void Init();
-        void Destroy();
+        void CleanUp();
 
         void RegisterLibrary(ModuleObject *libraryClass);
         const std::vector<ModuleObject *> &GetLibraries() const;

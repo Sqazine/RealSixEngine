@@ -3,7 +3,6 @@
 #include <vector>
 #include "Chunk.hpp"
 #include "Object.hpp"
-#include "LibraryManager.hpp"
 namespace RealSix::Script
 {
     class REALSIX_API VM

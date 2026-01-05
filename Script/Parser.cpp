@@ -1,5 +1,4 @@
 #include "Parser.hpp"
-#include "LibraryManager.hpp"
 #include "Common.hpp"
 #include "Logger.hpp"
 namespace RealSix::Script

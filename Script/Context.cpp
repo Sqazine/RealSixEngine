@@ -15,9 +15,9 @@ namespace RealSix::Script
             Allocator::GetInstance().SetGlobalValue(i, lib);
         }
     }
-    void Context::Destroy()
+    void Context::CleanUp()
     {
-        LibraryManager::GetInstance().Destroy();
-        Allocator::GetInstance().Destroy();
+        LibraryManager::GetInstance().CleanUp();
+        Allocator::GetInstance().CleanUp();
     }
 }

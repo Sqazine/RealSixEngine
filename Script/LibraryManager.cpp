@@ -249,7 +249,7 @@ namespace RealSix::Script
         mLibraries.emplace_back(timeModule);
     }
 
-    void LibraryManager::Destroy()
+    void LibraryManager::CleanUp()
     {
         mLibraries.clear();
     }

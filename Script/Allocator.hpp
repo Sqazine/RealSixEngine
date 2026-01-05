@@ -27,7 +27,7 @@ namespace RealSix::Script
     {
     public:
         void Init();
-        void Destroy();
+        void CleanUp();
 
         void ResetStackPointer();
         void ResetCallFramePointer();

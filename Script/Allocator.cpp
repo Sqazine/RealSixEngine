@@ -21,7 +21,7 @@ namespace RealSix::Script
         memset(mGlobalValueList, 0, sizeof(Value) * VARIABLE_MAX);
     }
 
-    void Allocator::Destroy()
+    void Allocator::CleanUp()
     {
         FreeObjects();
     }

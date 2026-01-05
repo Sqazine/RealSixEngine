@@ -5,7 +5,6 @@
 #include <fstream>
 #include <sstream>
 #include "Allocator.hpp"
-#include "LibraryManager.hpp"
 #include "Resource/FileSystem.hpp"
 #include "Core/Logger.hpp"
 #include "Core/Marco.hpp"

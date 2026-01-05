@@ -193,7 +193,7 @@ int32_t main(int32_t argc, const char *argv[])
 	SAFE_DELETE(gCompiler);
 	SAFE_DELETE(gVm);
 
-	Script::Context::GetInstance().Destroy();
+	Script::Context::GetInstance().CleanUp();
 
 	return EXIT_SUCCESS;
 }
