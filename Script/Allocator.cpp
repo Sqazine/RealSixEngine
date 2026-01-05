@@ -19,8 +19,7 @@ namespace RealSix::Script
         mOpenUpValues = nullptr;
 
         memset(mGlobalValueList, 0, sizeof(Value) * VARIABLE_MAX);
-        memset(mStaticValueList, 0, sizeof(Value) * VARIABLE_MAX);
-        memset(mStaticValueInitializedList, 0, sizeof(bool) * VARIABLE_MAX);
+        memset(mStaticValueList, 0, sizeof(StaticValue) * VARIABLE_MAX);
     }
 
     void Allocator::Destroy()
@@ -171,7 +170,7 @@ namespace RealSix::Script
         mGlobalValueList[idx] = v;
     }
 
-    Value *Allocator::GetStaticValueReference(size_t idx)
+    StaticValue *Allocator::GetStaticValueReference(size_t idx)
     {
         return &mStaticValueList[idx];
     }

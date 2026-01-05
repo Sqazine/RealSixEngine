@@ -223,12 +223,11 @@ namespace RealSix::Script
 				auto pos = READ_INS();
 				auto v = PEEK_STACK(0);
 				auto staticValue = GET_STATIC_VALUE_REFERENCE(pos);
-				bool &staticValueInitizlied = GET_STATIC_VALUE_INITIALIZED(pos);
 
-				if (!staticValueInitizlied)
+				if (!staticValue->initialized)
 				{
-					staticValueInitizlied = true;
-					*staticValue = v;
+					staticValue->initialized = true;
+					staticValue->value = v;
 				}
 				break;
 			}
@@ -239,15 +238,16 @@ namespace RealSix::Script
 				auto v = PEEK_STACK(0);
 
 				auto staticValue = GET_STATIC_VALUE_REFERENCE(pos);
-				staticValue = GetEndOfRefValuePtr(staticValue);
-				*staticValue = v;
+				Value* valuePtr = &(staticValue->value);
+				valuePtr = GetEndOfRefValuePtr(valuePtr);
+				*valuePtr = v;
 				break;
 			}
 			case OP_GET_STATIC:
 			{
 				OUTPUT_OPCODE_LOCATION();
 				auto pos = READ_INS();
-				PUSH_STACK(*GET_STATIC_VALUE_REFERENCE(pos));
+				PUSH_STACK(GET_STATIC_VALUE_REFERENCE(pos)->value);
 				break;
 			}
 			case OP_SET_LOCAL:
