@@ -66,7 +66,7 @@ namespace RealSix::Script
 		void CompileFactorialExpr(FactorialExpr *expr, const RWState &state = RWState::READ);
 
 		Symbol CompileFunction(FunctionDecl *decl, ClassDecl::FunctionKind kind = ClassDecl::FunctionKind::NONE);
-		uint32_t CompileVars(VarDecl *decl, bool IsInClassOrModuleScope,bool isStatic = false);
+		uint32_t CompileVars(VarDecl *decl,bool isStatic = false);
 		Symbol CompileClass(ClassDecl *decl);
 
 		uint64_t EmitOpCode(OpCode opCode, const Token *token);

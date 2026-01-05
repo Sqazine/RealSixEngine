@@ -51,12 +51,9 @@ namespace RealSix::Script
     class SymbolTable
     {
     public:
-        SymbolTable()
-            : mSymbolCount(0), mUpValueCount(0), enclosing(nullptr), mScopeDepth(0), mTableDepth(0)
-        {
-        }
-        SymbolTable(SymbolTable *enclosing)
-            : mSymbolCount(0), mUpValueCount(0), enclosing(enclosing)
+        SymbolTable() = default;
+        SymbolTable(SymbolTable *enclosing,bool isClassOrModuleScope = false)
+            : enclosing(enclosing), mIsClassOrModuleScope(isClassOrModuleScope)
         {
             mScopeDepth = enclosing->mScopeDepth + 1;
             mTableDepth = enclosing->mTableDepth + 1;
@@ -97,7 +94,6 @@ namespace RealSix::Script
 
         Symbol Resolve(const Token *relatedToken, const String &name, int8_t paramCount = -1, int8_t d = 0)
         {
-
             for (int16_t i = mSymbolCount - 1; i >= 0; --i)
             {
                 auto isSameParamCount = (mSymbols[i].functionSymInfo.paramCount < 0 || paramCount < 0) ? true : mSymbols[i].functionSymInfo.paramCount == paramCount;
@@ -133,11 +129,12 @@ namespace RealSix::Script
         }
 
         std::array<Symbol, UINT8_COUNT> mSymbols;
-        uint8_t mSymbolCount;
+        uint8_t mSymbolCount{0};
         std::array<UpValue, UINT8_COUNT> mUpValues;
-        int32_t mUpValueCount;
-        uint8_t mScopeDepth; // Depth of scope nesting(related to code {} scope)
-        SymbolTable *enclosing;
+        int32_t mUpValueCount{0};
+        uint8_t mScopeDepth{0}; // Depth of scope nesting(related to code {} scope)
+        SymbolTable *enclosing{nullptr};
+		bool mIsClassOrModuleScope{false};
 
     private:
         UpValue AddUpValue(const Token *relatedToken, uint8_t location, uint8_t depth)
@@ -231,7 +228,7 @@ namespace RealSix::Script
 	}
 	void Compiler::CompileVarDecl(VarDecl *decl, bool isStatic)
 	{
-		CompileVars(decl, false, isStatic);
+		CompileVars(decl, isStatic);
 	}
 
 	void Compiler::CompileFunctionDecl(FunctionDecl *decl)
@@ -284,7 +281,7 @@ namespace RealSix::Script
 
 		mFunctionList.emplace_back(new FunctionObject(decl->name->literal));
 
-		mSymbolTable = new SymbolTable(mSymbolTable);
+		mSymbolTable = new SymbolTable(mSymbolTable,true);
 
 		mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, "");
 
@@ -322,13 +319,13 @@ namespace RealSix::Script
 		for (const auto &varStmt : decl->varItems)
 		{
 			if (varStmt->permission == Permission::IMMUTABLE)
-				constCount += CompileVars(varStmt, true);
+				constCount += CompileVars(varStmt);
 		}
 
 		for (const auto &varStmt : decl->varItems)
 		{
 			if (varStmt->permission == Permission::MUTABLE)
-				varCount += CompileVars(varStmt, true);
+				varCount += CompileVars(varStmt);
 		}
 
 		EmitConstant(new StrObject(symbol.name), symbol.relatedToken);
@@ -1168,7 +1165,7 @@ namespace RealSix::Script
 		return functionSymbol;
 	}
 
-	uint32_t Compiler::CompileVars(VarDecl *decl, bool IsInClassOrModuleScope, bool isStatic)
+	uint32_t Compiler::CompileVars(VarDecl *decl, bool isStatic)
 	{
 		uint32_t varCount = 0;
 
@@ -1233,7 +1230,7 @@ namespace RealSix::Script
 							Emit(symbol.index);
 							EmitOpCode(OP_POP, symbol.relatedToken);
 						}
-						else if (IsInClassOrModuleScope)
+						else if (mSymbolTable->mIsClassOrModuleScope)
 						{
 							EmitConstant(new StrObject(literal), token);
 						}
@@ -1243,7 +1240,7 @@ namespace RealSix::Script
 					CurOpCodeList()[appregateOpCodeAddress] = appregateOpCode;
 					CurOpCodeList()[resolveAddress] = resolveCount;
 
-					if (IsInClassOrModuleScope)
+					if (mSymbolTable->mIsClassOrModuleScope)
 					{
 						EmitOpCode(OP_INIT_VAR_ARG, decl->tagToken);
 						Emit(varCount);
@@ -1285,7 +1282,7 @@ namespace RealSix::Script
 							Emit(symbol.index);
 							EmitOpCode(OP_POP, symbol.relatedToken);
 						}
-						else if (IsInClassOrModuleScope)
+						else if (mSymbolTable->mIsClassOrModuleScope)
 						{
 							EmitConstant(new StrObject(literal), token);
 						}
@@ -1311,7 +1308,7 @@ namespace RealSix::Script
 		auto symbol = mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, decl->name);
 
 		mFunctionList.emplace_back(new FunctionObject(decl->name));
-		mSymbolTable = new SymbolTable(mSymbolTable);
+		mSymbolTable = new SymbolTable(mSymbolTable, true);
 
 		mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, "");
 
@@ -1343,13 +1340,13 @@ namespace RealSix::Script
 		for (const auto &varMember : decl->constants)
 		{
 			auto varDecl = varMember.second;
-			constCount += CompileVars(varDecl, true);
+			constCount += CompileVars(varDecl);
 		}
 
 		for (const auto &varMember : decl->variables)
 		{
 			auto varDecl = varMember.second;
-			varCount += CompileVars(varDecl, true);
+			varCount += CompileVars(varDecl);
 		}
 
 		for (const auto &parent : decl->parents)
