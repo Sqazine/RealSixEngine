@@ -79,7 +79,7 @@ namespace RealSix::Script
             auto *symbol = &mSymbols[mSymbolCount++];
             symbol->name = name;
             symbol->permission = permission;
-            symbol->index = mSymbolCount - 1;
+            symbol->index = isStatic? mStaticSymbolCount++ : mSymbolCount - 1;
             symbol->functionSymInfo = functionInfo;
             symbol->scopeDepth = mScopeDepth;
             symbol->relatedToken = relatedToken;
@@ -155,6 +155,7 @@ namespace RealSix::Script
             return mUpValues[mUpValueCount - 1];
         }
         uint8_t mTableDepth; // Depth of symbol table nesting(related to symboltable's enclosing)
+		uint8_t mStaticSymbolCount{0};
     };
 	
 	Compiler::Compiler()
