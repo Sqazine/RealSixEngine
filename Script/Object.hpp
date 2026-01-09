@@ -195,7 +195,7 @@ namespace RealSix::Script
         VarArg varArg{VarArg::NONE};
         int8_t upValueCount{0};
         Chunk chunk{};
-        StaticValue staticValueList[VARIABLE_MAX]; // For static variables in function scope
+        StaticValue staticValueList[STATIC_VARIABLE_MAX]; // For static variables in function scope
     };
 
     struct REALSIX_API UpValueObject : public Object

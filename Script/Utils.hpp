@@ -8,6 +8,7 @@
 
 #define STACK_MAX 1024
 #define VARIABLE_MAX 512
+#define STATIC_VARIABLE_MAX 64
 
 #define UINT8_COUNT (UINT8_MAX + 1)
 

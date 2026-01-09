@@ -9,8 +9,8 @@ namespace RealSix::Script
     class AstPass;
     template <typename T>
     concept IsChildOfAstPass = !std::is_same_v<T, void> &&
-                                       !std::is_abstract_v<T> &&
-                                       std::is_base_of_v<AstPass, T>;
+                               !std::is_abstract_v<T> &&
+                               std::is_base_of_v<AstPass, T>;
 
     class REALSIX_API AstPass
     {
@@ -69,6 +69,8 @@ namespace RealSix::Script
                 return ExecuteClassDecl((ClassDecl *)decl);
             case AstKind::MODULE:
                 return ExecuteModuleDecl((ModuleDecl *)decl);
+            case AstKind::STATIC:
+                return ExecuteStaticDecl((StaticDecl *)decl);
             default:
                 return decl;
             }
@@ -80,6 +82,11 @@ namespace RealSix::Script
         virtual Stmt *ExecuteFunctionDecl(FunctionDecl *decl) { return decl; }
         virtual Stmt *ExecuteModuleDecl(ModuleDecl *decl) { return decl; }
         virtual Stmt *ExecuteClassDecl(ClassDecl *decl) { return decl; }
+        virtual Stmt *ExecuteStaticDecl(StaticDecl *decl)
+        {
+            decl->body = ExecuteDecl(decl->body);
+            return decl;
+        }
 
         virtual Stmt *ExecuteExprStmt(ExprStmt *stmt) { return stmt; }
         virtual Stmt *ExecuteReturnStmt(ReturnStmt *stmt) { return stmt; }
@@ -198,9 +205,9 @@ namespace RealSix::Script
             return this;
         }
 
-        Stmt* Execute(Stmt *stmt)
+        Stmt *Execute(Stmt *stmt)
         {
-            Stmt* result = stmt;
+            Stmt *result = stmt;
             for (auto &pass : mPasses)
                 pass->Execute(result);
             return result;

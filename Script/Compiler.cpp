@@ -284,49 +284,47 @@ namespace RealSix::Script
 
 		mSymbolTable = new SymbolTable(mSymbolTable,true);
 
-		mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, "");
-
 		uint8_t constCount = 0;
 		uint8_t varCount = 0;
 
-		for (const auto &enumStmt : decl->enumItems)
+		for (const auto &enumDecl : decl->enumItems)
 		{
-			CompileEnumDecl(enumStmt);
-			EmitConstant(new StrObject(enumStmt->name->literal), enumStmt->tagToken);
+			CompileEnumDecl(enumDecl);
+			EmitConstant(new StrObject(enumDecl->name->literal), enumDecl->tagToken);
 			constCount++;
 		}
 
-		for (const auto &fnStmt : decl->functionItems)
+		for (const auto &fnDecl : decl->functionItems)
 		{
-			CompileFunctionDecl(fnStmt);
-			EmitConstant(new StrObject(fnStmt->name->literal), fnStmt->tagToken);
+			CompileFunctionDecl(fnDecl);
+			EmitConstant(new StrObject(fnDecl->name->literal), fnDecl->tagToken);
 			constCount++;
 		}
 
-		for (const auto &classStmt : decl->classItems)
+		for (const auto &classDecl : decl->classItems)
 		{
-			CompileClassDecl(classStmt);
-			EmitConstant(new StrObject(classStmt->name), classStmt->tagToken);
+			CompileClassDecl(classDecl);
+			EmitConstant(new StrObject(classDecl->name), classDecl->tagToken);
 			constCount++;
 		}
 
-		for (const auto &moduleStmt : decl->moduleItems)
+		for (const auto &moduleDecl : decl->moduleItems)
 		{
-			CompileModuleDecl(moduleStmt);
-			EmitConstant(new StrObject(moduleStmt->name->literal), moduleStmt->tagToken);
+			CompileModuleDecl(moduleDecl);
+			EmitConstant(new StrObject(moduleDecl->name->literal), moduleDecl->tagToken);
 			constCount++;
 		}
 
-		for (const auto &varStmt : decl->varItems)
+		for (const auto &varDecl : decl->varItems)
 		{
-			if (varStmt->permission == Permission::IMMUTABLE)
-				constCount += CompileVars(varStmt);
+			if (varDecl->permission == Permission::IMMUTABLE)
+				constCount += CompileVars(varDecl);
 		}
 
-		for (const auto &varStmt : decl->varItems)
+		for (const auto &varDecl : decl->varItems)
 		{
-			if (varStmt->permission == Permission::MUTABLE)
-				varCount += CompileVars(varStmt);
+			if (varDecl->permission == Permission::MUTABLE)
+				varCount += CompileVars(varDecl);
 		}
 
 		EmitConstant(new StrObject(symbol.name), symbol.relatedToken);
@@ -1310,8 +1308,6 @@ namespace RealSix::Script
 
 		mFunctionList.emplace_back(new FunctionObject(decl->name));
 		mSymbolTable = new SymbolTable(mSymbolTable, true);
-
-		mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, "");
 
 		uint8_t enumCount = 0;
 		uint8_t fnCount = 0;

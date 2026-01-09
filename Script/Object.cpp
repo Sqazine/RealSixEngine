@@ -237,7 +237,7 @@ namespace RealSix::Script
 	FunctionObject::FunctionObject(StringView name)
 		: Object(ObjectKind::FUNCTION), arity(0), upValueCount(0), name(name), varArg(VarArg::NONE)
 	{
-		memset(staticValueList, 0, sizeof(StaticValue) * VARIABLE_MAX);
+		memset(staticValueList, 0, sizeof(StaticValue) * STATIC_VARIABLE_MAX);
 	}
 
 	String FunctionObject::ToString() const
