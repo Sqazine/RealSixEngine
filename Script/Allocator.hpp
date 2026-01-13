@@ -23,6 +23,12 @@ namespace RealSix::Script
         // -- Function cache relative
     };
 
+      struct StaticValue
+    {
+        Value value;
+        bool initialized{false};
+    };
+
     class REALSIX_API Allocator : public Singleton<Allocator>
     {
     public:
@@ -79,6 +85,8 @@ namespace RealSix::Script
 
         Value *GetGlobalValueReference(size_t idx);
         void SetGlobalValue(size_t idx, const Value &v);
+
+        StaticValue *GetStaticValueReference(size_t idx);
     private:
         friend class VM;
         friend class Compiler;
@@ -106,6 +114,7 @@ namespace RealSix::Script
         void Sweep();
 
         Value mGlobalValueList[VARIABLE_MAX];
+        StaticValue mStaticValueList[VARIABLE_MAX]; 
 
         Value *mStackTop;
         Value mValueStack[STACK_MAX];
@@ -124,6 +133,8 @@ namespace RealSix::Script
     };
 
 #define GET_GLOBAL_VALUE_REFERENCE(idx) (Allocator::GetInstance().GetGlobalValueReference(idx))
+
+#define GET_STATIC_VALUE_REFERENCE(idx) (Allocator::GetInstance().GetStaticValueReference(idx))
 
 #define PUSH_STACK(v) (Allocator::GetInstance().PushStack(v))
 #define POP_STACK() (Allocator::GetInstance().PopStack())

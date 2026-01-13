@@ -578,7 +578,8 @@ namespace RealSix::Script
 				   const std::vector<ClassDecl *> &classItems,
 				   const std::vector<ModuleDecl *> &moduleItems,
 				   const std::vector<EnumDecl *> &enumItems,
-				   const std::vector<FunctionDecl *> &functionItems);
+				   const std::vector<FunctionDecl *> &functionItems,
+				   const std::vector<StaticDecl *> &sttaticItems);
 		~ModuleDecl() override;
 
 #ifndef NDEBUG
@@ -591,5 +592,6 @@ namespace RealSix::Script
 		std::vector<ModuleDecl *> moduleItems;
 		std::vector<EnumDecl *> enumItems;
 		std::vector<FunctionDecl *> functionItems;
+		std::vector<StaticDecl *> staticItems;
 	};
 }

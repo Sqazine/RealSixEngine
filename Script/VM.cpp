@@ -222,7 +222,7 @@ namespace RealSix::Script
 				OUTPUT_OPCODE_LOCATION();
 				auto pos = READ_INS();
 				auto v = PEEK_STACK(0);
-				auto staticValue = &frame->closure->function->staticValueList[pos];
+				auto staticValue = GET_STATIC_VALUE_REFERENCE(pos);
 
 				if (!staticValue->initialized)
 				{
@@ -237,8 +237,8 @@ namespace RealSix::Script
 				auto pos = READ_INS();
 				auto v = PEEK_STACK(0);
 
-				auto staticValue =&frame->closure->function->staticValueList[pos];
-				Value* valuePtr = &(staticValue->value);
+				auto staticValue = GET_STATIC_VALUE_REFERENCE(pos);
+				Value *valuePtr = &(staticValue->value);
 				valuePtr = GetEndOfRefValuePtr(valuePtr);
 				*valuePtr = v;
 				break;
@@ -247,7 +247,7 @@ namespace RealSix::Script
 			{
 				OUTPUT_OPCODE_LOCATION();
 				auto pos = READ_INS();
-				PUSH_STACK(frame->closure->function->staticValueList[pos].value);
+				PUSH_STACK(GET_STATIC_VALUE_REFERENCE(pos)->value);
 				break;
 			}
 			case OP_SET_LOCAL:
@@ -382,7 +382,7 @@ namespace RealSix::Script
 			{
 				OUTPUT_OPCODE_LOCATION();
 				Value value;
-				GetActualValueIfIsRefValue(POP_STACK(),value);
+				GetActualValueIfIsRefValue(POP_STACK(), value);
 				if (!IS_BOOL_VALUE(value))
 					REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Invalid op:!{}, only bool type is available.", value.ToString());
 				PUSH_STACK(!TO_BOOL_VALUE(value));
@@ -402,8 +402,8 @@ namespace RealSix::Script
 			{
 				OUTPUT_OPCODE_LOCATION();
 				Value value;
-				GetActualValueIfIsRefValue(POP_STACK(),value);
-				
+				GetActualValueIfIsRefValue(POP_STACK(), value);
+
 				if (IS_INT_VALUE(value))
 					PUSH_STACK(-TO_INT_VALUE(value));
 				else if (IS_FLOAT_VALUE(value))
@@ -417,8 +417,8 @@ namespace RealSix::Script
 				OUTPUT_OPCODE_LOCATION();
 
 				Value value;
-				GetActualValueIfIsRefValue(POP_STACK(),value);
-				
+				GetActualValueIfIsRefValue(POP_STACK(), value);
+
 				if (IS_INT_VALUE(value))
 					PUSH_STACK(Factorial(TO_INT_VALUE(value)));
 				else
@@ -834,7 +834,7 @@ namespace RealSix::Script
 			{
 				OUTPUT_OPCODE_LOCATION();
 				Value peekValue;
-				GetActualValueIfIsRefValue(PEEK_STACK(1),peekValue);
+				GetActualValueIfIsRefValue(PEEK_STACK(1), peekValue);
 
 				auto propName = TO_STR_VALUE(POP_STACK())->value;
 
@@ -900,9 +900,9 @@ namespace RealSix::Script
 			case OP_SET_PROPERTY:
 			{
 				OUTPUT_OPCODE_LOCATION();
-				
+
 				Value peekValue;
-				GetActualValueIfIsRefValue(PEEK_STACK(1),peekValue);
+				GetActualValueIfIsRefValue(PEEK_STACK(1), peekValue);
 
 				auto propName = TO_STR_VALUE(POP_STACK())->value;
 				if (IS_CLASS_VALUE(peekValue))
@@ -1082,6 +1082,9 @@ namespace RealSix::Script
 
 				auto varCount = READ_INS();
 				auto constCount = READ_INS();
+
+				auto staticVarCount = READ_INS();
+				auto staticConstCount = READ_INS();
 
 				auto moduleObj = Allocator::GetInstance().CreateObject<ModuleObject>();
 				moduleObj->name = nameStr;

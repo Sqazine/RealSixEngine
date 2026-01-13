@@ -7,157 +7,159 @@
 namespace RealSix::Script
 {
 	enum class SymbolLocation
-    {
-        GLOBAL,
-        LOCAL,
-        UPVALUE,
-    };
+	{
+		GLOBAL,
+		LOCAL,
+		UPVALUE,
+	};
 
-    struct UpValue
-    {
-        uint8_t index = 0;
-        uint8_t location = 0;
-        uint8_t depth = -1;
-    };
+	struct UpValue
+	{
+		uint8_t index = 0;
+		uint8_t location = 0;
+		uint8_t depth = -1;
+	};
 
-    struct FunctionSymbolInfo
-    {
-        int8_t paramCount = -1;
-        VarArg varArg = VarArg::NONE;
-    };
+	struct FunctionSymbolInfo
+	{
+		int8_t paramCount = -1;
+		VarArg varArg = VarArg::NONE;
+	};
 
-    struct Symbol
-    {
-        Symbol() = default;
-        ~Symbol() = default;
+	struct Symbol
+	{
+		Symbol() = default;
+		~Symbol() = default;
 
-        bool IsStatic() const
-        {
-            return isStatic;
-        }
+		bool IsStatic() const
+		{
+			return isStatic;
+		}
 
-        String name;
-        SymbolLocation location = SymbolLocation::GLOBAL;
-        Permission permission = Permission::IMMUTABLE;
-        uint8_t index = 0;
-        int8_t scopeDepth = -1;
-        FunctionSymbolInfo functionSymInfo;
-        UpValue upvalue; // available only while type is SymbolLocation::UPVALUE
-        bool isCaptured = false;
-        bool isStatic = false;
-        const Token *relatedToken;
-    };
+		String name;
+		SymbolLocation location = SymbolLocation::GLOBAL;
+		Permission permission = Permission::IMMUTABLE;
+		uint8_t index = 0;
+		int8_t scopeDepth = -1;
+		FunctionSymbolInfo functionSymInfo;
+		UpValue upvalue; // available only while type is SymbolLocation::UPVALUE
+		bool isCaptured = false;
+		bool isStatic = false;
+		const Token *relatedToken;
+	};
 
-    class SymbolTable
-    {
-    public:
-        SymbolTable() = default;
-        SymbolTable(SymbolTable *enclosing,bool isClassOrModuleScope = false)
-            : enclosing(enclosing), mIsClassOrModuleScope(isClassOrModuleScope)
-        {
-            mScopeDepth = enclosing->mScopeDepth + 1;
-            mTableDepth = enclosing->mTableDepth + 1;
-        }
-        ~SymbolTable()
-        {
-            SAFE_DELETE(enclosing);
-        }
+	class SymbolTable
+	{
+	public:
+		SymbolTable(StringView name) : mName(name) {}
+		SymbolTable(StringView name, SymbolTable *parent, bool isClassOrModuleScope = false)
+			: mName(name), mParent(parent), mIsClassOrModuleScope(isClassOrModuleScope)
+		{
+			mScopeDepth = parent->mScopeDepth + 1;
+			mTableDepth = parent->mTableDepth + 1;
+		}
+		~SymbolTable()
+		{
+			SAFE_DELETE(mParent);
+		}
 
-        Symbol Define(const Token *relatedToken, Permission permission, const String &name, const FunctionSymbolInfo &functionInfo = {}, bool isStatic = false)
-        {
-            if (mSymbolCount >= mSymbols.size())
-                REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Too many symbols in current scope.");
-            for (int16_t i = mSymbolCount - 1; i >= 0; --i)
-            {
-                auto isSameParamCount = (mSymbols[i].functionSymInfo.paramCount < 0 || functionInfo.paramCount < 0) ? true : mSymbols[i].functionSymInfo.paramCount == functionInfo.paramCount;
-                if (mSymbols[i].scopeDepth == -1 || mSymbols[i].scopeDepth < mScopeDepth)
-                    break;
-                if (mSymbols[i].name == name && isSameParamCount)
-                    REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Redefinition symbol:{}", name);
-            }
+		Symbol Define(const Token *relatedToken, Permission permission, const String &name, const FunctionSymbolInfo &functionInfo = {}, bool isStatic = false)
+		{
+			if (mSymbolCount >= mSymbols.size())
+				REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Too many symbols in current scope.");
+			for (int16_t i = mSymbolCount - 1; i >= 0; --i)
+			{
+				auto isSameParamCount = (mSymbols[i].functionSymInfo.paramCount < 0 || functionInfo.paramCount < 0) ? true : mSymbols[i].functionSymInfo.paramCount == functionInfo.paramCount;
+				if (mSymbols[i].scopeDepth == -1 || mSymbols[i].scopeDepth < mScopeDepth)
+					break;
+				if (mSymbols[i].name == name && isSameParamCount)
+					REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Redefinition symbol:{}", name);
+			}
 
-            auto *symbol = &mSymbols[mSymbolCount++];
-            symbol->name = name;
-            symbol->permission = permission;
-            symbol->index = isStatic? mStaticSymbolCount++ : mSymbolCount - 1;
-            symbol->functionSymInfo = functionInfo;
-            symbol->scopeDepth = mScopeDepth;
-            symbol->relatedToken = relatedToken;
-            symbol->isStatic = isStatic;
+			auto *symbol = &mSymbols[mSymbolCount++];
+			symbol->name = name;
+			symbol->permission = permission;
+			symbol->index = isStatic ? mStaticSymbolCount++ : mSymbolCount - 1;
+			symbol->functionSymInfo = functionInfo;
+			symbol->scopeDepth = mScopeDepth;
+			symbol->relatedToken = relatedToken;
+			symbol->isStatic = isStatic;
 
-            if (mScopeDepth == 0)
-                symbol->location = SymbolLocation::GLOBAL;
-            else
-                symbol->location = SymbolLocation::LOCAL;
-            return *symbol;
-        }
+			if (mScopeDepth == 0)
+				symbol->location = SymbolLocation::GLOBAL;
+			else
+				symbol->location = SymbolLocation::LOCAL;
+			return *symbol;
+		}
 
-        Symbol Resolve(const Token *relatedToken, const String &name, int8_t paramCount = -1, int8_t d = 0)
-        {
-            for (int16_t i = mSymbolCount - 1; i >= 0; --i)
-            {
-                auto isSameParamCount = (mSymbols[i].functionSymInfo.paramCount < 0 || paramCount < 0) ? true : mSymbols[i].functionSymInfo.paramCount == paramCount;
+		Symbol Resolve(const Token *relatedToken, const String &name, int8_t paramCount = -1, int8_t d = 0)
+		{
+			for (int16_t i = mSymbolCount - 1; i >= 0; --i)
+			{
+				auto isSameParamCount = (mSymbols[i].functionSymInfo.paramCount < 0 || paramCount < 0) ? true : mSymbols[i].functionSymInfo.paramCount == paramCount;
 
-                if (mSymbols[i].name == name && mSymbols[i].scopeDepth <= mScopeDepth)
-                {
-                    if (isSameParamCount || mSymbols[i].functionSymInfo.varArg > VarArg::NONE)
-                    {
-                        if (mSymbols[i].scopeDepth == -1)
-                            REALSIX_SCRIPT_LOG_ERROR(relatedToken, "symbol not defined yet!");
+				if (mSymbols[i].name == name && mSymbols[i].scopeDepth <= mScopeDepth)
+				{
+					if (isSameParamCount || mSymbols[i].functionSymInfo.varArg > VarArg::NONE)
+					{
+						if (mSymbols[i].scopeDepth == -1)
+							REALSIX_SCRIPT_LOG_ERROR(relatedToken, "symbol not defined yet!");
 
-                        if (d == 1)
-                            mSymbols[i].isCaptured = true;
+						if (d == 1)
+							mSymbols[i].isCaptured = true;
 
-                        return mSymbols[i];
-                    }
-                }
-            }
+						return mSymbols[i];
+					}
+				}
+			}
 
-            if (enclosing)
-            {
-                Symbol result = enclosing->Resolve(relatedToken, name, paramCount, ++d);
-                if (d > 0 && result.location != SymbolLocation::GLOBAL)
-                {
-                    result.location = SymbolLocation::UPVALUE;
-                    result.upvalue = AddUpValue(relatedToken, result.index, enclosing->mTableDepth);
-                }
-                return result;
-            }
+			if (mParent)
+			{
+				Symbol result = mParent->Resolve(relatedToken, name, paramCount, ++d);
+				if (d > 0 && result.location != SymbolLocation::GLOBAL)
+				{
+					result.location = SymbolLocation::UPVALUE;
+					result.upvalue = AddUpValue(relatedToken, result.index, mParent->mTableDepth);
+				}
+				return result;
+			}
 
-            REALSIX_SCRIPT_LOG_ERROR(relatedToken, "No symbol: \"{}\" in current scope.", name);
-            return Symbol(); // Return an empty symbol, this should never be reached
-        }
+			REALSIX_SCRIPT_LOG_ERROR(relatedToken, "No symbol: \"{}\" in current scope.", name);
+			return Symbol(); // Return an empty symbol, this should never be reached
+		}
 
-        std::array<Symbol, UINT8_COUNT> mSymbols;
-        uint8_t mSymbolCount{0};
-        std::array<UpValue, UINT8_COUNT> mUpValues;
-        int32_t mUpValueCount{0};
-        uint8_t mScopeDepth{0}; // Depth of scope nesting(related to code {} scope)
-        SymbolTable *enclosing{nullptr};
+		StringView mName;
+		std::array<Symbol, UINT8_COUNT> mSymbols;
+		uint8_t mSymbolCount{0};
+		std::array<UpValue, UINT8_COUNT> mUpValues;
+		int32_t mUpValueCount{0};
+		uint8_t mScopeDepth{0}; // Depth of scope nesting(related to code {} scope)
+		SymbolTable *mParent{nullptr};
 		bool mIsClassOrModuleScope{false};
 
-    private:
-        UpValue AddUpValue(const Token *relatedToken, uint8_t location, uint8_t depth)
-        {
-            for (int32_t i = 0; i < mUpValueCount; ++i)
-            {
-                UpValue *upvalue = &mUpValues[i];
-                if (upvalue->location == location && upvalue->depth == depth)
-                    return *upvalue;
-            }
+	private:
+		UpValue AddUpValue(const Token *relatedToken, uint8_t location, uint8_t depth)
+		{
+			for (int32_t i = 0; i < mUpValueCount; ++i)
+			{
+				UpValue *upvalue = &mUpValues[i];
+				if (upvalue->location == location && upvalue->depth == depth)
+					return *upvalue;
+			}
 
-            if (mUpValueCount == UINT8_COUNT)
-                REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Too many closure upvalues in function.");
-            mUpValues[mUpValueCount].location = location;
-            mUpValues[mUpValueCount].depth = depth;
-            mUpValues[mUpValueCount].index = mUpValueCount;
-            mUpValueCount++;
-            return mUpValues[mUpValueCount - 1];
-        }
-        uint8_t mTableDepth; // Depth of symbol table nesting(related to symboltable's enclosing)
-		uint8_t mStaticSymbolCount{0};
-    };
-	
+			if (mUpValueCount == UINT8_COUNT)
+				REALSIX_SCRIPT_LOG_ERROR(relatedToken, "Too many closure upvalues in function.");
+			mUpValues[mUpValueCount].location = location;
+			mUpValues[mUpValueCount].depth = depth;
+			mUpValues[mUpValueCount].index = mUpValueCount;
+			mUpValueCount++;
+			return mUpValues[mUpValueCount - 1];
+		}
+		uint8_t mTableDepth; // Depth of symbol table nesting(related to symboltable's parent)
+
+		static inline uint16_t mStaticSymbolCount{0};
+	};
+
 	Compiler::Compiler()
 		: mSymbolTable(nullptr)
 	{
@@ -195,7 +197,7 @@ namespace RealSix::Script
 
 		mFunctionList.emplace_back(new FunctionObject(MAIN_ENTRY_FUNCTION_NAME));
 
-		mSymbolTable = new SymbolTable();
+		mSymbolTable = new SymbolTable(MAIN_ENTRY_FUNCTION_NAME);
 		for (const auto &lib : LibraryManager::GetInstance().GetLibraries())
 			mSymbolTable->Define(nullptr, Permission::IMMUTABLE, lib->name);
 	}
@@ -280,12 +282,14 @@ namespace RealSix::Script
 	{
 		auto symbol = mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, decl->name->literal);
 
-		mFunctionList.emplace_back(new FunctionObject(decl->name->literal));
+		mFunctionList.emplace_back(new FunctionObject(symbol.name));
 
-		mSymbolTable = new SymbolTable(mSymbolTable,true);
+		mSymbolTable = new SymbolTable(symbol.name, mSymbolTable, true);
 
 		uint8_t constCount = 0;
 		uint8_t varCount = 0;
+		uint8_t staticConstCount = 0;
+		uint8_t staticVarCount = 0;
 
 		for (const auto &enumDecl : decl->enumItems)
 		{
@@ -327,11 +331,33 @@ namespace RealSix::Script
 				varCount += CompileVars(varDecl);
 		}
 
+		for (const auto &staticDecl : decl->staticItems)
+		{
+			if (staticDecl->body->kind == AstKind::VAR)
+			{
+				auto varDecl = (VarDecl *)staticDecl->body;
+				if (varDecl->permission == Permission::IMMUTABLE)
+					staticConstCount += CompileVars(varDecl, true);
+			}
+		}
+
+		for (const auto &staticDecl : decl->staticItems)
+		{
+			if (staticDecl->body->kind == AstKind::VAR)
+			{
+				auto varDecl = (VarDecl *)staticDecl->body;
+				if (varDecl->permission == Permission::MUTABLE)
+					staticVarCount += CompileVars(varDecl, true);
+			}
+		}
+
 		EmitConstant(new StrObject(symbol.name), symbol.relatedToken);
 
 		EmitOpCode(OP_MODULE, decl->tagToken);
 		Emit(varCount);
 		Emit(constCount);
+		Emit(staticConstCount);
+		Emit(staticVarCount);
 
 		EmitReturn(1, decl->tagToken);
 
@@ -348,7 +374,8 @@ namespace RealSix::Script
 		EmitOpCode(OP_CALL, decl->tagToken);
 		Emit(mSymbolTable->mSymbolCount);
 
-		mSymbolTable = mSymbolTable->enclosing;
+		mLegacySymbolTables.emplace_back(mSymbolTable);
+		mSymbolTable = mSymbolTable->mParent;
 
 		EmitSymbol(symbol);
 	}
@@ -971,7 +998,7 @@ namespace RealSix::Script
 	void Compiler::CompileLambdaExpr(LambdaExpr *expr)
 	{
 		mFunctionList.emplace_back(new FunctionObject());
-		mSymbolTable = new SymbolTable(mSymbolTable);
+		mSymbolTable = new SymbolTable("", mSymbolTable);
 
 		mSymbolTable->Define(expr->tagToken, Permission::IMMUTABLE, "");
 
@@ -1000,7 +1027,8 @@ namespace RealSix::Script
 		if (CurChunk().opCodes[CurChunk().opCodes.size() - 2] != OP_RETURN)
 			EmitReturn(0, expr->body->stmts.back()->tagToken);
 
-		mSymbolTable = mSymbolTable->enclosing;
+		mLegacySymbolTables.emplace_back(mSymbolTable);
+		mSymbolTable = mSymbolTable->mParent;
 
 		auto function = mFunctionList.back();
 		mFunctionList.pop_back();
@@ -1027,12 +1055,41 @@ namespace RealSix::Script
 	}
 	void Compiler::CompileDotExpr(DotExpr *expr, const RWState &state)
 	{
-		CompileExpr(expr->callee);
-		EmitConstant(new StrObject(expr->callMember->literal), expr->callee->tagToken);
-		if (state == RWState::WRITE)
-			EmitOpCode(OP_SET_PROPERTY, expr->callMember->tagToken);
-		else
-			EmitOpCode(OP_GET_PROPERTY, expr->callMember->tagToken);
+		bool isSatisfied = false;
+		if (expr->callee->kind == AstKind::IDENTIFIER)
+		{
+			auto symbolTable = GetLegacySymbolTable(((IdentifierExpr *)expr->callee)->literal);
+			if (symbolTable)
+			{
+				Symbol symbol = symbolTable->Resolve(expr->callMember->tagToken, expr->callMember->ToString());
+
+				if (symbol.IsStatic())
+				{
+					isSatisfied = true;
+					if (state == RWState::WRITE)
+					{
+						EmitOpCode(OP_SET_STATIC, expr->callMember->tagToken);
+						Emit(symbol.index);
+					}
+					else
+					{
+						EmitOpCode(OP_GET_STATIC, expr->callMember->tagToken);
+						Emit(symbol.index);
+					}
+				}
+			}
+		}
+
+		if (!isSatisfied)
+		{
+			CompileExpr(expr->callee);
+			EmitConstant(new StrObject(expr->callMember->literal), expr->callee->tagToken);
+
+			if (state == RWState::WRITE)
+				EmitOpCode(OP_SET_PROPERTY, expr->callMember->tagToken);
+			else
+				EmitOpCode(OP_GET_PROPERTY, expr->callMember->tagToken);
+		}
 	}
 	void Compiler::CompileRefExpr(RefExpr *expr)
 	{
@@ -1109,8 +1166,8 @@ namespace RealSix::Script
 
 		auto functionSymbol = mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, decl->name->literal, FunctionSymbolInfo{(int8_t)decl->parameters.size(), varArg});
 
-		mFunctionList.emplace_back(new FunctionObject(decl->name->literal));
-		mSymbolTable = new SymbolTable(mSymbolTable);
+		mFunctionList.emplace_back(new FunctionObject(functionSymbol.name));
+		mSymbolTable = new SymbolTable(functionSymbol.name,mSymbolTable);
 
 		String symbolName = decl->name->literal;
 		if (kind == ClassDecl::FunctionKind::MEMBER || kind == ClassDecl::FunctionKind::CONSTRUCTOR)
@@ -1148,7 +1205,8 @@ namespace RealSix::Script
 
 		auto upvalues = mSymbolTable->mUpValues;
 
-		mSymbolTable = mSymbolTable->enclosing;
+		mLegacySymbolTables.emplace_back(mSymbolTable);
+		mSymbolTable = mSymbolTable->mParent;
 
 		auto function = mFunctionList.back();
 		mFunctionList.pop_back();
@@ -1192,7 +1250,7 @@ namespace RealSix::Script
 
 					int32_t resolveCount = 0;
 
-					if (mSymbolTable->enclosing == nullptr && mSymbolTable->mScopeDepth > 0) // local scope
+					if (mSymbolTable->mParent == nullptr && mSymbolTable->mScopeDepth > 0) // local scope
 						std::reverse(arrayExpr->elements.begin(), arrayExpr->elements.end());
 
 					for (int32_t i = 0; i < arrayExpr->elements.size(); ++i)
@@ -1306,8 +1364,8 @@ namespace RealSix::Script
 	{
 		auto symbol = mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, decl->name);
 
-		mFunctionList.emplace_back(new FunctionObject(decl->name));
-		mSymbolTable = new SymbolTable(mSymbolTable, true);
+		mFunctionList.emplace_back(new FunctionObject(symbol.name));
+		mSymbolTable = new SymbolTable(symbol.name, mSymbolTable, true);
 
 		uint8_t enumCount = 0;
 		uint8_t fnCount = 0;
@@ -1375,7 +1433,8 @@ namespace RealSix::Script
 
 		EmitReturn(1, decl->tagToken);
 
-		mSymbolTable = mSymbolTable->enclosing;
+		mLegacySymbolTables.emplace_back(mSymbolTable);
+		mSymbolTable = mSymbolTable->mParent;
 
 		auto function = mFunctionList.back();
 		mFunctionList.pop_back();
@@ -1491,6 +1550,16 @@ namespace RealSix::Script
 				symbol->location = SymbolLocation::GLOBAL; // mark as global to avoid second pop
 			}
 		}
+	}
+
+	SymbolTable *Compiler::GetLegacySymbolTable(StringView name)
+	{
+		for (auto table : mLegacySymbolTables)
+		{
+			if (table->mName == name)
+				return table;
+		}
+		return nullptr;
 	}
 
 	Chunk &Compiler::CurChunk()

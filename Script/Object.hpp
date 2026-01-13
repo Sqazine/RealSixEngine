@@ -164,12 +164,6 @@ namespace RealSix::Script
         std::unordered_map<String, Value> elements{};
     };
 
-        struct StaticValue
-    {
-        Value value;
-        bool initialized{false};
-    };
-
     struct REALSIX_API FunctionObject : public Object
     {
         FunctionObject();
@@ -195,7 +189,6 @@ namespace RealSix::Script
         VarArg varArg{VarArg::NONE};
         int8_t upValueCount{0};
         Chunk chunk{};
-        StaticValue staticValueList[STATIC_VARIABLE_MAX]; // For static variables in function scope
     };
 
     struct REALSIX_API UpValueObject : public Object
@@ -289,7 +282,7 @@ namespace RealSix::Script
         bool IsEqualTo(Object *other) override;
         std::vector<uint8_t> Serialize() const override;
 
-        Value receiver{};//ClassObject or ClassInstanceObject
+        Value receiver{}; //ClassObject or ClassInstanceObject
         ClosureObject *closure{nullptr};
     };
 
@@ -313,7 +306,7 @@ namespace RealSix::Script
     struct REALSIX_API ModuleObject : public Object
     {
         ModuleObject();
-        ModuleObject(const String &name, const std::unordered_map<String, Value> &members={});
+        ModuleObject(const String &name, const std::unordered_map<String, Value> &members = {});
         ~ModuleObject() override = default;
 
         String ToString() const override;

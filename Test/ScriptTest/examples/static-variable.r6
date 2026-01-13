@@ -9,3 +9,12 @@ Test();// 1
 Test();// 2
 Test();// 3
 Test();// 4
+
+module A
+{
+    static let a = 10;
+}
+
+io.println(A.a);//10
+A.a=20;
+io.println(A.a);//20

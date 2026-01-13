@@ -84,6 +84,8 @@ namespace RealSix::Script
 		void EnterScope();
 		void ExitScope();
 
+		SymbolTable * GetLegacySymbolTable(StringView name);
+		
 		Chunk &CurChunk();
 		FunctionObject *CurFunction();
 		OpCodeList &CurOpCodeList();
@@ -97,6 +99,7 @@ namespace RealSix::Script
 		std::vector<FunctionObject *> mFunctionList;
 		SymbolTable *mSymbolTable;
 
+		std::vector<SymbolTable *> mLegacySymbolTables;;
 		int64_t mCurBreakStmtAddress, mCurContinueStmtAddress;
 	};
 }

@@ -767,13 +767,15 @@ namespace RealSix::Script
 						   const std::vector<ClassDecl *> &classItems,
 						   const std::vector<ModuleDecl *> &moduleItems,
 						   const std::vector<EnumDecl *> &enumItems,
-						   const std::vector<FunctionDecl *> &functionItems)
+						   const std::vector<FunctionDecl *> &functionItems,
+						   const std::vector<StaticDecl *> &staticItems )
 		: Stmt(tagToken, AstKind::MODULE), name(name),
 		  varItems(varItems),
 		  classItems(classItems),
 		  moduleItems(moduleItems),
 		  enumItems(enumItems),
-		  functionItems(functionItems)
+		  functionItems(functionItems),
+		  staticItems(staticItems)
 	{
 	}
 	ModuleDecl::~ModuleDecl()
@@ -784,6 +786,7 @@ namespace RealSix::Script
 		std::vector<ModuleDecl *>().swap(moduleItems);
 		std::vector<EnumDecl *>().swap(enumItems);
 		std::vector<FunctionDecl *>().swap(functionItems);
+		std::vector<StaticDecl *>().swap(staticItems);
 	}
 #ifndef NDEBUG
 	String ModuleDecl::ToString()
@@ -843,7 +846,7 @@ namespace RealSix::Script
 	ClassDecl::ClassDecl(Token *tagToken,
 						 String name,
 						 const std::vector<std::pair<MemberPrivilege, IdentifierExpr *>> &parents,
-						  const std::vector<std::pair<MemberPrivilege, StaticDecl *>> &statics,
+						 const std::vector<std::pair<MemberPrivilege, StaticDecl *>> &statics,
 						 const std::vector<std::pair<MemberPrivilege, VarDecl *>> &variables,
 						 const std::vector<std::pair<MemberPrivilege, FunctionMember>> &functions,
 						 const std::vector<std::pair<MemberPrivilege, EnumDecl *>> &enumerations)

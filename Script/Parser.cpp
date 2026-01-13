@@ -406,8 +406,11 @@ namespace RealSix::Script
 			case TokenKind::MODULE:
 				moduleDecl->moduleItems.emplace_back((ModuleDecl *)ParseModuleDecl());
 				break;
+			case TokenKind::STATIC:
+				moduleDecl->staticItems.emplace_back((StaticDecl *)ParseStaticDecl());
+				break;
 			default:
-				REALSIX_SCRIPT_LOG_ERROR(GetCurToken(), "Only let,const,function,class,enum and module is available in module scope");
+				REALSIX_SCRIPT_LOG_ERROR(GetCurToken(), "Only let,const,function,class,enum,static and module is available in module scope");
 			}
 		}
 

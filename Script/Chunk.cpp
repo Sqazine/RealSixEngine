@@ -246,10 +246,12 @@ namespace RealSix::Script
 				auto tok = opCodeRelatedTokens[opcodes[++i]];
 				auto varCount = opcodes[++i];
 				auto constCount = opcodes[++i];
+				auto staticVarCount = opcodes[++i];
+				auto staticConstCount = opcodes[++i];
 				auto tokStr = tok->ToString();
 				String tokGap(maxTokenShowSize - tokStr.Size(), ' ');
 				tokStr += tokGap;
-				stream << tokStr << std::setfill('0') << std::setw(8) << i << "\tOP_MODULE\t" << static_cast<int32_t>(varCount) << "\t" << static_cast<int32_t>(constCount) << std::endl;
+				stream << tokStr << std::setfill('0') << std::setw(8) << i << "\tOP_MODULE\t" << static_cast<int32_t>(varCount) << "\t" << static_cast<int32_t>(constCount) << "\t" << static_cast<int32_t>(staticVarCount) << "\t" << static_cast<int32_t>(staticConstCount) << std::endl;
 				break;
 			}
 			default:
