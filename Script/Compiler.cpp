@@ -10,6 +10,8 @@ namespace RealSix::Script
 	{
 		GLOBAL,
 		LOCAL,
+		GLOBAL_STATIC,
+		LOCAL_STATIC,
 		UPVALUE,
 	};
 
@@ -33,7 +35,7 @@ namespace RealSix::Script
 
 		bool IsStatic() const
 		{
-			return isStatic;
+			return location == SymbolLocation::GLOBAL_STATIC || location == SymbolLocation::LOCAL_STATIC;
 		}
 
 		String name;
@@ -44,14 +46,16 @@ namespace RealSix::Script
 		FunctionSymbolInfo functionSymInfo;
 		UpValue upvalue; // available only while type is SymbolLocation::UPVALUE
 		bool isCaptured = false;
-		bool isStatic = false;
 		const Token *relatedToken;
 	};
 
 	class SymbolTable
 	{
 	public:
-		SymbolTable(StringView name) : mName(name) {}
+		SymbolTable(StringView name) : mName(name)
+		{
+			mStaticSymbolCount = 0;
+		}
 		SymbolTable(StringView name, SymbolTable *parent, bool isClassOrModuleScope = false)
 			: mName(name), mParent(parent), mIsClassOrModuleScope(isClassOrModuleScope)
 		{
@@ -83,12 +87,11 @@ namespace RealSix::Script
 			symbol->functionSymInfo = functionInfo;
 			symbol->scopeDepth = mScopeDepth;
 			symbol->relatedToken = relatedToken;
-			symbol->isStatic = isStatic;
 
 			if (mScopeDepth == 0)
-				symbol->location = SymbolLocation::GLOBAL;
+				symbol->location = isStatic ? SymbolLocation::GLOBAL_STATIC : SymbolLocation::GLOBAL;
 			else
-				symbol->location = SymbolLocation::LOCAL;
+				symbol->location = isStatic ? SymbolLocation::LOCAL_STATIC : SymbolLocation::LOCAL;
 			return *symbol;
 		}
 
@@ -157,7 +160,7 @@ namespace RealSix::Script
 		}
 		uint8_t mTableDepth; // Depth of symbol table nesting(related to symboltable's parent)
 
-		static inline uint16_t mStaticSymbolCount{0};
+		static inline uint8_t mStaticSymbolCount{0};
 	};
 
 	Compiler::Compiler()
@@ -197,7 +200,8 @@ namespace RealSix::Script
 
 		mFunctionList.emplace_back(new FunctionObject(MAIN_ENTRY_FUNCTION_NAME));
 
-		mSymbolTable = new SymbolTable(MAIN_ENTRY_FUNCTION_NAME);
+		EnterNewSymbolTable(MAIN_ENTRY_FUNCTION_NAME);
+
 		for (const auto &lib : LibraryManager::GetInstance().GetLibraries())
 			mSymbolTable->Define(nullptr, Permission::IMMUTABLE, lib->name);
 	}
@@ -284,7 +288,7 @@ namespace RealSix::Script
 
 		mFunctionList.emplace_back(new FunctionObject(symbol.name));
 
-		mSymbolTable = new SymbolTable(symbol.name, mSymbolTable, true);
+		EnterNewSymbolTable(symbol.name, true);
 
 		uint8_t constCount = 0;
 		uint8_t varCount = 0;
@@ -361,7 +365,7 @@ namespace RealSix::Script
 
 		EmitReturn(1, decl->tagToken);
 
-		auto function = mFunctionList.back();
+		auto function = CurFunction();
 		function->arity = mSymbolTable->mSymbolCount;
 
 		mFunctionList.pop_back();
@@ -374,8 +378,7 @@ namespace RealSix::Script
 		EmitOpCode(OP_CALL, decl->tagToken);
 		Emit(mSymbolTable->mSymbolCount);
 
-		mLegacySymbolTables.emplace_back(mSymbolTable);
-		mSymbolTable = mSymbolTable->mParent;
+		PopupSymbolTable();
 
 		EmitSymbol(symbol);
 	}
@@ -998,7 +1001,8 @@ namespace RealSix::Script
 	void Compiler::CompileLambdaExpr(LambdaExpr *expr)
 	{
 		mFunctionList.emplace_back(new FunctionObject());
-		mSymbolTable = new SymbolTable("", mSymbolTable);
+
+		EnterNewSymbolTable("");
 
 		mSymbolTable->Define(expr->tagToken, Permission::IMMUTABLE, "");
 
@@ -1027,10 +1031,9 @@ namespace RealSix::Script
 		if (CurChunk().opCodes[CurChunk().opCodes.size() - 2] != OP_RETURN)
 			EmitReturn(0, expr->body->stmts.back()->tagToken);
 
-		mLegacySymbolTables.emplace_back(mSymbolTable);
-		mSymbolTable = mSymbolTable->mParent;
+		PopupSymbolTable();
 
-		auto function = mFunctionList.back();
+		auto function = CurFunction();
 		mFunctionList.pop_back();
 
 		EmitClosure(function, expr->tagToken);
@@ -1167,7 +1170,8 @@ namespace RealSix::Script
 		auto functionSymbol = mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, decl->name->literal, FunctionSymbolInfo{(int8_t)decl->parameters.size(), varArg});
 
 		mFunctionList.emplace_back(new FunctionObject(functionSymbol.name));
-		mSymbolTable = new SymbolTable(functionSymbol.name,mSymbolTable);
+
+		EnterNewSymbolTable(functionSymbol.name);
 
 		String symbolName = decl->name->literal;
 		if (kind == ClassDecl::FunctionKind::MEMBER || kind == ClassDecl::FunctionKind::CONSTRUCTOR)
@@ -1201,14 +1205,13 @@ namespace RealSix::Script
 			EmitReturn(1, decl->tagToken);
 		}
 
-		mFunctionList.back()->upValueCount = mSymbolTable->mUpValueCount;
+		CurFunction()->upValueCount = mSymbolTable->mUpValueCount;
 
 		auto upvalues = mSymbolTable->mUpValues;
 
-		mLegacySymbolTables.emplace_back(mSymbolTable);
-		mSymbolTable = mSymbolTable->mParent;
+		PopupSymbolTable();
 
-		auto function = mFunctionList.back();
+		auto function = CurFunction();
 		mFunctionList.pop_back();
 
 		EmitClosure(function, decl->tagToken);
@@ -1332,7 +1335,6 @@ namespace RealSix::Script
 					}
 					else
 					{
-
 						if (symbol.location == SymbolLocation::GLOBAL)
 						{
 							EmitOpCode(OP_SET_GLOBAL, symbol.relatedToken);
@@ -1365,7 +1367,8 @@ namespace RealSix::Script
 		auto symbol = mSymbolTable->Define(decl->tagToken, Permission::IMMUTABLE, decl->name);
 
 		mFunctionList.emplace_back(new FunctionObject(symbol.name));
-		mSymbolTable = new SymbolTable(symbol.name, mSymbolTable, true);
+
+		EnterNewSymbolTable(symbol.name, true);
 
 		uint8_t enumCount = 0;
 		uint8_t fnCount = 0;
@@ -1433,10 +1436,9 @@ namespace RealSix::Script
 
 		EmitReturn(1, decl->tagToken);
 
-		mLegacySymbolTables.emplace_back(mSymbolTable);
-		mSymbolTable = mSymbolTable->mParent;
+		PopupSymbolTable();
 
-		auto function = mFunctionList.back();
+		auto function = CurFunction();
 		mFunctionList.pop_back();
 
 		EmitClosure(function, decl->tagToken);
@@ -1796,5 +1798,18 @@ namespace RealSix::Script
 	{
 		SAFE_DELETE(mSymbolTable);
 		std::vector<FunctionObject *>().swap(mFunctionList);
+	}
+
+	void Compiler::EnterNewSymbolTable(StringView name, bool isClassOrModuleScope)
+	{
+		if (mSymbolTable)
+			mSymbolTable = new SymbolTable(name, mSymbolTable, isClassOrModuleScope);
+		else
+			mSymbolTable = new SymbolTable(name);
+	}
+	void Compiler::PopupSymbolTable()
+	{
+		mLegacySymbolTables.emplace_back(mSymbolTable);
+		mSymbolTable = mSymbolTable->mParent;
 	}
 }

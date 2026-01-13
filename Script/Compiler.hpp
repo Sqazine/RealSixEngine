@@ -96,10 +96,13 @@ namespace RealSix::Script
 
 		void ClearStatus();
 
+		void EnterNewSymbolTable(StringView name,bool isClassOrModuleScope = false);
+		void PopupSymbolTable();
+
 		std::vector<FunctionObject *> mFunctionList;
 		SymbolTable *mSymbolTable;
 
-		std::vector<SymbolTable *> mLegacySymbolTables;;
+		std::vector<SymbolTable *> mLegacySymbolTables;
 		int64_t mCurBreakStmtAddress, mCurContinueStmtAddress;
 	};
 }
