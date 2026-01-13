@@ -25,7 +25,7 @@ namespace RealSix
         StaticMesh* mStaticMeshPtr;
         IGfxTexture* mColorTexture;
         std::unique_ptr<GfxUniformBuffer> mMeshUniformDataBuffer;
-        std::unique_ptr<IGfxRasterShader> mShader;
+        std::unique_ptr<IGfxVertexRasterShader> mShader;
         std::unique_ptr<IGfxRasterPipeline> mRasterPipeline;
     };
 

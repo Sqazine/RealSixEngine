@@ -22,7 +22,7 @@ namespace RealSix
     {
         VkPipelineVertexInputStateCreateInfo vertexState;
         ZeroVulkanStruct(vertexState, VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO);
- 
+
         VkVertexInputBindingDescription vertexInputBindingState = GetVulkanVertexInputBindingDescription(mPipelineStateDesc.vertexBinding);
         std::vector<VkVertexInputAttributeDescription> vertexAttributes = GetVulkanVertexInputAttributeDescriptions(mPipelineStateDesc.vertexBinding);
         if (mPipelineStateDesc.vertexBinding != GfxVertexInputBinding::Default())
@@ -107,13 +107,17 @@ namespace RealSix
         pipelineRendering.depthAttachmentFormat = ToVkFormat(mPipelineStateDesc.depthAttachment->texture->GetDesc().format);
         pipelineRendering.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
 
-        auto rawShader = static_cast<GfxVulkanRasterShader *>(static_cast<IGfxShader *>(mPipelineStateDesc.shader));
+        GfxVulkanShader *rawShader = dynamic_cast<GfxVulkanShader *>(static_cast<IGfxShader *>(mPipelineStateDesc.shader));
+
+        std::vector<VkPipelineShaderStageCreateInfo> stages;
+        if (auto vertexRasterShader = static_cast<GfxVulkanVertexRasterShader*>(rawShader))
+            stages = vertexRasterShader->GetPipelineShaderStageInfoList();
 
         VkGraphicsPipelineCreateInfo pipelineInfo;
         ZeroVulkanStruct(pipelineInfo, VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO);
         pipelineInfo.pNext = &pipelineRendering;
-        pipelineInfo.stageCount = rawShader->GetPipelineShaderStageInfoList().size();
-        pipelineInfo.pStages = rawShader->GetPipelineShaderStageInfoList().data();
+        pipelineInfo.stageCount = stages.size();
+        pipelineInfo.pStages = stages.data();
         pipelineInfo.pVertexInputState = &vertexState;
         pipelineInfo.pInputAssemblyState = &inputAssemblyState;
         pipelineInfo.pViewportState = &viewportState;

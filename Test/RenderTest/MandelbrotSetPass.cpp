@@ -36,7 +36,7 @@ namespace RealSix
 
         auto vertShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "ScreenSpaceQuad.vert.slang");
         auto fragShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "MandelbrotSetDrawPass.frag.slang");
-        mRasterShader.reset(IGfxRasterShader::Create(Renderer::GetGfxDevice()));
+        mRasterShader.reset(IGfxVertexRasterShader::Create(Renderer::GetGfxDevice()));
         mRasterShader->SetVertexShader(vertShaderContent);
         mRasterShader->SetFragmentShader(fragShaderContent);
         mRasterShader->Build();

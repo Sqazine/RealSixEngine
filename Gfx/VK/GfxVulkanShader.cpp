@@ -323,62 +323,62 @@ namespace RealSix
         }
     }
 
-    GfxVulkanRasterShader::GfxVulkanRasterShader(IGfxDevice *device)
+    GfxVulkanVertexRasterShader::GfxVulkanVertexRasterShader(IGfxDevice *device)
         : GfxVulkanShader(device)
     {
     }
 
-    GfxVulkanRasterShader::~GfxVulkanRasterShader()
+    GfxVulkanVertexRasterShader::~GfxVulkanVertexRasterShader()
     {
     }
-    IGfxShader *GfxVulkanRasterShader::BindBuffer(StringView name, const IGfxBuffer *buffer)
+    IGfxShader *GfxVulkanVertexRasterShader::BindBuffer(StringView name, const IGfxBuffer *buffer)
     {
         BindBufferImpl(name, buffer);
         return this;
     }
-    IGfxShader *GfxVulkanRasterShader::BindTexture(StringView name, const IGfxTexture *texture)
+    IGfxShader *GfxVulkanVertexRasterShader::BindTexture(StringView name, const IGfxTexture *texture)
     {
         BindTextureImpl(name, texture);
         return this;
     }
 
-    const std::vector<VkPipelineShaderStageCreateInfo> &GfxVulkanRasterShader::GetPipelineShaderStageInfoList() const
+    const std::vector<VkPipelineShaderStageCreateInfo> &GfxVulkanVertexRasterShader::GetPipelineShaderStageInfoList() const
     {
         return mPipelineShaderStageCreateInfos;
     }
 
-    IGfxShader *GfxVulkanRasterShader::Build()
+    IGfxShader *GfxVulkanVertexRasterShader::Build()
     {
         mPipelineShaderStageCreateInfos.clear();
 
-        if (!mShaderSources[RasterShaderSlot::Vertex].Empty())
+        if (!mShaderSources[static_cast<uint8_t>(Slot::Vertex)].Empty())
         {
-            mShaderModules[RasterShaderSlot::Vertex] = std::make_unique<GfxVulkanShaderModule>(mDevice, mShaderSources[RasterShaderSlot::Vertex], "main", mMarcos);
-            mPipelineShaderStageCreateInfos.emplace_back(mShaderModules[RasterShaderSlot::Vertex]->GetPipelineShaderStageInfo());
+            mShaderModules[static_cast<uint8_t>(Slot::Vertex)] = std::make_unique<GfxVulkanShaderModule>(mDevice, mShaderSources[static_cast<uint8_t>(Slot::Vertex)], "main", mMarcos);
+            mPipelineShaderStageCreateInfos.emplace_back(mShaderModules[static_cast<uint8_t>(Slot::Vertex)]->GetPipelineShaderStageInfo());
         }
 
-        if (!mShaderSources[RasterShaderSlot::Fragment].Empty())
+        if (!mShaderSources[static_cast<uint8_t>(Slot::Fragment)].Empty())
         {
-            mShaderModules[RasterShaderSlot::Fragment] = std::make_unique<GfxVulkanShaderModule>(mDevice, mShaderSources[RasterShaderSlot::Fragment], "main", mMarcos);
-            mPipelineShaderStageCreateInfos.emplace_back(mShaderModules[RasterShaderSlot::Fragment]->GetPipelineShaderStageInfo());
+            mShaderModules[static_cast<uint8_t>(Slot::Fragment)] = std::make_unique<GfxVulkanShaderModule>(mDevice, mShaderSources[static_cast<uint8_t>(Slot::Fragment)], "main", mMarcos);
+            mPipelineShaderStageCreateInfos.emplace_back(mShaderModules[static_cast<uint8_t>(Slot::Fragment)]->GetPipelineShaderStageInfo());
         }
 
-        if (!mShaderSources[RasterShaderSlot::TessellationControl].Empty())
+        if (!mShaderSources[static_cast<uint8_t>(Slot::TessellationControl)].Empty())
         {
-            mShaderModules[RasterShaderSlot::TessellationControl] = std::make_unique<GfxVulkanShaderModule>(mDevice, mShaderSources[RasterShaderSlot::TessellationControl], "main", mMarcos);
-            mPipelineShaderStageCreateInfos.emplace_back(mShaderModules[RasterShaderSlot::TessellationControl]->GetPipelineShaderStageInfo());
+            mShaderModules[static_cast<uint8_t>(Slot::TessellationControl)] = std::make_unique<GfxVulkanShaderModule>(mDevice, mShaderSources[static_cast<uint8_t>(Slot::TessellationControl)], "main", mMarcos);
+            mPipelineShaderStageCreateInfos.emplace_back(mShaderModules[static_cast<uint8_t>(Slot::TessellationControl)]->GetPipelineShaderStageInfo());
         }
 
-        if (!mShaderSources[RasterShaderSlot::TessellationEvaluation].Empty())
+        if (!mShaderSources[static_cast<uint8_t>(Slot::TessellationEvaluation)].Empty())
         {
-            mShaderModules[RasterShaderSlot::TessellationEvaluation] = std::make_unique<GfxVulkanShaderModule>(mDevice, mShaderSources[RasterShaderSlot::TessellationEvaluation], "main", mMarcos);
-            mPipelineShaderStageCreateInfos.emplace_back(mShaderModules[RasterShaderSlot::TessellationEvaluation]->GetPipelineShaderStageInfo());
+            mShaderModules[static_cast<uint8_t>(Slot::TessellationEvaluation)] = std::make_unique<GfxVulkanShaderModule>(mDevice, mShaderSources[static_cast<uint8_t>(Slot::TessellationEvaluation)], "main", mMarcos);
+            mPipelineShaderStageCreateInfos.emplace_back(mShaderModules[static_cast<uint8_t>(Slot::TessellationEvaluation)]->GetPipelineShaderStageInfo());
         }
 
-        if (!mShaderSources[RasterShaderSlot::Geometry].Empty())
+        if (!mShaderSources[static_cast<uint8_t>(Slot::Geometry)].Empty())
         {
-            mShaderModules[RasterShaderSlot::Geometry] = std::make_unique<GfxVulkanShaderModule>(mDevice, mShaderSources[RasterShaderSlot::Geometry], "main", mMarcos);
-            mPipelineShaderStageCreateInfos.emplace_back(mShaderModules[RasterShaderSlot::Geometry]->GetPipelineShaderStageInfo());
+            mShaderModules[static_cast<uint8_t>(Slot::Geometry)] = std::make_unique<GfxVulkanShaderModule>(mDevice, mShaderSources[static_cast<uint8_t>(Slot::Geometry)], "main", mMarcos);
+            mPipelineShaderStageCreateInfos.emplace_back(mShaderModules[static_cast<uint8_t>(Slot::Geometry)]->GetPipelineShaderStageInfo());
         }
 
         DumpDescriptorBindings();
@@ -390,9 +390,9 @@ namespace RealSix
         return this;
     }
 
-    void GfxVulkanRasterShader::DumpDescriptorBindings()
+    void GfxVulkanVertexRasterShader::DumpDescriptorBindings()
     {
-        for (size_t i = RasterShaderSlot::Vertex; i < RasterShaderSlot::Num; ++i)
+        for (uint8_t i = static_cast<uint8_t>(Slot::Vertex); i < static_cast<uint8_t>(Slot::Num); ++i)
         {
             if (!mShaderModules[i])
                 continue;
@@ -402,7 +402,7 @@ namespace RealSix
                 {
                     if (vkBinding.first == spvBinding->name)
                     {
-                        vkBinding.second.stageFlags = GetShaderStageFlag((RasterShaderSlot)i);
+                        vkBinding.second.stageFlags = GetShaderStageFlag((IGfxVertexRasterShader::Slot)i);
                     }
                 }
                 VkDescriptorSetLayoutBinding layoutBinding{};
@@ -410,17 +410,17 @@ namespace RealSix
                 layoutBinding.descriptorCount = spvBinding->count;
                 layoutBinding.descriptorType = (VkDescriptorType)spvBinding->descriptor_type;
                 layoutBinding.pImmutableSamplers = nullptr;
-                layoutBinding.stageFlags = GetShaderStageFlag((RasterShaderSlot)i);
+                layoutBinding.stageFlags = GetShaderStageFlag((IGfxVertexRasterShader::Slot)i);
                 mBindings[spvBinding->name] = layoutBinding;
             }
         }
     }
 
-    void GfxVulkanRasterShader::DumpDescriptorSetLayouts()
+    void GfxVulkanVertexRasterShader::DumpDescriptorSetLayouts()
     {
         size_t maxCount = 0;
         size_t descriptorSetSize = 0;
-        for (size_t i = RasterShaderSlot::Vertex; i < RasterShaderSlot::Num; ++i)
+        for (uint8_t i = static_cast<uint8_t>(Slot::Vertex); i < static_cast<uint8_t>(Slot::Num); ++i)
         {
             if (!mShaderModules[i])
                 continue;
@@ -450,7 +450,7 @@ namespace RealSix
             return VkDescriptorSetLayoutBinding{};
         };
 
-        for (size_t i = RasterShaderSlot::Vertex; i < RasterShaderSlot::Num; ++i)
+        for (uint8_t i = static_cast<uint8_t>(Slot::Vertex); i < static_cast<uint8_t>(Slot::Num); ++i)
         {
             if (!mShaderModules[i])
                 continue;
@@ -460,9 +460,9 @@ namespace RealSix
 
                 std::vector<VkDescriptorSetLayoutBinding> vkBindings(spvSet->binding_count);
 
-                for (size_t i = 0; i < spvSet->binding_count; ++i)
+                for (size_t j = 0; j < spvSet->binding_count; ++j)
                 {
-                    vkBindings[i] = GetDescriptorBinding(spvSet->bindings[i]->name);
+                    vkBindings[j] = GetDescriptorBinding(spvSet->bindings[j]->name);
                 }
 
                 VkDescriptorSetLayoutCreateInfo layoutInfo{};
@@ -475,11 +475,11 @@ namespace RealSix
         }
     }
 
-    void GfxVulkanRasterShader::DumpDescriptorWrites()
+    void GfxVulkanVertexRasterShader::DumpDescriptorWrites()
     {
         auto GetSetIndex = [&](StringView name) -> uint32_t
         {
-            for (size_t i = RasterShaderSlot::Vertex; i < RasterShaderSlot::Num; ++i)
+            for (uint8_t i = static_cast<uint8_t>(Slot::Vertex); i < static_cast<uint8_t>(Slot::Num); ++i)
             {
                 if (!mShaderModules[i])
                     continue;
@@ -508,19 +508,19 @@ namespace RealSix
         }
     }
 
-    VkShaderStageFlagBits GfxVulkanRasterShader::GetShaderStageFlag(RasterShaderSlot slot)
+    VkShaderStageFlagBits GfxVulkanVertexRasterShader::GetShaderStageFlag(IGfxVertexRasterShader::Slot slot)
     {
         switch (slot)
         {
-        case RasterShaderSlot::Vertex:
+        case Slot::Vertex:
             return VK_SHADER_STAGE_VERTEX_BIT;
-        case RasterShaderSlot::Fragment:
+        case Slot::Fragment:
             return VK_SHADER_STAGE_FRAGMENT_BIT;
-        case RasterShaderSlot::TessellationControl:
+        case Slot::TessellationControl:
             return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-        case RasterShaderSlot::TessellationEvaluation:
+        case Slot::TessellationEvaluation:
             return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-        case RasterShaderSlot::Geometry:
+        case Slot::Geometry:
             return VK_SHADER_STAGE_GEOMETRY_BIT;
         }
 

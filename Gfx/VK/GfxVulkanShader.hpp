@@ -93,11 +93,11 @@ namespace RealSix
         std::unordered_map<StringView, VkDescriptorImageInfo> mImageInfos;
     };
 
-    class GfxVulkanRasterShader : public GfxVulkanShader, public IGfxRasterShader
+    class GfxVulkanVertexRasterShader : public GfxVulkanShader, public IGfxVertexRasterShader
     {
     public:
-        GfxVulkanRasterShader(IGfxDevice *device);
-        ~GfxVulkanRasterShader() override;
+        GfxVulkanVertexRasterShader(IGfxDevice *device);
+        ~GfxVulkanVertexRasterShader() override;
 
         const std::vector<VkPipelineShaderStageCreateInfo> &GetPipelineShaderStageInfoList() const;
 
@@ -110,11 +110,11 @@ namespace RealSix
         void DumpDescriptorSetLayouts();
         void DumpDescriptorWrites();
 
-        VkShaderStageFlagBits GetShaderStageFlag(RasterShaderSlot slot);
+        VkShaderStageFlagBits GetShaderStageFlag(IGfxVertexRasterShader::Slot slot);
 
         std::vector<VkPipelineShaderStageCreateInfo> mPipelineShaderStageCreateInfos;
 
-        std::array<std::unique_ptr<GfxVulkanShaderModule>, RasterShaderSlot::Num> mShaderModules;
+        std::array<std::unique_ptr<GfxVulkanShaderModule>, static_cast<uint8_t>(IGfxVertexRasterShader::Slot::Num)> mShaderModules;
     };
 
     class GfxVulkanComputeShader : public GfxVulkanShader, public IGfxComputeShader

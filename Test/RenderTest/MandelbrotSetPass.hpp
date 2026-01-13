@@ -24,7 +24,7 @@ namespace RealSix
         std::unique_ptr<GfxUniformBuffer> mUniformBuffer;
         std::unique_ptr<GfxShaderStorageBuffer> mComputeImageBuffer;
 
-        std::unique_ptr<IGfxRasterShader> mRasterShader;
+        std::unique_ptr<IGfxVertexRasterShader> mRasterShader;
         std::unique_ptr<IGfxRasterPipeline> mRasterPipeline;
 
         std::unique_ptr<IGfxComputeShader> mComputeShader;

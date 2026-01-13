@@ -23,7 +23,7 @@ namespace RealSix
 
         auto vertShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "BasicMeshPass.vert.slang");
         auto fragShaderContent = ResourceLoader::GetInstance().GetShaderContentFromDisk(TEST_SHADER_DIR "BasicMeshPass.frag.slang");
-        mShader.reset(IGfxRasterShader::Create(Renderer::GetGfxDevice()));
+        mShader.reset(IGfxVertexRasterShader::Create(Renderer::GetGfxDevice()));
         mShader->SetVertexShader(vertShaderContent);
         mShader->SetFragmentShader(fragShaderContent);
         mShader->Build();

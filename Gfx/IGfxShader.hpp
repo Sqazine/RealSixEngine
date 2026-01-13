@@ -24,39 +24,70 @@ namespace RealSix
         std::vector<StringView> mMarcos;
     };
 
-    enum RasterShaderSlot:uint8_t
-    {
-        Vertex = 0,
-        Fragment,
-        TessellationControl,
-        TessellationEvaluation,
-        Geometry,
-        Num,
-    };
-
     class IGfxRasterShader : public IGfxShader
     {
     public:
         IGfxRasterShader() = default;
-         virtual ~IGfxRasterShader() override = default;
+        virtual ~IGfxRasterShader() override = default;
+    };
 
-        static IGfxRasterShader *Create(IGfxDevice *device);
+    class IGfxVertexRasterShader : public IGfxRasterShader
+    {
+    public:
+        enum class Slot : uint8_t
+        {
+            Vertex = 0,
+            Fragment,
+            TessellationControl,
+            TessellationEvaluation,
+            Geometry,
+            Num,
+        };
 
-        IGfxRasterShader *SetVertexShader(StringView source);
-        IGfxRasterShader *SetFragmentShader(StringView source);
-        IGfxRasterShader *SetTessellationControlShader(StringView source);
-        IGfxRasterShader *SetTessellationEvaluationShader(StringView source);
-        IGfxRasterShader *SetGeometryShader(StringView source);
+        IGfxVertexRasterShader() = default;
+        virtual ~IGfxVertexRasterShader() override = default;
+
+        static IGfxVertexRasterShader *Create(IGfxDevice *device);
+
+        IGfxVertexRasterShader *SetVertexShader(StringView source);
+        IGfxVertexRasterShader *SetFragmentShader(StringView source);
+        IGfxVertexRasterShader *SetTessellationControlShader(StringView source);
+        IGfxVertexRasterShader *SetTessellationEvaluationShader(StringView source);
+        IGfxVertexRasterShader *SetGeometryShader(StringView source);
 
     protected:
-        std::array<StringView, RasterShaderSlot::Num> mShaderSources;
+        std::array<StringView, static_cast<uint8_t>(Slot::Num)> mShaderSources;
+    };
+
+    class IGfxMeshTaskRasterShader : public IGfxRasterShader
+    {
+    public:
+        enum class Slot : uint8_t
+        {
+            Task = 0,
+            Mesh,
+            Fragment,
+            Num
+        };
+
+        IGfxMeshTaskRasterShader() = default;
+        virtual ~IGfxMeshTaskRasterShader() override = default;
+
+        static IGfxMeshTaskRasterShader *Create(IGfxDevice *device);
+
+        IGfxMeshTaskRasterShader *SetTaskShader(StringView source);
+        IGfxMeshTaskRasterShader *SetMeshShader(StringView source);
+        IGfxMeshTaskRasterShader *SetFragmentShader(StringView source);
+
+    protected:
+        std::array<StringView, static_cast<uint8_t>(Slot::Num)> mShaderSources;
     };
 
     class IGfxComputeShader : public IGfxShader
     {
     public:
         IGfxComputeShader() = default;
-         virtual  ~IGfxComputeShader() override = default;
+        virtual ~IGfxComputeShader() override = default;
 
         static IGfxComputeShader *Create(IGfxDevice *device);
 

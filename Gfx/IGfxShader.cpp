@@ -4,24 +4,23 @@
 #include "Gfx/VK/GfxVulkanShader.hpp"
 namespace RealSix
 {
-	IGfxShader *IGfxShader::AddMarco(StringView marco)
-	{
-        auto iter = std::find(mMarcos.begin(),mMarcos.end(),marco);
-        if(iter == mMarcos.end())
+    IGfxShader *IGfxShader::AddMarco(StringView marco)
+    {
+        auto iter = std::find(mMarcos.begin(), mMarcos.end(), marco);
+        if (iter == mMarcos.end())
             mMarcos.emplace_back(marco);
-		return this;
-	}
+        return this;
+    }
 
-
-    IGfxRasterShader *IGfxRasterShader::Create(IGfxDevice *device)
+    IGfxVertexRasterShader *IGfxVertexRasterShader::Create(IGfxDevice *device)
     {
         const GfxConfig &gfxConfig = GfxConfig::GetInstance();
         switch (gfxConfig.GetBackend())
         {
         case GfxBackend::VULKAN:
         {
-            IGfxShader *shader = new GfxVulkanRasterShader(device);
-            return static_cast<IGfxRasterShader *>(shader);
+            IGfxShader *shader = new GfxVulkanVertexRasterShader(device);
+            return static_cast<IGfxVertexRasterShader *>(shader);
         }
         case GfxBackend::D3D12:
             REALSIX_LOG_ERROR("Not implemented D3D12 device creation yet");
@@ -35,34 +34,73 @@ namespace RealSix
         return nullptr;
     }
 
-    IGfxRasterShader *IGfxRasterShader::SetVertexShader(StringView source)
+    IGfxVertexRasterShader *IGfxVertexRasterShader::SetVertexShader(StringView source)
     {
-        mShaderSources[RasterShaderSlot::Vertex] = source;
+        mShaderSources[static_cast<uint8_t>(Slot::Vertex)] = source;
         return this;
     }
 
-    IGfxRasterShader *IGfxRasterShader::SetFragmentShader(StringView source)
+    IGfxVertexRasterShader *IGfxVertexRasterShader::SetFragmentShader(StringView source)
     {
-		mShaderSources[RasterShaderSlot::Fragment] = source;
-		return this;
+        mShaderSources[static_cast<uint8_t>(Slot::Fragment)] = source;
+        return this;
     }
 
-    IGfxRasterShader *IGfxRasterShader::SetTessellationControlShader(StringView source)
+    IGfxVertexRasterShader *IGfxVertexRasterShader::SetTessellationControlShader(StringView source)
     {
-		mShaderSources[RasterShaderSlot::TessellationControl] = source;
-		return this;
+        mShaderSources[static_cast<uint8_t>(Slot::TessellationControl)] = source;
+        return this;
     }
 
-    IGfxRasterShader *IGfxRasterShader::SetTessellationEvaluationShader(StringView source)
+    IGfxVertexRasterShader *IGfxVertexRasterShader::SetTessellationEvaluationShader(StringView source)
     {
-		mShaderSources[RasterShaderSlot::TessellationEvaluation] = source;
-		return this;
+        mShaderSources[static_cast<uint8_t>(Slot::TessellationEvaluation)] = source;
+        return this;
     }
 
-    IGfxRasterShader *IGfxRasterShader::SetGeometryShader(StringView source)
+    IGfxVertexRasterShader *IGfxVertexRasterShader::SetGeometryShader(StringView source)
     {
-		mShaderSources[RasterShaderSlot::Geometry] = source;
-		return this;
+        mShaderSources[static_cast<uint8_t>(Slot::Geometry)] = source;
+        return this;
+    }
+
+    IGfxMeshTaskRasterShader *IGfxMeshTaskRasterShader::Create(IGfxDevice *device)
+    {
+        const GfxConfig &gfxConfig = GfxConfig::GetInstance();
+        switch (gfxConfig.GetBackend())
+        {
+        case GfxBackend::VULKAN:
+        {
+            // TODO
+        }
+        case GfxBackend::D3D12:
+            REALSIX_LOG_ERROR("Not implemented D3D12 device creation yet");
+            break;
+        default:
+            REALSIX_LOG_ERROR("Unreachable GfxBackend: {}", static_cast<int>(gfxConfig.GetBackend()));
+            break;
+        }
+
+        REALSIX_LOG_ERROR("Unreachable GfxBackend: {}", static_cast<int>(gfxConfig.GetBackend()));
+        return nullptr;
+    }
+
+    IGfxMeshTaskRasterShader *IGfxMeshTaskRasterShader::SetTaskShader(StringView source)
+    {
+        mShaderSources[static_cast<uint8_t>(Slot::Task)] = source;
+        return this;
+    }
+
+    IGfxMeshTaskRasterShader *IGfxMeshTaskRasterShader::SetMeshShader(StringView source)
+    {
+        mShaderSources[static_cast<uint8_t>(Slot::Mesh)] = source;
+        return this;
+    }
+
+    IGfxMeshTaskRasterShader *IGfxMeshTaskRasterShader::SetFragmentShader(StringView source)
+    {
+        mShaderSources[static_cast<uint8_t>(Slot::Fragment)] = source;
+        return this;
     }
 
     IGfxComputeShader *IGfxComputeShader::Create(IGfxDevice *device)
@@ -88,7 +126,7 @@ namespace RealSix
     }
     IGfxComputeShader *IGfxComputeShader::SetComputeShader(StringView source)
     {
-		mShaderSource = source;
-		return this;
+        mShaderSource = source;
+        return this;
     }
 }
