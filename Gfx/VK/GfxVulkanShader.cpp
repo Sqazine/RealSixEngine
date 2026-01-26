@@ -8,330 +8,369 @@
 #include "Resource/FileSystem.hpp"
 namespace RealSix
 {
-    GfxVulkanShaderModule::GfxVulkanShaderModule(IGfxDevice *device, StringView content, StringView mainEntry, const std::vector<StringView> &marcos)
-        : GfxVulkanObject(device), mMainEntry(mainEntry)
+    struct SpirvReflectedData
     {
-        auto binaryContent = Compile(content, mainEntry, marcos);
+        std::vector<SpvReflectInterfaceVariable *> inputVariables;
+        std::vector<SpvReflectInterfaceVariable *> ouputVariables;
+        std::vector<SpvReflectBlockVariable *> pushConstants;
+        std::vector<SpvReflectDescriptorSet *> descriptorSets;
+        std::vector<SpvReflectDescriptorBinding *> descriptorBindings;
+    };
 
-        mShaderModule = CreateShaderModule(binaryContent);
-        mReflectedData = SpirvReflect(mSpvModule, binaryContent);
-
-        ZeroVulkanStruct(mStageCreateInfo, VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
-        mStageCreateInfo.stage = static_cast<VkShaderStageFlagBits>(mSpvModule.shader_stage);
-        mStageCreateInfo.module = mShaderModule;
-        mStageCreateInfo.pName = mMainEntry.CString();
-    }
-
-    GfxVulkanShaderModule::~GfxVulkanShaderModule()
+    class GfxVulkanShaderModule : public GfxVulkanObject
     {
-        VkDevice device = mDevice->GetLogicDevice();
-
-        if (mSpvModule.entry_point_name != nullptr)
-            spvReflectDestroyShaderModule(&mSpvModule);
-
-        if (mShaderModule != VK_NULL_HANDLE)
+    public:
+        GfxVulkanShaderModule(IGfxDevice *device, StringView content, StringView mainEntry = "main", const std::vector<StringView> &marcos = {})
+            : GfxVulkanObject(device), mMainEntry(mainEntry)
         {
-            vkDestroyShaderModule(device, mShaderModule, nullptr);
-            mShaderModule = VK_NULL_HANDLE;
+            auto binaryContent = Compile(content, mainEntry, marcos);
+
+            mShaderModule = CreateShaderModule(binaryContent);
+            mReflectedData = SpirvReflect(mSpvModule, binaryContent);
+
+            ZeroVulkanStruct(mStageCreateInfo, VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
+            mStageCreateInfo.stage = static_cast<VkShaderStageFlagBits>(mSpvModule.shader_stage);
+            mStageCreateInfo.module = mShaderModule;
+            mStageCreateInfo.pName = mMainEntry.CString();
+        }
+        ~GfxVulkanShaderModule() override
+        {
+            VkDevice device = mDevice->GetLogicDevice();
+
+            if (mSpvModule.entry_point_name != nullptr)
+                spvReflectDestroyShaderModule(&mSpvModule);
+
+            if (mShaderModule != VK_NULL_HANDLE)
+            {
+                vkDestroyShaderModule(device, mShaderModule, nullptr);
+                mShaderModule = VK_NULL_HANDLE;
+            }
+
+            ZeroVulkanStruct(mStageCreateInfo, VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
         }
 
-        ZeroVulkanStruct(mStageCreateInfo, VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
-    }
+        const VkPipelineShaderStageCreateInfo &GetPipelineShaderStageInfo() const { return mStageCreateInfo; }
 
-    VkShaderModule GfxVulkanShaderModule::CreateShaderModule(StringView content)
-    {
-        VkShaderModuleCreateInfo createInfo;
-        ZeroVulkanStruct(createInfo, VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO);
-        createInfo.codeSize = content.Size();
-        createInfo.pCode = reinterpret_cast<const uint32_t *>(content.CString());
+        const SpirvReflectedData &GetSpvReflectData() const { return mReflectedData; }
 
-        VkShaderModule shaderModule;
-        VK_CHECK(vkCreateShaderModule(mDevice->GetLogicDevice(), &createInfo, nullptr, &shaderModule));
+    private:
+        String Compile(StringView content, StringView mainEntry, const std::vector<StringView> &marcos)
+        {
+            // TODO: need to be optimize
+            String fullContent = "/*MainEntry:" + String(mainEntry.CString()) + "*/\n"; // head
 
-        return shaderModule;
-    }
+            for (const auto &marco : marcos)
+            {
+                fullContent += "#define " + String(marco) + "\n";
+            }
 
-    SpirvReflectedData GfxVulkanShaderModule::SpirvReflect(SpvReflectShaderModule &spvModule, StringView content)
-    {
+            fullContent += content;
+
+            mSourceCodeHash = fullContent.GetHash();
+
+            if (!FileSystem::Exists("ShaderSource"))
+                FileSystem::CreateDirectory("ShaderSource");
+
+            String path = "ShaderSource/" + std::to_string(mSourceCodeHash) + ".slang";
+
+            FileSystem::WriteBinaryFile(path, fullContent);
+
+            if (!FileSystem::Exists("ShaderBinary"))
+                FileSystem::CreateDirectory("ShaderBinary");
+
+            String destPath = "ShaderBinary/" + std::to_string(mSourceCodeHash) + ".slang.spv";
+
+            auto shaderCompile = "slangc.exe " + path +
+                                 " -profile sm_6_6+spirv_1_6 -target spirv -o " + destPath +
+                                 " -emit-spirv-directly -fvk-use-entrypoint-name";
+            system(shaderCompile.CString());
+
+            return FileSystem::ReadBinaryFile(destPath);
+        }
+
+        VkShaderModule CreateShaderModule(StringView content)
+        {
+            VkShaderModuleCreateInfo createInfo;
+            ZeroVulkanStruct(createInfo, VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO);
+            createInfo.codeSize = content.Size();
+            createInfo.pCode = reinterpret_cast<const uint32_t *>(content.CString());
+
+            VkShaderModule shaderModule;
+            VK_CHECK(vkCreateShaderModule(mDevice->GetLogicDevice(), &createInfo, nullptr, &shaderModule));
+
+            return shaderModule;
+        }
+        SpirvReflectedData SpirvReflect(SpvReflectShaderModule &spvModule, StringView content)
+        {
 #define SPIRV_REFLECT_CHECK(v)                                                       \
     do                                                                               \
     {                                                                                \
         REALSIX_CHECK(v == SPV_REFLECT_RESULT_SUCCESS, "Spirv reflect check error"); \
     } while (false)
 
-        SpirvReflectedData result;
+            SpirvReflectedData result;
 
-        SPIRV_REFLECT_CHECK(spvReflectCreateShaderModule(content.Size(), (const void *)content.CString(), &spvModule));
+            SPIRV_REFLECT_CHECK(spvReflectCreateShaderModule(content.Size(), (const void *)content.CString(), &spvModule));
 
-        uint32_t varCount = 0;
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvModule, &varCount, nullptr));
-        result.inputVariables.resize(varCount);
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvModule, &varCount, result.inputVariables.data()));
+            uint32_t varCount = 0;
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvModule, &varCount, nullptr));
+            result.inputVariables.resize(varCount);
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvModule, &varCount, result.inputVariables.data()));
 
-        varCount = 0;
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvModule, &varCount, nullptr));
-        result.ouputVariables.resize(varCount);
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvModule, &varCount, result.ouputVariables.data()));
+            varCount = 0;
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvModule, &varCount, nullptr));
+            result.ouputVariables.resize(varCount);
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvModule, &varCount, result.ouputVariables.data()));
 
-        varCount = 0;
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvModule, &varCount, nullptr));
-        result.descriptorBindings.resize(varCount);
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvModule, &varCount, result.descriptorBindings.data()));
+            varCount = 0;
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvModule, &varCount, nullptr));
+            result.descriptorBindings.resize(varCount);
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvModule, &varCount, result.descriptorBindings.data()));
 
-        varCount = 0;
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvModule, &varCount, nullptr));
-        result.descriptorSets.resize(varCount);
-        SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvModule, &varCount, result.descriptorSets.data()));
+            varCount = 0;
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvModule, &varCount, nullptr));
+            result.descriptorSets.resize(varCount);
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvModule, &varCount, result.descriptorSets.data()));
 
-        varCount = 0;
-        SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvModule, &varCount, nullptr));
-        result.pushConstants.resize(varCount);
-        SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvModule, &varCount, result.pushConstants.data()));
+            varCount = 0;
+            SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvModule, &varCount, nullptr));
+            result.pushConstants.resize(varCount);
+            SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvModule, &varCount, result.pushConstants.data()));
 
-        return result;
-    }
-
-    String GfxVulkanShaderModule::Compile(StringView content, StringView mainEntry, const std::vector<StringView> &marcos)
-    {
-        // TODO: need to be optimize
-        String fullContent = "/*MainEntry:" + String(mainEntry.CString()) + "*/\n"; // head
-
-        for (const auto &marco : marcos)
-        {
-            fullContent += "#define " + String(marco) + "\n";
+            return result;
         }
 
-        fullContent += content;
+        size_t mSourceCodeHash;
 
-        mSourceCodeHash = fullContent.GetHash();
+        StringView mMainEntry;
 
-        if (!FileSystem::Exists("ShaderSource"))
-            FileSystem::CreateDirectory("ShaderSource");
+        VkPipelineShaderStageCreateInfo mStageCreateInfo{};
 
-        String path = "ShaderSource/" + std::to_string(mSourceCodeHash) + ".slang";
+        SpvReflectShaderModule mSpvModule{};
+        SpirvReflectedData mReflectedData{};
 
-        FileSystem::WriteBinaryFile(path, fullContent);
+        VkShaderModule mShaderModule{VK_NULL_HANDLE};
+    };
 
-        if (!FileSystem::Exists("ShaderBinary"))
-            FileSystem::CreateDirectory("ShaderBinary");
-
-        String destPath = "ShaderBinary/" + std::to_string(mSourceCodeHash) + ".slang.spv";
-
-        auto shaderCompile = "slangc.exe " + path +
-                             " -profile sm_6_6+spirv_1_6 -target spirv -o " + destPath +
-                             " -emit-spirv-directly -fvk-use-entrypoint-name";
-        system(shaderCompile.CString());
-
-        return FileSystem::ReadBinaryFile(destPath);
-    }
-
-    GfxVulkanShaderCommon::GfxVulkanShaderCommon(IGfxDevice *device)
-        : GfxVulkanObject(device)
+    class GfxVulkanShaderCommon : public GfxVulkanObject
     {
-    }
-
-    GfxVulkanShaderCommon::~GfxVulkanShaderCommon()
-    {
-        VkDevice device = mDevice->GetLogicDevice();
-
-        vkDestroyPipelineLayout(device, mPipelineLayout, nullptr);
-
-        for (auto &setLayout : mDescriptorSetLayouts)
+    public:
+        GfxVulkanShaderCommon(IGfxDevice *device)
+            : GfxVulkanObject(device)
         {
-            vkDestroyDescriptorSetLayout(device, setLayout, nullptr);
         }
-
-        vkDestroyDescriptorPool(device, mDescriptorPool, nullptr);
-    }
-
-    void GfxVulkanShaderCommon::CreatePipelineLayout()
-    {
-        auto layouts = GetDescriptorSetLayoutList();
-
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-        ZeroVulkanStruct(pipelineLayoutInfo, VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO);
-        pipelineLayoutInfo.setLayoutCount = layouts.size();
-        pipelineLayoutInfo.pSetLayouts = layouts.empty() ? nullptr : layouts.data();
-
-        VkDevice device = mDevice->GetLogicDevice();
-
-        VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &mPipelineLayout));
-    }
-
-    std::vector<VkWriteDescriptorSet> GfxVulkanShaderCommon::GetWriteList()
-    {
-        std::vector<VkWriteDescriptorSet> result;
-        for (auto [k, v] : mWriteMap)
+        virtual ~GfxVulkanShaderCommon()
         {
-            result.emplace_back(v);
-        }
+            VkDevice device = mDevice->GetLogicDevice();
 
-        return result;
-    }
+            vkDestroyPipelineLayout(device, mPipelineLayout, nullptr);
 
-    void GfxVulkanShaderCommon::SetBinding(StringView name, VkDescriptorSetLayoutBinding binding)
-    {
-        mBindingMap[name] = binding;
-    }
-
-    bool GfxVulkanShaderCommon::CheckDescriptorWriteValid()
-    {
-        for (const auto &write : mWriteMap)
-        {
-            if (write.second.pBufferInfo == nullptr && write.second.pImageInfo == nullptr)
+            for (auto &setLayout : mDescriptorSetLayouts)
             {
-                REALSIX_LOG_WARN("Descriptor write for binding {} is not bound!", write.first);
-                return false;
+                vkDestroyDescriptorSetLayout(device, setLayout, nullptr);
             }
-        }
-        return true;
-    }
 
-    void GfxVulkanShaderCommon::MarkDirty()
-    {
-        mIsDirty = true;
-    }
-
-    std::vector<VkDescriptorSetLayoutBinding> GfxVulkanShaderCommon::GetDescriptorLayoutBindingList()
-    {
-        std::vector<VkDescriptorSetLayoutBinding> result;
-        for (auto [k, v] : mBindingMap)
-        {
-            result.emplace_back(v);
+            vkDestroyDescriptorPool(device, mDescriptorPool, nullptr);
         }
 
-        return result;
-    }
-
-    std::vector<VkDescriptorSetLayout> &GfxVulkanShaderCommon::GetDescriptorSetLayoutList()
-    {
-        return mDescriptorSetLayouts;
-    }
-
-    const VkDescriptorPool &GfxVulkanShaderCommon::GetDescriptorPool() const
-    {
-        return mDescriptorPool;
-    }
-
-    std::vector<VkDescriptorSet> &GfxVulkanShaderCommon::GetDescriptorSetList()
-    {
-        return mDescriptorSets;
-    }
-
-    VkDescriptorSet GfxVulkanShaderCommon::GetDescriptorSet(uint8_t index) const
-    {
-        return mDescriptorSets[index];
-    }
-
-    VkPipelineLayout GfxVulkanShaderCommon::GetPipelineLayout() const
-    {
-        return mPipelineLayout;
-    }
-
-    void GfxVulkanShaderCommon::BindBufferImpl(StringView name, const IGfxBuffer *buffer)
-    {
-        MarkDirty();
-
-        if (mWriteMap.find(name) == mWriteMap.end())
+        std::vector<VkDescriptorSetLayoutBinding> GetDescriptorLayoutBindingList()
         {
-            REALSIX_LOG_WARN("Cannot find buffer binding named: {}", name);
-        }
-
-        auto rawVulkanBuffer = static_cast<const GfxVulkanBuffer *>(buffer);
-
-        mBufferInfos[name].buffer = rawVulkanBuffer->GetHandle();
-        mBufferInfos[name].offset = 0;
-        mBufferInfos[name].range = rawVulkanBuffer->GetSize();
-
-        mWriteMap[name].pBufferInfo = &mBufferInfos[name];
-    }
-
-    void GfxVulkanShaderCommon::BindTextureImpl(StringView name, const IGfxTexture *texture)
-    {
-        MarkDirty();
-
-        auto rawVulkanTexture = static_cast<const GfxVulkanTexture *>(texture);
-
-        if (mWriteMap.find(name) == mWriteMap.end())
-        {
-            REALSIX_LOG_WARN("Cannot find texture binding named: {}", name);
-        }
-
-        mImageInfos[name].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        mImageInfos[name].imageView = rawVulkanTexture->GetView();
-        mImageInfos[name].sampler = rawVulkanTexture->GetSampler();
-
-        mWriteMap[name].pImageInfo = &mImageInfos[name];
-    }
-
-    void GfxVulkanShaderCommon::Flush()
-    {
-        if (mIsDirty)
-        {
-            if (CheckDescriptorWriteValid())
+            std::vector<VkDescriptorSetLayoutBinding> result;
+            for (auto [k, v] : mBindingMap)
             {
-                auto writeList = GetWriteList();
-                vkUpdateDescriptorSets(mDevice->GetLogicDevice(), static_cast<uint32_t>(writeList.size()), writeList.data(), 0, nullptr);
+                result.emplace_back(v);
             }
-            mIsDirty = false;
+
+            return result;
         }
-    }
-
-    void GfxVulkanShaderCommon::CreateDescriptorPool()
-    {
-        if (mDescriptorSetLayouts.empty())
-            return;
-
-        std::vector<VkDescriptorPoolSize> poolSizes;
-
-        for (auto &[k, v] : mBindingMap)
+        std::vector<VkDescriptorSetLayout> &GetDescriptorSetLayoutList()
         {
-            bool alreadyExists = false;
-            for (auto &poolSize : poolSizes)
+            return mDescriptorSetLayouts;
+        }
+
+        std::vector<VkDescriptorSet> &GetDescriptorSetList()
+        {
+            return mDescriptorSets;
+        }
+        VkDescriptorSet GetDescriptorSet(uint8_t index) const
+        {
+            return mDescriptorSets[index];
+        }
+        VkPipelineLayout GetPipelineLayout() const
+        {
+            return mPipelineLayout;
+        }
+
+        void Flush()
+        {
+            if (mIsDirty)
             {
-                if (v.descriptorType == poolSize.type)
+                if (CheckDescriptorWriteValid())
                 {
-                    poolSize.descriptorCount++;
-                    alreadyExists = true;
-                    break;
+                    auto writeList = GetWriteList();
+                    vkUpdateDescriptorSets(mDevice->GetLogicDevice(), static_cast<uint32_t>(writeList.size()), writeList.data(), 0, nullptr);
+                }
+                mIsDirty = false;
+            }
+        }
+
+        void BindBufferImpl(StringView name, const IGfxBuffer *buffer)
+        {
+            MarkDirty();
+
+            if (mWriteMap.find(name) == mWriteMap.end())
+            {
+                REALSIX_LOG_WARN("Cannot find buffer binding named: {}", name);
+            }
+
+            auto rawVulkanBuffer = static_cast<const GfxVulkanBuffer *>(buffer);
+
+            mBufferInfos[name].buffer = rawVulkanBuffer->GetHandle();
+            mBufferInfos[name].offset = 0;
+            mBufferInfos[name].range = rawVulkanBuffer->GetSize();
+
+            mWriteMap[name].pBufferInfo = &mBufferInfos[name];
+        }
+        void BindTextureImpl(StringView name, const IGfxTexture *texture)
+        {
+            MarkDirty();
+
+            auto rawVulkanTexture = static_cast<const GfxVulkanTexture *>(texture);
+
+            if (mWriteMap.find(name) == mWriteMap.end())
+            {
+                REALSIX_LOG_WARN("Cannot find texture binding named: {}", name);
+            }
+
+            mImageInfos[name].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            mImageInfos[name].imageView = rawVulkanTexture->GetView();
+            mImageInfos[name].sampler = rawVulkanTexture->GetSampler();
+
+            mWriteMap[name].pImageInfo = &mImageInfos[name];
+        }
+
+        void CreateDescriptorPool()
+        {
+            if (mDescriptorSetLayouts.empty())
+                return;
+
+            std::vector<VkDescriptorPoolSize> poolSizes;
+
+            for (auto &[k, v] : mBindingMap)
+            {
+                bool alreadyExists = false;
+                for (auto &poolSize : poolSizes)
+                {
+                    if (v.descriptorType == poolSize.type)
+                    {
+                        poolSize.descriptorCount++;
+                        alreadyExists = true;
+                        break;
+                    }
+                }
+
+                if (!alreadyExists)
+                {
+                    VkDescriptorPoolSize newPoolSize;
+                    newPoolSize.type = v.descriptorType;
+                    newPoolSize.descriptorCount = 1;
+                    poolSizes.emplace_back(newPoolSize);
                 }
             }
 
-            if (!alreadyExists)
+            VkDescriptorPoolCreateInfo poolInfo{};
+            poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+            poolInfo.pPoolSizes = poolSizes.data();
+            poolInfo.maxSets = static_cast<uint32_t>(mDescriptorSetLayouts.size());
+
+            VK_CHECK(vkCreateDescriptorPool(mDevice->GetLogicDevice(), &poolInfo, nullptr, &mDescriptorPool));
+        }
+        void AllocateDescriptorSets()
+        {
+            mDescriptorSets.resize(mDescriptorSetLayouts.size());
+            for (size_t i = 0; i < mDescriptorSetLayouts.size(); ++i)
             {
-                VkDescriptorPoolSize newPoolSize;
-                newPoolSize.type = v.descriptorType;
-                newPoolSize.descriptorCount = 1;
-                poolSizes.emplace_back(newPoolSize);
+                if (mDescriptorSetLayouts[i] == nullptr)
+                    continue;
+
+                VkDescriptorSetAllocateInfo allocInfo{};
+                allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                allocInfo.descriptorPool = GetDescriptorPool();
+                allocInfo.descriptorSetCount = 1;
+                allocInfo.pSetLayouts = &mDescriptorSetLayouts[i];
+
+                VK_CHECK(vkAllocateDescriptorSets(mDevice->GetLogicDevice(), &allocInfo, &mDescriptorSets[i]));
             }
         }
-
-        VkDescriptorPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-        poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(mDescriptorSetLayouts.size());
-
-        VK_CHECK(vkCreateDescriptorPool(mDevice->GetLogicDevice(), &poolInfo, nullptr, &mDescriptorPool));
-    }
-
-    void GfxVulkanShaderCommon::AllocateDescriptorSets()
-    {
-        mDescriptorSets.resize(mDescriptorSetLayouts.size());
-        for (size_t i = 0; i < mDescriptorSetLayouts.size(); ++i)
+        void CreatePipelineLayout()
         {
-            if (mDescriptorSetLayouts[i] == nullptr)
-                continue;
+            auto layouts = GetDescriptorSetLayoutList();
 
-            VkDescriptorSetAllocateInfo allocInfo{};
-            allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-            allocInfo.descriptorPool = GetDescriptorPool();
-            allocInfo.descriptorSetCount = 1;
-            allocInfo.pSetLayouts = &mDescriptorSetLayouts[i];
+            VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+            ZeroVulkanStruct(pipelineLayoutInfo, VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO);
+            pipelineLayoutInfo.setLayoutCount = layouts.size();
+            pipelineLayoutInfo.pSetLayouts = layouts.empty() ? nullptr : layouts.data();
 
-            VK_CHECK(vkAllocateDescriptorSets(mDevice->GetLogicDevice(), &allocInfo, &mDescriptorSets[i]));
+            VkDevice device = mDevice->GetLogicDevice();
+
+            VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &mPipelineLayout));
         }
-    }
+
+        const VkDescriptorPool &GetDescriptorPool() const
+        {
+            return mDescriptorPool;
+        }
+
+        std::vector<VkWriteDescriptorSet> GetWriteList()
+        {
+            std::vector<VkWriteDescriptorSet> result;
+            for (auto [k, v] : mWriteMap)
+            {
+                result.emplace_back(v);
+            }
+
+            return result;
+        }
+        std::unordered_map<StringView, VkWriteDescriptorSet> &GetWriteMap() { return mWriteMap; }
+        void SetBinding(StringView name, VkDescriptorSetLayoutBinding binding)
+        {
+            mBindingMap[name] = binding;
+        }
+        std::unordered_map<StringView, VkDescriptorSetLayoutBinding> &GetBindingMap() { return mBindingMap; }
+        bool CheckDescriptorWriteValid()
+        {
+            for (const auto &write : mWriteMap)
+            {
+                if (write.second.pBufferInfo == nullptr && write.second.pImageInfo == nullptr)
+                {
+                    REALSIX_LOG_WARN("Descriptor write for binding {} is not bound!", write.first);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        void MarkDirty()
+        {
+            mIsDirty = true;
+        }
+
+    private:
+        bool mIsDirty{true};
+
+        std::unordered_map<StringView, VkDescriptorSetLayoutBinding> mBindingMap;
+        std::unordered_map<StringView, VkWriteDescriptorSet> mWriteMap;
+
+        std::vector<VkDescriptorSetLayout> mDescriptorSetLayouts;
+        std::vector<VkDescriptorSet> mDescriptorSets;
+        VkDescriptorPool mDescriptorPool{VK_NULL_HANDLE};
+
+        VkPipelineLayout mPipelineLayout{VK_NULL_HANDLE};
+
+        std::unordered_map<StringView, VkDescriptorBufferInfo> mBufferInfos;
+        std::unordered_map<StringView, VkDescriptorImageInfo> mImageInfos;
+    };
 
     GfxVulkanVertexRasterShader::GfxVulkanVertexRasterShader(IGfxDevice *device)
         : GfxVulkanObject(device), mShaderCommon(std::make_unique<GfxVulkanShaderCommon>(device))
@@ -399,6 +438,10 @@ namespace RealSix
         mShaderCommon->CreatePipelineLayout();
         return this;
     }
+
+    VkPipelineLayout GfxVulkanVertexRasterShader::GetPipelineLayout() const { return mShaderCommon->GetPipelineLayout(); }
+    void GfxVulkanVertexRasterShader::Flush() { mShaderCommon->Flush(); }
+    std::vector<VkDescriptorSet> &GfxVulkanVertexRasterShader::GetDescriptorSetList() { return mShaderCommon->GetDescriptorSetList(); }
 
     void GfxVulkanVertexRasterShader::DumpDescriptorBindings()
     {
@@ -578,6 +621,11 @@ namespace RealSix
 
         return this;
     }
+
+    VkPipelineLayout GfxVulkanComputeShader::GetPipelineLayout() const { return mShaderCommon->GetPipelineLayout(); }
+    void GfxVulkanComputeShader::Flush() { mShaderCommon->Flush(); }
+
+    std::vector<VkDescriptorSet> &GfxVulkanComputeShader::GetDescriptorSetList() { return mShaderCommon->GetDescriptorSetList(); }
 
     void GfxVulkanComputeShader::DumpDescriptorBindings()
     {
