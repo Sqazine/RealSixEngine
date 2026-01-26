@@ -107,11 +107,9 @@ namespace RealSix
         pipelineRendering.depthAttachmentFormat = ToVkFormat(mPipelineStateDesc.depthAttachment->texture->GetDesc().format);
         pipelineRendering.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
 
-        GfxVulkanShader *rawShader = dynamic_cast<GfxVulkanShader *>(static_cast<IGfxShader *>(mPipelineStateDesc.shader));
+        GfxVulkanVertexRasterShader *rawShader = static_cast<GfxVulkanVertexRasterShader *>(mPipelineStateDesc.shader);
 
-        std::vector<VkPipelineShaderStageCreateInfo> stages;
-        if (auto vertexRasterShader = static_cast<GfxVulkanVertexRasterShader*>(rawShader))
-            stages = vertexRasterShader->GetPipelineShaderStageInfoList();
+        std::vector<VkPipelineShaderStageCreateInfo> stages = rawShader->GetPipelineShaderStageInfoList();
 
         VkGraphicsPipelineCreateInfo pipelineInfo;
         ZeroVulkanStruct(pipelineInfo, VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO);
@@ -146,7 +144,7 @@ namespace RealSix
 
     void GfxVulkanComputePipeline::Create()
     {
-        auto rawShader = static_cast<GfxVulkanComputeShader *>(static_cast<IGfxShader *>(mShader));
+        auto rawShader = static_cast<GfxVulkanComputeShader *>(mShader);
 
         VkComputePipelineCreateInfo pipelineInfo{};
         ZeroVulkanStruct(pipelineInfo, VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO);

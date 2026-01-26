@@ -50,20 +50,20 @@ namespace RealSix
         VkShaderModule mShaderModule{VK_NULL_HANDLE};
     };
 
-    class GfxVulkanShader : public GfxVulkanObject
+    class GfxVulkanShaderCommon : public GfxVulkanObject
     {
     public:
-        GfxVulkanShader(IGfxDevice *device);
-        virtual ~GfxVulkanShader();
+        GfxVulkanShaderCommon(IGfxDevice *device);
+        virtual ~GfxVulkanShaderCommon();
 
         std::vector<VkDescriptorSetLayoutBinding> GetDescriptorLayoutBindingList();
-        const std::vector<VkDescriptorSetLayout> &GetDescriptorSetLayoutList() const;
-        const std::vector<VkDescriptorSet> &GetDescriptorSets();
+        std::vector<VkDescriptorSetLayout> &GetDescriptorSetLayoutList();
+        std::vector<VkDescriptorSet> &GetDescriptorSetList();
+        VkDescriptorSet GetDescriptorSet(uint8_t index) const;
         VkPipelineLayout GetPipelineLayout() const;
 
         void Flush();
 
-    protected:
         void BindBufferImpl(StringView name, const IGfxBuffer *buffer);
         void BindTextureImpl(StringView name, const IGfxTexture *texture);
 
@@ -73,15 +73,19 @@ namespace RealSix
 
         const VkDescriptorPool &GetDescriptorPool() const;
 
-        std::vector<VkWriteDescriptorSet> GetWrites();
+        std::vector<VkWriteDescriptorSet> GetWriteList();
+        std::unordered_map<StringView, VkWriteDescriptorSet> &GetWriteMap() { return mWriteMap; }
+        void SetBinding(StringView name, VkDescriptorSetLayoutBinding binding);
+        std::unordered_map<StringView, VkDescriptorSetLayoutBinding> &GetBindingMap() { return mBindingMap; }
         bool CheckDescriptorWriteValid();
 
         void MarkDirty();
 
+    private:
         bool mIsDirty{true};
 
-        std::unordered_map<StringView, VkDescriptorSetLayoutBinding> mBindings;
-        std::unordered_map<StringView, VkWriteDescriptorSet> mWrites;
+        std::unordered_map<StringView, VkDescriptorSetLayoutBinding> mBindingMap;
+        std::unordered_map<StringView, VkWriteDescriptorSet> mWriteMap;
 
         std::vector<VkDescriptorSetLayout> mDescriptorSetLayouts;
         std::vector<VkDescriptorSet> mDescriptorSets;
@@ -93,7 +97,7 @@ namespace RealSix
         std::unordered_map<StringView, VkDescriptorImageInfo> mImageInfos;
     };
 
-    class GfxVulkanVertexRasterShader : public GfxVulkanShader, public IGfxVertexRasterShader
+    class GfxVulkanVertexRasterShader : public GfxVulkanObject, public IGfxVertexRasterShader
     {
     public:
         GfxVulkanVertexRasterShader(IGfxDevice *device);
@@ -105,6 +109,10 @@ namespace RealSix
         virtual IGfxShader *BindTexture(StringView name, const IGfxTexture *texture) override;
         virtual IGfxShader *Build() override;
 
+        VkPipelineLayout GetPipelineLayout() const { return mShaderCommon->GetPipelineLayout(); }
+        void Flush() { mShaderCommon->Flush(); }
+        std::vector<VkDescriptorSet> &GetDescriptorSetList() { return mShaderCommon->GetDescriptorSetList(); }
+
     private:
         void DumpDescriptorBindings();
         void DumpDescriptorSetLayouts();
@@ -112,12 +120,14 @@ namespace RealSix
 
         VkShaderStageFlagBits GetShaderStageFlag(IGfxVertexRasterShader::Slot slot);
 
+        std::unique_ptr<GfxVulkanShaderCommon> mShaderCommon;
+
         std::vector<VkPipelineShaderStageCreateInfo> mPipelineShaderStageCreateInfos;
 
         std::array<std::unique_ptr<GfxVulkanShaderModule>, static_cast<uint8_t>(IGfxVertexRasterShader::Slot::Num)> mShaderModules;
     };
 
-    class GfxVulkanComputeShader : public GfxVulkanShader, public IGfxComputeShader
+    class GfxVulkanComputeShader : public GfxVulkanObject, public IGfxComputeShader
     {
     public:
         GfxVulkanComputeShader(IGfxDevice *device);
@@ -127,6 +137,10 @@ namespace RealSix
         virtual IGfxShader *BindTexture(StringView name, const IGfxTexture *texture) override;
         virtual IGfxShader *Build() override;
         const VkPipelineShaderStageCreateInfo &GetPipelineShaderStageInfo() const;
+        VkPipelineLayout GetPipelineLayout() const { return mShaderCommon->GetPipelineLayout(); }
+        void Flush() { mShaderCommon->Flush(); }
+
+        std::vector<VkDescriptorSet> &GetDescriptorSetList() { return mShaderCommon->GetDescriptorSetList(); }
 
     private:
         void DumpDescriptorBindings();
@@ -134,6 +148,8 @@ namespace RealSix
         void DumpDescriptorWrites();
 
         VkShaderStageFlagBits GetShaderStageFlag();
+
+        std::unique_ptr<GfxVulkanShaderCommon> mShaderCommon;
 
         std::unique_ptr<GfxVulkanShaderModule> mShaderModule;
     };

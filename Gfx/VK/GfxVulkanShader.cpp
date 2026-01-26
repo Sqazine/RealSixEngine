@@ -125,12 +125,12 @@ namespace RealSix
         return FileSystem::ReadBinaryFile(destPath);
     }
 
-    GfxVulkanShader::GfxVulkanShader(IGfxDevice *device)
+    GfxVulkanShaderCommon::GfxVulkanShaderCommon(IGfxDevice *device)
         : GfxVulkanObject(device)
     {
     }
 
-    GfxVulkanShader::~GfxVulkanShader()
+    GfxVulkanShaderCommon::~GfxVulkanShaderCommon()
     {
         VkDevice device = mDevice->GetLogicDevice();
 
@@ -144,7 +144,7 @@ namespace RealSix
         vkDestroyDescriptorPool(device, mDescriptorPool, nullptr);
     }
 
-    void GfxVulkanShader::CreatePipelineLayout()
+    void GfxVulkanShaderCommon::CreatePipelineLayout()
     {
         auto layouts = GetDescriptorSetLayoutList();
 
@@ -158,10 +158,10 @@ namespace RealSix
         VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &mPipelineLayout));
     }
 
-    std::vector<VkWriteDescriptorSet> GfxVulkanShader::GetWrites()
+    std::vector<VkWriteDescriptorSet> GfxVulkanShaderCommon::GetWriteList()
     {
         std::vector<VkWriteDescriptorSet> result;
-        for (auto [k, v] : mWrites)
+        for (auto [k, v] : mWriteMap)
         {
             result.emplace_back(v);
         }
@@ -169,9 +169,14 @@ namespace RealSix
         return result;
     }
 
-    bool GfxVulkanShader::CheckDescriptorWriteValid()
+    void GfxVulkanShaderCommon::SetBinding(StringView name, VkDescriptorSetLayoutBinding binding)
     {
-        for (const auto &write : mWrites)
+        mBindingMap[name] = binding;
+    }
+
+    bool GfxVulkanShaderCommon::CheckDescriptorWriteValid()
+    {
+        for (const auto &write : mWriteMap)
         {
             if (write.second.pBufferInfo == nullptr && write.second.pImageInfo == nullptr)
             {
@@ -182,15 +187,15 @@ namespace RealSix
         return true;
     }
 
-    void GfxVulkanShader::MarkDirty()
+    void GfxVulkanShaderCommon::MarkDirty()
     {
         mIsDirty = true;
     }
 
-    std::vector<VkDescriptorSetLayoutBinding> GfxVulkanShader::GetDescriptorLayoutBindingList()
+    std::vector<VkDescriptorSetLayoutBinding> GfxVulkanShaderCommon::GetDescriptorLayoutBindingList()
     {
         std::vector<VkDescriptorSetLayoutBinding> result;
-        for (auto [k, v] : mBindings)
+        for (auto [k, v] : mBindingMap)
         {
             result.emplace_back(v);
         }
@@ -198,31 +203,36 @@ namespace RealSix
         return result;
     }
 
-    const std::vector<VkDescriptorSetLayout> &GfxVulkanShader::GetDescriptorSetLayoutList() const
+    std::vector<VkDescriptorSetLayout> &GfxVulkanShaderCommon::GetDescriptorSetLayoutList()
     {
         return mDescriptorSetLayouts;
     }
 
-    const VkDescriptorPool &GfxVulkanShader::GetDescriptorPool() const
+    const VkDescriptorPool &GfxVulkanShaderCommon::GetDescriptorPool() const
     {
         return mDescriptorPool;
     }
 
-    const std::vector<VkDescriptorSet> &GfxVulkanShader::GetDescriptorSets()
+    std::vector<VkDescriptorSet> &GfxVulkanShaderCommon::GetDescriptorSetList()
     {
         return mDescriptorSets;
     }
 
-    VkPipelineLayout GfxVulkanShader::GetPipelineLayout() const
+    VkDescriptorSet GfxVulkanShaderCommon::GetDescriptorSet(uint8_t index) const
+    {
+        return mDescriptorSets[index];
+    }
+
+    VkPipelineLayout GfxVulkanShaderCommon::GetPipelineLayout() const
     {
         return mPipelineLayout;
     }
 
-    void GfxVulkanShader::BindBufferImpl(StringView name, const IGfxBuffer *buffer)
+    void GfxVulkanShaderCommon::BindBufferImpl(StringView name, const IGfxBuffer *buffer)
     {
         MarkDirty();
 
-        if (mWrites.find(name) == mWrites.end())
+        if (mWriteMap.find(name) == mWriteMap.end())
         {
             REALSIX_LOG_WARN("Cannot find buffer binding named: {}", name);
         }
@@ -233,16 +243,16 @@ namespace RealSix
         mBufferInfos[name].offset = 0;
         mBufferInfos[name].range = rawVulkanBuffer->GetSize();
 
-        mWrites[name].pBufferInfo = &mBufferInfos[name];
+        mWriteMap[name].pBufferInfo = &mBufferInfos[name];
     }
 
-    void GfxVulkanShader::BindTextureImpl(StringView name, const IGfxTexture *texture)
+    void GfxVulkanShaderCommon::BindTextureImpl(StringView name, const IGfxTexture *texture)
     {
         MarkDirty();
 
         auto rawVulkanTexture = static_cast<const GfxVulkanTexture *>(texture);
 
-        if (mWrites.find(name) == mWrites.end())
+        if (mWriteMap.find(name) == mWriteMap.end())
         {
             REALSIX_LOG_WARN("Cannot find texture binding named: {}", name);
         }
@@ -251,30 +261,30 @@ namespace RealSix
         mImageInfos[name].imageView = rawVulkanTexture->GetView();
         mImageInfos[name].sampler = rawVulkanTexture->GetSampler();
 
-        mWrites[name].pImageInfo = &mImageInfos[name];
+        mWriteMap[name].pImageInfo = &mImageInfos[name];
     }
 
-    void GfxVulkanShader::Flush()
+    void GfxVulkanShaderCommon::Flush()
     {
         if (mIsDirty)
         {
             if (CheckDescriptorWriteValid())
             {
-                auto writeList = GetWrites();
+                auto writeList = GetWriteList();
                 vkUpdateDescriptorSets(mDevice->GetLogicDevice(), static_cast<uint32_t>(writeList.size()), writeList.data(), 0, nullptr);
             }
             mIsDirty = false;
         }
     }
 
-    void GfxVulkanShader::CreateDescriptorPool()
+    void GfxVulkanShaderCommon::CreateDescriptorPool()
     {
         if (mDescriptorSetLayouts.empty())
             return;
 
         std::vector<VkDescriptorPoolSize> poolSizes;
 
-        for (auto &[k, v] : mBindings)
+        for (auto &[k, v] : mBindingMap)
         {
             bool alreadyExists = false;
             for (auto &poolSize : poolSizes)
@@ -305,7 +315,7 @@ namespace RealSix
         VK_CHECK(vkCreateDescriptorPool(mDevice->GetLogicDevice(), &poolInfo, nullptr, &mDescriptorPool));
     }
 
-    void GfxVulkanShader::AllocateDescriptorSets()
+    void GfxVulkanShaderCommon::AllocateDescriptorSets()
     {
         mDescriptorSets.resize(mDescriptorSetLayouts.size());
         for (size_t i = 0; i < mDescriptorSetLayouts.size(); ++i)
@@ -324,7 +334,7 @@ namespace RealSix
     }
 
     GfxVulkanVertexRasterShader::GfxVulkanVertexRasterShader(IGfxDevice *device)
-        : GfxVulkanShader(device)
+        : GfxVulkanObject(device), mShaderCommon(std::make_unique<GfxVulkanShaderCommon>(device))
     {
     }
 
@@ -333,12 +343,12 @@ namespace RealSix
     }
     IGfxShader *GfxVulkanVertexRasterShader::BindBuffer(StringView name, const IGfxBuffer *buffer)
     {
-        BindBufferImpl(name, buffer);
+        mShaderCommon->BindBufferImpl(name, buffer);
         return this;
     }
     IGfxShader *GfxVulkanVertexRasterShader::BindTexture(StringView name, const IGfxTexture *texture)
     {
-        BindTextureImpl(name, texture);
+        mShaderCommon->BindTextureImpl(name, texture);
         return this;
     }
 
@@ -383,10 +393,10 @@ namespace RealSix
 
         DumpDescriptorBindings();
         DumpDescriptorSetLayouts();
-        CreateDescriptorPool();
-        AllocateDescriptorSets();
+        mShaderCommon->CreateDescriptorPool();
+        mShaderCommon->AllocateDescriptorSets();
         DumpDescriptorWrites();
-        CreatePipelineLayout();
+        mShaderCommon->CreatePipelineLayout();
         return this;
     }
 
@@ -398,11 +408,11 @@ namespace RealSix
                 continue;
             for (auto &spvBinding : mShaderModules[i]->GetSpvReflectData().descriptorBindings)
             {
-                for (auto &vkBinding : mBindings)
+                for (auto &[k, v] : mShaderCommon->GetBindingMap())
                 {
-                    if (vkBinding.first == spvBinding->name)
+                    if (k == spvBinding->name)
                     {
-                        vkBinding.second.stageFlags = GetShaderStageFlag((IGfxVertexRasterShader::Slot)i);
+                        v.stageFlags = GetShaderStageFlag((IGfxVertexRasterShader::Slot)i);
                     }
                 }
                 VkDescriptorSetLayoutBinding layoutBinding{};
@@ -411,7 +421,7 @@ namespace RealSix
                 layoutBinding.descriptorType = (VkDescriptorType)spvBinding->descriptor_type;
                 layoutBinding.pImmutableSamplers = nullptr;
                 layoutBinding.stageFlags = GetShaderStageFlag((IGfxVertexRasterShader::Slot)i);
-                mBindings[spvBinding->name] = layoutBinding;
+                mShaderCommon->SetBinding(spvBinding->name, layoutBinding);
             }
         }
     }
@@ -437,11 +447,11 @@ namespace RealSix
         if (descriptorSetSize == 0)
             return;
 
-        mDescriptorSetLayouts.resize(maxCount + 1);
+        mShaderCommon->GetDescriptorSetLayoutList().resize(maxCount + 1);
 
         auto GetDescriptorBinding = [&](StringView name)
         {
-            for (auto &[k, v] : mBindings)
+            for (auto &[k, v] : mShaderCommon->GetBindingMap())
             {
                 if (k == name)
                     return v;
@@ -470,7 +480,7 @@ namespace RealSix
                 layoutInfo.bindingCount = static_cast<uint32_t>(vkBindings.size());
                 layoutInfo.pBindings = vkBindings.data();
 
-                VK_CHECK(vkCreateDescriptorSetLayout(mDevice->GetLogicDevice(), &layoutInfo, nullptr, &mDescriptorSetLayouts[setSlot]));
+                VK_CHECK(vkCreateDescriptorSetLayout(mDevice->GetLogicDevice(), &layoutInfo, nullptr, &mShaderCommon->GetDescriptorSetLayoutList()[setSlot]));
             }
         }
     }
@@ -494,17 +504,17 @@ namespace RealSix
             return 4096;
         };
 
-        for (const auto &[k, v] : mBindings)
+        for (const auto &[k, v] : mShaderCommon->GetBindingMap())
         {
             VkWriteDescriptorSet write = {};
             ZeroVulkanStruct(write, VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET);
-            write.dstSet = mDescriptorSets[GetSetIndex(k)];
+            write.dstSet = mShaderCommon->GetDescriptorSetList()[GetSetIndex(k)];
             write.dstBinding = v.binding;
             write.dstArrayElement = 0;
             write.descriptorType = v.descriptorType;
             write.descriptorCount = v.descriptorCount;
 
-            mWrites[k] = write;
+            mShaderCommon->GetWriteMap()[k] = write;
         }
     }
 
@@ -528,7 +538,7 @@ namespace RealSix
     }
 
     GfxVulkanComputeShader::GfxVulkanComputeShader(IGfxDevice *device)
-        : GfxVulkanShader(device)
+        : GfxVulkanObject(device), mShaderCommon(std::make_unique<GfxVulkanShaderCommon>(device))
     {
     }
 
@@ -538,12 +548,12 @@ namespace RealSix
 
     IGfxShader *GfxVulkanComputeShader::BindBuffer(StringView name, const IGfxBuffer *buffer)
     {
-        BindBufferImpl(name, buffer);
+        mShaderCommon->BindBufferImpl(name, buffer);
         return this;
     }
     IGfxShader *GfxVulkanComputeShader::BindTexture(StringView name, const IGfxTexture *texture)
     {
-        BindTextureImpl(name, texture);
+        mShaderCommon->BindTextureImpl(name, texture);
         return this;
     }
 
@@ -561,10 +571,10 @@ namespace RealSix
 
         DumpDescriptorBindings();
         DumpDescriptorSetLayouts();
-        CreateDescriptorPool();
-        AllocateDescriptorSets();
+        mShaderCommon->CreateDescriptorPool();
+        mShaderCommon->AllocateDescriptorSets();
         DumpDescriptorWrites();
-        CreatePipelineLayout();
+        mShaderCommon->CreatePipelineLayout();
 
         return this;
     }
@@ -573,7 +583,7 @@ namespace RealSix
     {
         for (auto &spvBinding : mShaderModule->GetSpvReflectData().descriptorBindings)
         {
-            for (auto &vkBinding : mBindings)
+            for (auto &vkBinding : mShaderCommon->GetBindingMap())
             {
                 if (vkBinding.first == spvBinding->name)
                 {
@@ -586,7 +596,7 @@ namespace RealSix
             layoutBinding.descriptorType = (VkDescriptorType)spvBinding->descriptor_type;
             layoutBinding.pImmutableSamplers = nullptr;
             layoutBinding.stageFlags = GetShaderStageFlag();
-            mBindings[spvBinding->name] = layoutBinding;
+            mShaderCommon->SetBinding(spvBinding->name, layoutBinding);
         }
     }
     void GfxVulkanComputeShader::DumpDescriptorSetLayouts()
@@ -604,11 +614,11 @@ namespace RealSix
         if (descriptorSetSize == 0)
             return;
 
-        mDescriptorSetLayouts.resize(maxCount + 1);
+        mShaderCommon->GetDescriptorSetLayoutList().resize(maxCount + 1);
 
         auto GetDescriptorBinding = [&](StringView name)
         {
-            for (auto &[k, v] : mBindings)
+            for (auto &[k, v] : mShaderCommon->GetBindingMap())
             {
                 if (k == name)
                     return v;
@@ -633,7 +643,7 @@ namespace RealSix
             layoutInfo.bindingCount = static_cast<uint32_t>(vkBindings.size());
             layoutInfo.pBindings = vkBindings.data();
 
-            VK_CHECK(vkCreateDescriptorSetLayout(mDevice->GetLogicDevice(), &layoutInfo, nullptr, &mDescriptorSetLayouts[setSlot]));
+            VK_CHECK(vkCreateDescriptorSetLayout(mDevice->GetLogicDevice(), &layoutInfo, nullptr, &mShaderCommon->GetDescriptorSetLayoutList()[setSlot]));
         }
     }
     void GfxVulkanComputeShader::DumpDescriptorWrites()
@@ -651,17 +661,17 @@ namespace RealSix
             return 4096;
         };
 
-        for (const auto &[k, v] : mBindings)
+        for (const auto &[k, v] : mShaderCommon->GetBindingMap())
         {
             VkWriteDescriptorSet write = {};
             ZeroVulkanStruct(write, VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET);
-            write.dstSet = mDescriptorSets[GetSetIndex(k)];
+            write.dstSet = mShaderCommon->GetDescriptorSet(GetSetIndex(k));
             write.dstBinding = v.binding;
             write.dstArrayElement = 0;
             write.descriptorType = v.descriptorType;
             write.descriptorCount = v.descriptorCount;
 
-            mWrites[k] = write;
+            mShaderCommon->GetWriteMap()[k] = write;
         }
     }
 

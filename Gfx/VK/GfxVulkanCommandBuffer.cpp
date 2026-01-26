@@ -316,10 +316,10 @@ namespace RealSix
     {
         REALSIX_CHECK(mCommandType == GfxCommandType::GRAPHICS, "BindRasterPipeline can only be called on GRAPHICS command buffer!");
 
-        auto vulkanShader = dynamic_cast<GfxVulkanShader *>(static_cast<IGfxShader *>(pipeline->GetShader()));
+        auto vulkanShader = static_cast<GfxVulkanVertexRasterShader *>(pipeline->GetShader());
         vulkanShader->Flush();
 
-        auto sets = vulkanShader->GetDescriptorSets();
+        auto sets = vulkanShader->GetDescriptorSetList();
         if (!sets.empty())
             vkCmdBindDescriptorSets(mHandle, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanShader->GetPipelineLayout(), 0, sets.size(), sets.data(), 0, nullptr);
 
@@ -335,7 +335,7 @@ namespace RealSix
         auto vulkanComputeShader = static_cast<GfxVulkanComputeShader *>(static_cast<IGfxShader *>(pipeline->GetShader()));
         vulkanComputeShader->Flush();
 
-        auto sets = vulkanComputeShader->GetDescriptorSets();
+        auto sets = vulkanComputeShader->GetDescriptorSetList();
         if (!sets.empty())
             vkCmdBindDescriptorSets(mHandle, VK_PIPELINE_BIND_POINT_COMPUTE, vulkanComputeShader->GetPipelineLayout(), 0, sets.size(), sets.data(), 0, nullptr);
 
