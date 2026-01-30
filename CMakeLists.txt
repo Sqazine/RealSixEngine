@@ -72,6 +72,7 @@ else()
 endif()
 
 find_package(Vulkan REQUIRED)
+
 add_subdirectory(${THIRD_PARTY_DIR}/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(${THIRD_PARTY_DIR}/SPIRV-Reflect EXCLUDE_FROM_ALL)
 

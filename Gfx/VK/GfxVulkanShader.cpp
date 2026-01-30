@@ -10,6 +10,57 @@ namespace RealSix
 {
     struct SpirvReflectedData
     {
+        SpirvReflectedData() = default;
+
+        ~SpirvReflectedData()
+        {
+            if (spvReflectModule.entry_point_name != nullptr)
+                spvReflectDestroyShaderModule(&spvReflectModule);
+
+            std::exchange(inputVariables, {});
+            std::exchange(ouputVariables, {});
+            std::exchange(pushConstants, {});
+            std::exchange(descriptorSets, {});
+            std::exchange(descriptorBindings, {});
+        }
+
+        void ReflectFrom(StringView spirvBinaryContent)
+        {
+#define SPIRV_REFLECT_CHECK(v)                                                       \
+    do                                                                               \
+    {                                                                                \
+        REALSIX_CHECK(v == SPV_REFLECT_RESULT_SUCCESS, "Spirv reflect check error"); \
+    } while (false)
+
+            SPIRV_REFLECT_CHECK(spvReflectCreateShaderModule(spirvBinaryContent.Size(), (const void *)spirvBinaryContent.CString(), &spvReflectModule));
+
+            uint32_t varCount = 0;
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvReflectModule, &varCount, nullptr));
+            inputVariables.resize(varCount);
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvReflectModule, &varCount, inputVariables.data()));
+
+            varCount = 0;
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvReflectModule, &varCount, nullptr));
+            ouputVariables.resize(varCount);
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvReflectModule, &varCount, ouputVariables.data()));
+
+            varCount = 0;
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvReflectModule, &varCount, nullptr));
+            descriptorBindings.resize(varCount);
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvReflectModule, &varCount, descriptorBindings.data()));
+
+            varCount = 0;
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvReflectModule, &varCount, nullptr));
+            descriptorSets.resize(varCount);
+            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvReflectModule, &varCount, descriptorSets.data()));
+
+            varCount = 0;
+            SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvReflectModule, &varCount, nullptr));
+            pushConstants.resize(varCount);
+            SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvReflectModule, &varCount, pushConstants.data()));
+        }
+
+        SpvReflectShaderModule spvReflectModule;
         std::vector<SpvReflectInterfaceVariable *> inputVariables;
         std::vector<SpvReflectInterfaceVariable *> ouputVariables;
         std::vector<SpvReflectBlockVariable *> pushConstants;
@@ -26,19 +77,16 @@ namespace RealSix
             auto binaryContent = Compile(content, mainEntry, marcos);
 
             mShaderModule = CreateShaderModule(binaryContent);
-            mReflectedData = SpirvReflect(mSpvModule, binaryContent);
+            mReflectedData.ReflectFrom(binaryContent);
 
             ZeroVulkanStruct(mStageCreateInfo, VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
-            mStageCreateInfo.stage = static_cast<VkShaderStageFlagBits>(mSpvModule.shader_stage);
+            mStageCreateInfo.stage = static_cast<VkShaderStageFlagBits>(mReflectedData.spvReflectModule.shader_stage);
             mStageCreateInfo.module = mShaderModule;
             mStageCreateInfo.pName = mMainEntry.CString();
         }
         ~GfxVulkanShaderModule() override
         {
             VkDevice device = mDevice->GetLogicDevice();
-
-            if (mSpvModule.entry_point_name != nullptr)
-                spvReflectDestroyShaderModule(&mSpvModule);
 
             if (mShaderModule != VK_NULL_HANDLE)
             {
@@ -100,45 +148,6 @@ namespace RealSix
 
             return shaderModule;
         }
-        SpirvReflectedData SpirvReflect(SpvReflectShaderModule &spvModule, StringView content)
-        {
-#define SPIRV_REFLECT_CHECK(v)                                                       \
-    do                                                                               \
-    {                                                                                \
-        REALSIX_CHECK(v == SPV_REFLECT_RESULT_SUCCESS, "Spirv reflect check error"); \
-    } while (false)
-
-            SpirvReflectedData result;
-
-            SPIRV_REFLECT_CHECK(spvReflectCreateShaderModule(content.Size(), (const void *)content.CString(), &spvModule));
-
-            uint32_t varCount = 0;
-            SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvModule, &varCount, nullptr));
-            result.inputVariables.resize(varCount);
-            SPIRV_REFLECT_CHECK(spvReflectEnumerateInputVariables(&spvModule, &varCount, result.inputVariables.data()));
-
-            varCount = 0;
-            SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvModule, &varCount, nullptr));
-            result.ouputVariables.resize(varCount);
-            SPIRV_REFLECT_CHECK(spvReflectEnumerateOutputVariables(&spvModule, &varCount, result.ouputVariables.data()));
-
-            varCount = 0;
-            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvModule, &varCount, nullptr));
-            result.descriptorBindings.resize(varCount);
-            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorBindings(&spvModule, &varCount, result.descriptorBindings.data()));
-
-            varCount = 0;
-            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvModule, &varCount, nullptr));
-            result.descriptorSets.resize(varCount);
-            SPIRV_REFLECT_CHECK(spvReflectEnumerateDescriptorSets(&spvModule, &varCount, result.descriptorSets.data()));
-
-            varCount = 0;
-            SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvModule, &varCount, nullptr));
-            result.pushConstants.resize(varCount);
-            SPIRV_REFLECT_CHECK(spvReflectEnumeratePushConstantBlocks(&spvModule, &varCount, result.pushConstants.data()));
-
-            return result;
-        }
 
         size_t mSourceCodeHash;
 
@@ -146,7 +155,6 @@ namespace RealSix
 
         VkPipelineShaderStageCreateInfo mStageCreateInfo{};
 
-        SpvReflectShaderModule mSpvModule{};
         SpirvReflectedData mReflectedData{};
 
         VkShaderModule mShaderModule{VK_NULL_HANDLE};
