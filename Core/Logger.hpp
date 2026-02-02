@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <sstream>
-
+#include "Core/Config.hpp"
 #include "String.hpp"
 #include <cassert>
 #include <cstdarg>
@@ -74,10 +74,13 @@ namespace RealSix::Logger
         abort();                                                                \
     } while (false)
 
-#define REALSIX_LOG_WARN(fmt, ...)                                             \
-    do                                                                         \
-    {                                                                          \
-        RealSix::Logger::Log(RealSix::Logger::Kind::WARN, fmt, ##__VA_ARGS__); \
+#define REALSIX_LOG_WARN(fmt, ...)                                                  \
+    do                                                                              \
+    {                                                                               \
+        if (RealSix::LoggerConfig::GetInstance().IsWarnningAsError())               \
+            RealSix::Logger::Log(RealSix::Logger::Kind::ERROR, fmt, ##__VA_ARGS__); \
+        else                                                                        \
+            RealSix::Logger::Log(RealSix::Logger::Kind::WARN, fmt, ##__VA_ARGS__);  \
     } while (false)
 
 #define REALSIX_LOG_INFO(fmt, ...)                                             \

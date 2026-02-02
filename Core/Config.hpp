@@ -13,7 +13,7 @@ namespace RealSix
         bool mRefreshOnlyWindowIsActive{true};
     };
 
-    enum class GfxBackend: uint8_t
+    enum class GfxBackend : uint8_t
     {
         VULKAN = 0,
         D3D12 = 1,
@@ -31,10 +31,10 @@ namespace RealSix
 
     enum class Msaa : uint8_t
     {
-        X1  = 1,
-        X2  = 2,
-        X4  = 4,
-        X8  = 8,
+        X1 = 1,
+        X2 = 2,
+        X4 = 4,
+        X8 = 8,
         X16 = 16,
         X32 = 32,
         X64 = 64,
@@ -107,5 +107,15 @@ namespace RealSix
         bool mDebugGC{false};
         bool mStressGC{false};
 #endif
+    };
+
+    class LoggerConfig : public Singleton<LoggerConfig>
+    {
+    public:
+        LoggerConfig &SetWarnningAsError(bool toggle);
+        bool IsWarnningAsError() const;
+
+    private:
+        bool mWarnningAsError{false};
     };
 }

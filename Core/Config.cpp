@@ -128,7 +128,7 @@ namespace RealSix
     ScriptConfig &ScriptConfig::SetDebugGC(bool toggle)
     {
         mDebugGC = toggle;
-        return *this; 
+        return *this;
     }
     bool ScriptConfig::IsDebugGC() const
     {
@@ -144,4 +144,15 @@ namespace RealSix
         return mStressGC;
     }
 #endif
+
+    LoggerConfig &LoggerConfig::SetWarnningAsError(bool toggle)
+    {
+        mWarnningAsError = toggle;
+        return *this;
+    }
+    
+    bool LoggerConfig::IsWarnningAsError() const
+    {
+        return mWarnningAsError;
+    }
 }

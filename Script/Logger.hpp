@@ -1,7 +1,6 @@
 #pragma once
 #include <iostream>
 #include <sstream>
-
 #include "String.hpp"
 #include <cassert>
 #include <cstdarg>
@@ -97,10 +96,13 @@ namespace RealSix::Script
         assert(0);                                                                          \
     } while (false)
 
-#define REALSIX_SCRIPT_LOG_WARN(tokOrSourceLocation, fmt, ...)                             \
-    do                                                                                     \
-    {                                                                                      \
-        RealSix::Script::Log(Logger::Kind::WARN, tokOrSourceLocation, fmt, ##__VA_ARGS__); \
+#define REALSIX_SCRIPT_LOG_WARN(tokOrSourceLocation, fmt, ...)                                  \
+    do                                                                                          \
+    {                                                                                           \
+        if (RealSix::LoggerConfig::GetInstance().IsWarnningAsError())                           \
+            RealSix::Script::Log(Logger::Kind::ERROR, tokOrSourceLocation, fmt, ##__VA_ARGS__); \
+        else                                                                                    \
+            RealSix::Script::Log(Logger::Kind::WARN, tokOrSourceLocation, fmt, ##__VA_ARGS__);  \
     } while (false)
 
 #define REALSIX_SCRIPT_LOG_INFO(tokOrSourceLocation, fmt, ...)                             \
