@@ -1,0 +1,221 @@
+# RealSix Script Language Grammar (EBNF)
+
+## 1. Start Rule
+
+Program = { Declaration } .
+
+## 2. Declarations
+
+Declaration = VarDeclaration | FunctionDeclaration | ClassDeclaration | EnumDeclaration | ModuleDeclaration | StaticDeclaration | Statement .
+
+### 2.1 Variable Declaration
+
+VarDeclaration = ( "let" | "const" ) VariableList ";" .
+VariableList = Variable { "," Variable } .
+Variable = ( DestructuringAssignment | VariableDescription ) [ "=" Expression ] .
+DestructuringAssignment = "[" VariableDescription { "," VariableDescription } "]" [ "=" Expression ] .
+VariableDescription = ( Ellipsis [ Identifier ] | Identifier ) [ ":" Type ] .
+Ellipsis = "..." .
+Type = Identifier .
+
+### 2.2 Function Declaration
+
+FunctionDeclaration = "fn" Identifier "(" [ ParameterList ] ")" [ ":" ReturnTypeList ] ScopeStatement .
+ParameterList = VariableDescription { "," VariableDescription } .
+ReturnTypeList = Type { "," Type } .
+
+### 2.3 Class Declaration
+
+ClassDeclaration = "class" Identifier [ ":" ClassParentList ] "{" ClassMember* "}" .
+ClassParentList = ClassMemberPrivilege Identifier { "," ClassMemberPrivilege Identifier } .
+ClassMemberPrivilege = "public" | "protected" | "private" | ε .
+ClassMember = ClassMemberPrivilege ( VarDeclaration | FunctionDeclaration | StaticDeclaration | EnumDeclaration ) .
+
+### 2.4 Enum Declaration
+
+EnumDeclaration = "enum" Identifier "{" EnumItem { "," EnumItem } "}" .
+EnumItem = Identifier [ "=" Expression ] .
+
+### 2.5 Module Declaration
+
+ModuleDeclaration = "module" Identifier "{" ModuleItem* "}" .
+ModuleItem = VarDeclaration | FunctionDeclaration | ClassDeclaration | EnumDeclaration | ModuleDeclaration | StaticDeclaration .
+
+### 2.6 Static Declaration
+
+StaticDeclaration = "static" Declaration .
+
+## 3. Statements
+
+Statement = ReturnStatement | IfStatement | ScopeStatement | WhileStatement | ForStatement | BreakStatement | ContinueStatement | SwitchStatement | ExpressionStatement .
+
+### 3.1 Expression Statement
+
+ExpressionStatement = Expression ";" .
+
+### 3.2 Return Statement
+
+ReturnStatement = "return" [ Expression { "," Expression } ] ";" .
+
+### 3.3 If Statement
+
+IfStatement = "if" "(" Expression ")" Statement [ "else" Statement ] .
+
+### 3.4 Scope Statement
+
+ScopeStatement = "{" { Declaration } "}" .
+
+### 3.5 Loop Statements
+
+WhileStatement = "while" "(" Expression ")" ( ScopeStatement | Statement ) .
+
+ForStatement = "for" "(" [ Initializer ] ";" [ Condition ] ";" [ Increment ] ")" ( ScopeStatement | Statement ) .
+Initializer = VarDeclaration | Expression { "," Expression } .
+Condition = Expression .
+Increment = Expression { "," Expression } .
+
+### 3.6 Break and Continue Statements
+
+BreakStatement = "break" ";" .
+ContinueStatement = "continue" ";" .
+
+### 3.7 Switch Statement
+
+SwitchStatement = "switch" "(" Identifier ")" "{" ( CaseClause | DefaultClause )* "}" .
+CaseClause = Expression { "," Expression } ":" ( ScopeStatement | Statement ) .
+DefaultClause = "default" ":" ( ScopeStatement | Statement ) .
+
+## 4. Expressions
+
+Expression = AssignmentExpression .
+
+### 4.1 Assignment Expression
+
+AssignmentExpression = ConditionalExpression ( AssignmentOperator ConditionalExpression )* .
+AssignmentOperator = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>=" .
+
+### 4.2 Conditional Expression
+
+ConditionalExpression = LogicalOrExpression ( "?" Expression ":" Expression )? .
+
+### 4.3 Logical Expressions
+
+LogicalOrExpression = LogicalAndExpression ( "||" LogicalAndExpression )* .
+LogicalAndExpression = BitwiseOrExpression ( "&&" BitwiseOrExpression )* .
+
+### 4.4 Bitwise Expressions
+
+BitwiseOrExpression = BitwiseXorExpression ( "|" BitwiseXorExpression )* .
+BitwiseXorExpression = BitwiseAndExpression ( "^" BitwiseAndExpression )* .
+BitwiseAndExpression = EqualityExpression ( "&" EqualityExpression )* .
+
+### 4.5 Equality Expressions
+
+EqualityExpression = RelationalExpression ( ( "==" | "!=" ) RelationalExpression )* .
+
+### 4.6 Relational Expressions
+
+RelationalExpression = BitwiseShiftExpression ( ( "<" | "<=" | ">" | ">=" ) BitwiseShiftExpression )* .
+
+### 4.7 Bitwise Shift Expressions
+
+BitwiseShiftExpression = AdditiveExpression ( ( "<<" | ">>" ) AdditiveExpression )* .
+
+### 4.8 Additive Expressions
+
+AdditiveExpression = MultiplicativeExpression ( ( "+" | "-" ) MultiplicativeExpression )* .
+
+### 4.9 Multiplicative Expressions
+
+MultiplicativeExpression = UnaryExpression ( ( "*" | "/" | "%" ) UnaryExpression )* .
+
+### 4.10 Unary Expressions
+
+UnaryExpression = ( "!" | "~" | "-" | "++" | "--" | "&" ) UnaryExpression | PostfixExpression .
+
+### 4.11 Postfix Expressions
+
+PostfixExpression = PrimaryExpression ( "++" | "--" | "!" | Call | Index | Dot )* .
+Call = "(" [ Expression { "," Expression } ] ")" .
+Index = "[" Expression "]" .
+Dot = "." Identifier .
+
+### 4.12 Primary Expressions
+
+PrimaryExpression = Literal | Identifier | GroupExpression | ArrayExpression | DictExpression | StructExpression | LambdaExpression | NewExpression | ThisExpression | BaseExpression | MatchExpression | CompoundExpression .
+
+Literal = NUMBER | STR | CHARACTER | "true" | "false" | "null" .
+GroupExpression = "(" Expression ")" .
+ArrayExpression = "[" [ Expression { "," Expression } ] "]" .
+DictExpression = "{" [ DictEntry { "," DictEntry } ] "}" .
+DictEntry = Expression ":" Expression .
+StructExpression = "struct" "{" [ StructEntry { "," StructEntry } ] "}" .
+StructEntry = Identifier ":" Expression .
+LambdaExpression = "fn" "(" [ ParameterList ] ")" ScopeStatement .
+NewExpression = "new" Expression .
+ThisExpression = "this" .
+BaseExpression = "base" "." Identifier .
+MatchExpression = "match" "(" Expression ")" "{" ( MatchCase | MatchDefault )* "}" .
+MatchCase = Expression { "," Expression } ":" Expression .
+MatchDefault = "default" ":" Expression .
+CompoundExpression = "({" { Declaration ";" } Expression "})" .
+
+## 5. Lexical Tokens
+
+### 5.1 Keywords
+
+Keyword = "let" | "const" | "fn" | "class" | "struct" | "enum" | "module" | "static" | "if" | "else" | "while" | "for" | "return" | "break" | "continue" | "switch" | "default" | "match" | "true" | "false" | "null" | "this" | "base" | "public" | "protected" | "private" | "import" | "new" | "as" .
+
+### 5.2 Type Keywords
+
+TypeKeyword = "u8" | "u16" | "u32" | "u64" | "i8" | "i16" | "i32" | "i64" | "f32" | "f64" | "bool" | "char" | "any" | "void" .
+
+### 5.3 Identifiers
+
+Identifier = [a-zA-Z_] [a-zA-Z0-9_]* .
+
+### 5.4 Literals
+
+NUMBER = [0-9]+ ( "." [0-9]+ )? .
+STR = "\"" [^\"\\]* "\"" .
+CHARACTER = "'" [^'\\] "'" .
+
+### 5.5 Operators
+
+Operator = "+" | "-" | "*" | "/" | "%" | "=" | "<" | ">" | "&" | "|" | "^" | "~" | "?" | "!" | "..." | "<<" | ">>" | "++" | "--" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>=" | "==" | "<=" | ">=" | "!=" | "&&" | "||" | "({" | "})" .
+
+### 5.6 Separators
+
+Separator = "." | "," | ":" | ";" | "[" | "]" | "{" | "}" | "(" | ")" .
+
+## 6. Syntax Precedence (from lowest to highest)
+
+1. "," (comma)
+2. Assignment operators (=, +=, -=, *=, /=, %=, &=, |=, ^=, <<=, >>=)
+3. Conditional operator (?:)
+4. Logical OR (||)
+5. Logical AND (&&)
+6. Bitwise OR (|)
+7. Bitwise XOR (^)
+8. Bitwise AND (&)
+9. Equality (==, !=)
+10. Relational operators (<, <=, >, >=)
+11. Bitwise shift (<<, >>)
+12. Addition and subtraction (+, -)
+13. Multiplication, division, and modulus (*, /, %)
+14. Prefix operators (!, ~, -, &, ++, --)
+15. Infix operators ([], (), ., !)
+16. Postfix operators (++, --, !)
+
+## 7. Syntax Associativity
+
+- Assignment operators: Right-associative
+- Conditional operator: Left-associative
+- Logical operators: Left-associative
+- Bitwise operators: Left-associative
+- Equality and relational operators: Left-associative
+- Bitwise shift operators: Left-associative
+- Addition, subtraction, multiplication, division operators: Left-associative
+- Prefix operators: Right-associative
+- Infix operators: Left-associative
+- Postfix operators: Left-associative
