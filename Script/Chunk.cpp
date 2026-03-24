@@ -1,6 +1,8 @@
 #include "Chunk.hpp"
 #include <iomanip>
 #include <sstream>
+#include "Core/String.hpp"
+#include <format>
 #include "Version.hpp"
 #include "Common.hpp"
 #include "Object.hpp"
@@ -15,8 +17,7 @@ namespace RealSix::Script
 #ifndef NDEBUG
 	String Chunk::ToString() const
 	{
-		String result;
-		result += OpCodeToString(opCodes);
+		String result = OpCodeToString(opCodes);
 		for (const auto &c : constants)
 		{
 			if (IS_FUNCTION_VALUE(c))
@@ -91,49 +92,40 @@ namespace RealSix::Script
 
 	String Chunk::OpCodeToString(const OpCodeList &opcodes) const
 	{
-#define CASE(opCode)                                                                                       \
-	case opCode:                                                                                           \
-	{                                                                                                      \
-		auto instrLoc = i;                                                                                 \
-		auto tok = opCodeRelatedTokens[opcodes[++i]];                                                      \
-		auto tokStr = tok->ToString();                                                                     \
-		String tokGap(maxTokenShowSize - tokStr.Size(), ' ');                                              \
-		tokStr += tokGap;                                                                                  \
-		stream << tokStr << std::setfill('0') << std::setw(8) << instrLoc << "\t" << #opCode << std::endl; \
-		break;                                                                                             \
+#define CASE(opCode)                                                         \
+	case opCode:                                                             \
+	{                                                                        \
+		stream << std::format("{}{:08}    {}\n", tokStr, instrLoc, #opCode); \
+		break;                                                               \
 	}
 
-#define CASE_JUMP(opCode, op)                                                                                                                             \
-	case opCode:                                                                                                                                          \
-	{                                                                                                                                                     \
-		auto instrLoc = i;                                                                                                                                \
-		auto tok = opCodeRelatedTokens[opcodes[++i]];                                                                                                     \
-		uint16_t addressOffset = opcodes[++i] << 8 | opcodes[++i];                                                                                        \
-		auto tokStr = tok->ToString();                                                                                                                    \
-		String tokGap(maxTokenShowSize - tokStr.Size(), ' ');                                                                                             \
-		tokStr += tokGap;                                                                                                                                 \
-		stream << tokStr << std::setfill('0') << std::setw(8) << instrLoc << "\t" << #opCode << "\t" << i << "->" << i op addressOffset + 3 << std::endl; \
-		break;                                                                                                                                            \
+#define CASE_JUMP(opCode, op)                                                                         \
+	case opCode:                                                                                      \
+	{                                                                                                 \
+		uint16_t addressOffset = opcodes[++i] << 8 | opcodes[++i];                                    \
+		auto targetAddr = i op addressOffset + 3;                                                     \
+		stream << std::format("{}{:08}    {}    {}->{}\n", tokStr, instrLoc, #opCode, i, targetAddr); \
+		break;                                                                                        \
 	}
 
-#define CASE_1(opCode)                                                                                                                          \
-	case opCode:                                                                                                                                \
-	{                                                                                                                                           \
-		auto instrLoc = i;                                                                                                                      \
-		auto tok = opCodeRelatedTokens[opcodes[++i]];                                                                                           \
-		auto pos = opcodes[++i];                                                                                                                \
-		auto tokStr = tok->ToString();                                                                                                          \
-		String tokGap(maxTokenShowSize - tokStr.Size(), ' ');                                                                                   \
-		tokStr += tokGap;                                                                                                                       \
-		stream << tokStr << std::setfill('0') << std::setw(8) << instrLoc << "\t" << #opCode << "\t" << static_cast<int32_t>(pos) << std::endl; \
-		break;                                                                                                                                  \
+#define CASE_1(opCode)                                                                                        \
+	case opCode:                                                                                              \
+	{                                                                                                         \
+		auto pos = opcodes[++i];                                                                              \
+		stream << std::format("{}{:08}    {}    {}\n", tokStr, instrLoc, #opCode, pos); \
+		break;                                                                                                \
 	}
 
 		const uint32_t maxTokenShowSize = GetBiggestTokenLength() + 4; // 4 for a gap "    "
 		std::stringstream stream;
 		for (int32_t i = 0; i < opcodes.size(); ++i)
 		{
-			switch (opcodes[i])
+			auto instrLoc = i;
+			auto tokStr = opCodeRelatedTokens[opcodes[++i]]->ToString();
+			String tokGap(maxTokenShowSize - tokStr.Size(), ' ');
+			tokStr += tokGap;
+
+			switch (opcodes[instrLoc])
 			{
 				CASE(OP_NULL)
 				CASE(OP_ADD)
@@ -187,45 +179,28 @@ namespace RealSix::Script
 				CASE_1(OP_INIT_VAR_ARG)
 			case OP_CONSTANT:
 			{
-				auto instrLoc = i;
-				auto tok = opCodeRelatedTokens[opcodes[++i]];
 				auto pos = opcodes[++i];
 				String constantStr = constants[pos].ToString();
-
-				auto tokStr = tok->ToString();
-				String tokGap(maxTokenShowSize - tokStr.Size(), ' ');
-				tokStr += tokGap;
-				stream << tokStr << std::setfill('0') << std::setw(8) << instrLoc << "\tOP_CONSTANT\t" << static_cast<int32_t>(pos) << "\t'" << constantStr << "'" << std::endl;
+				stream << std::format("{}{:08}    OP_CONSTANT    {}    '{}'\n", tokStr, instrLoc, pos, constantStr);
 				break;
 			}
 			case OP_CLASS:
 			{
-				auto instrLoc = i;
-				auto tok = opCodeRelatedTokens[opcodes[++i]];
 				auto constructorCount = opcodes[++i];
 				auto parentClassCount = opcodes[++i];
 				auto varCount = opcodes[++i];
 				auto constCount = opcodes[++i];
 				auto fnCount = opcodes[++i];
 				auto enumCount = opcodes[++i];
-				auto tokStr = tok->ToString();
-				String tokGap(maxTokenShowSize - tokStr.Size(), ' ');
-				tokStr += tokGap;
-				stream << tokStr << std::setfill('0') << std::setw(8) << i << "\tOP_CLASS\t" << constructorCount << "\t" << static_cast<int32_t>(parentClassCount) << "\t" << static_cast<int32_t>(varCount) << "\t" << static_cast<int32_t>(constCount) << "\t" << static_cast<int32_t>(fnCount) << "\t" << static_cast<int32_t>(enumCount) << "\t" << std::endl;
+				stream << std::format("{}{:08}    OP_CLASS    {}    {}    {}    {}    {}    {}\n", tokStr, i, constructorCount, parentClassCount, varCount, constCount, fnCount, enumCount);
 				break;
 			}
 			case OP_CLOSURE:
 			{
-				auto instrLoc = i;
-				auto tok = opCodeRelatedTokens[opcodes[++i]];
 				auto pos = opcodes[++i];
 				String funcStr = ("<fn " + TO_FUNCTION_VALUE(constants[pos])->name + ":0x" + PointerAddressToString((void *)TO_FUNCTION_VALUE(constants[pos])) + ">");
 
-				auto tokStr = tok->ToString();
-				String tokGap(maxTokenShowSize - tokStr.Size(), ' ');
-				tokStr += tokGap;
-
-				stream << tokStr << std::setfill('0') << std::setw(8) << i << "\tOP_CLOSURE\t" << static_cast<int32_t>(pos) << "\t" << funcStr << std::endl;
+				stream << std::format("{}{:08}    OP_CLOSURE    {}    {}\n", tokStr, i, pos, funcStr);
 
 				auto upvalueCount = TO_FUNCTION_VALUE(constants[pos])->upValueCount;
 				if (upvalueCount > 0)
@@ -233,25 +208,20 @@ namespace RealSix::Script
 					stream << "        upvalues:" << std::endl;
 					for (auto j = 0; j < upvalueCount; ++j)
 					{
-						stream << "                 location  " << static_cast<int32_t>(opcodes[++i]);
+						stream << "                 location  " << opcodes[++i];
 						stream << " | ";
-						stream << "depth  " << static_cast<int32_t>(opcodes[++i]) << std::endl;
+						stream << "depth  " << opcodes[++i] << std::endl;
 					}
 				}
 				break;
 			}
 			case OP_MODULE:
 			{
-				auto instrLoc = i;
-				auto tok = opCodeRelatedTokens[opcodes[++i]];
 				auto varCount = opcodes[++i];
 				auto constCount = opcodes[++i];
 				auto staticVarCount = opcodes[++i];
 				auto staticConstCount = opcodes[++i];
-				auto tokStr = tok->ToString();
-				String tokGap(maxTokenShowSize - tokStr.Size(), ' ');
-				tokStr += tokGap;
-				stream << tokStr << std::setfill('0') << std::setw(8) << i << "\tOP_MODULE\t" << static_cast<int32_t>(varCount) << "\t" << static_cast<int32_t>(constCount) << "\t" << static_cast<int32_t>(staticVarCount) << "\t" << static_cast<int32_t>(staticConstCount) << std::endl;
+				stream << std::format("{}{:08}    OP_MODULE    {}    {}    {}    {}\n", tokStr, i, varCount, constCount, staticVarCount, staticConstCount);
 				break;
 			}
 			default:

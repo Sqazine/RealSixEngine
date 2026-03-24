@@ -102,14 +102,14 @@ namespace RealSix
 		std::string_view GetRawData() const;
 
 		const char *CString() const;
-		
+
 		StringView SubStr(size_t offset, size_t len = std::string_view::npos) const;
 
 		StringView &operator=(const StringView &other);
 		StringView &operator=(StringView &&other);
 		bool operator==(StringView other) const;
 		bool operator!=(StringView other) const;
-		const char &operator[](size_t index) const ;
+		const char &operator[](size_t index) const;
 
 	private:
 		std::string_view mStringView{};
@@ -136,16 +136,54 @@ namespace std
 			return std::hash<std::string_view>()(v.GetRawData()) ^ std::hash<int64_t>()(v.GetHash());
 		}
 	};
-}
 
-namespace std
-{
 	template <>
 	struct hash<RealSix::String>
 	{
 		inline std::size_t operator()(const RealSix::String &v) const
 		{
 			return std::hash<std::string>()(v.GetRawData()) ^ std::hash<int64_t>()(v.GetHash());
+		}
+	};
+
+	template <>
+	struct formatter<RealSix::String, char>
+	{
+		constexpr auto parse(std::format_parse_context &ctx)
+		{
+			return ctx.begin();
+		}
+
+		template <typename FormatContext>
+		inline auto format(const RealSix::String &s, FormatContext &ctx) const
+		{
+			return std::format_to(ctx.out(), "{}", s.GetRawData());
+		}
+
+		template <typename FormatContext>
+		inline auto format(RealSix::String &s, FormatContext &ctx) const
+		{
+			return std::format_to(ctx.out(), "{}", s.GetRawData());
+		}
+	};
+	template <>
+	struct formatter<RealSix::StringView, char>
+	{
+		constexpr auto parse(std::format_parse_context &ctx)
+		{
+			return ctx.begin();
+		}
+
+		template <typename FormatContext>
+		inline auto format(const RealSix::StringView &s, FormatContext &ctx) const
+		{
+			return std::format_to(ctx.out(), "{}", s.GetRawData());
+		}
+
+		template <typename FormatContext>
+		inline auto format(RealSix::StringView s, FormatContext &ctx) const
+		{
+			return std::format_to(ctx.out(), "{}", s.GetRawData());
 		}
 	};
 }
