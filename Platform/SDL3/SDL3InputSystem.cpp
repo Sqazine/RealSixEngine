@@ -9,7 +9,7 @@ namespace RealSix
     uint8_t GetSDL3ScanCode(KeyCode keyCode)
     {
 #define CONVERT(x)             \
-    case KeyCode::KEYCODE_##x: \
+    case KeyCode::##x: \
         return SDL_SCANCODE_##x;
 
         switch (keyCode)
@@ -40,26 +40,26 @@ namespace RealSix
             CONVERT(X)
             CONVERT(Y)
             CONVERT(Z)
-            CONVERT(1)
-            CONVERT(2)
-            CONVERT(3)
-            CONVERT(4)
-            CONVERT(5)
-            CONVERT(6)
-            CONVERT(7)
-            CONVERT(8)
-            CONVERT(9)
-            CONVERT(0)
-            CONVERT(RETURN)
-            CONVERT(ESCAPE)
-            CONVERT(BACKSPACE)
-            CONVERT(TAB)
-            CONVERT(SPACE)
-            CONVERT(MINUS)
-            CONVERT(EQUALS)
-            CONVERT(LEFTBRACKET)
-            CONVERT(RIGHTBRACKET)
-            CONVERT(BACKSLASH)
+		case KeyCode::KEY_1:
+			return SDL_SCANCODE_1;
+		case KeyCode::KEY_2:
+			return SDL_SCANCODE_2;
+		case KeyCode::KEY_3:
+			return SDL_SCANCODE_3;
+		case KeyCode::KEY_4:
+			return SDL_SCANCODE_4;
+		case KeyCode::KEY_5:
+			return SDL_SCANCODE_5;
+		case KeyCode::KEY_6:
+			return SDL_SCANCODE_6;
+		case KeyCode::KEY_7:
+			return SDL_SCANCODE_7;
+		case KeyCode::KEY_8:
+			return SDL_SCANCODE_8;
+		case KeyCode::KEY_9:
+			return SDL_SCANCODE_9;
+		case KeyCode::KEY_0:
+			return SDL_SCANCODE_0;
             CONVERT(NONUSHASH)
             CONVERT(SEMICOLON)
             CONVERT(APOSTROPHE)
@@ -229,21 +229,21 @@ namespace RealSix
 
     bool SDL3Controller::GetButtonValue(ControllerButton button) const
     {
-        return mCurrentButtons[button];
+        return mCurrentButtons[CONTROLLER_BUTTON_CAST(button)];
     }
 
     ButtonState SDL3Controller::GetButtonState(ControllerButton button) const
     {
-        if (mPreviousButtons[button] == 0)
+        if (mPreviousButtons[CONTROLLER_BUTTON_CAST(button)] == 0)
         {
-            if (mCurrentButtons[button] == 0)
+            if (mCurrentButtons[CONTROLLER_BUTTON_CAST(button)] == 0)
                 return ButtonState::NONE;
             else
                 return ButtonState::PRESS;
         }
         else
         {
-            if (mCurrentButtons[button] == 0)
+            if (mCurrentButtons[CONTROLLER_BUTTON_CAST(button)] == 0)
                 return ButtonState::RELEASE;
             else
                 return ButtonState::HOLD;
