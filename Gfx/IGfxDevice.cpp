@@ -11,6 +11,7 @@ namespace RealSix
 		const GfxConfig &gfxConfig = GfxConfig::GetInstance();
 		switch (gfxConfig.GetBackend())
 		{
+#if defined(PLATFORM_SUPPORT_VULKAN)
 		case GfxBackend::VULKAN:
 		{
 			// Create Vulkan device
@@ -18,6 +19,7 @@ namespace RealSix
 			device->CreateSwapChain(window);
 			return device;
 		}
+#endif
 		case GfxBackend::D3D12:
 			// Create D3D12 device
 			REALSIX_LOG_ERROR("Not implemented D3D12 device creation yet");

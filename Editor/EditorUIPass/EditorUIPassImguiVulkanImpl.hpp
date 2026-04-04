@@ -1,4 +1,7 @@
 #pragma once
+
+#if defined(PLATFORM_SUPPORT_VULKAN)
+
 #include "EditorUIPass.hpp"
 #include <vulkan/vulkan.h>
 namespace RealSix
@@ -20,3 +23,5 @@ namespace RealSix
         VkDescriptorPool mDescriptorPool;
     };
 }
+
+#endif

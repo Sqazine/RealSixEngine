@@ -15,7 +15,9 @@ namespace RealSix
 
     enum class GfxBackend : uint8_t
     {
+        #if defined(PLATFORM_SUPPORT_VULKAN)
         VULKAN = 0,
+        #endif
         D3D12 = 1,
         METAL = 2,
     };

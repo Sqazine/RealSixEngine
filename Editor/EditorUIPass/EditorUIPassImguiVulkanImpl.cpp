@@ -1,3 +1,4 @@
+#if defined(PLATFORM_SUPPORT_VULKAN)
 #include "EditorUIPassImguiVulkanImpl.hpp"
 #ifndef IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
 #define IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
@@ -185,3 +186,4 @@ namespace RealSix
         }
     }
 }
+#endif

@@ -458,7 +458,7 @@ namespace RealSix
 
 	std::vector<const char *> GfxVulkanDevice::GetInstanceExtensionList()
 	{
-		std::vector<const char *> result = PlatformInfo::GetInstance().GetVulkanPlatformInfo()->GetInstanceWindowExtensionList();
+		std::vector<const char *> result = PlatformInfo::GetInstance().GetVulkanPlatformInfo()->GetInstanceExtensionList();
 		// result.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 #ifndef NDEBUG
 		if (GfxConfig::GetInstance().IsEnableGpuValidation())

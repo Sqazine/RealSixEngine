@@ -8,9 +8,10 @@
 #include "Platform/Window.hpp"
 namespace RealSix
 {
+#if defined(PLATFORM_SUPPORT_VULKAN)
     class SDL3VulkanPlatformInfo : public VulkanPlatformInfo
     {
-        std::vector<const char *> GetInstanceWindowExtensionList()
+        std::vector<const char *> GetInstanceExtensionList()
         {
             uint32_t extensionCount;
 
@@ -31,7 +32,7 @@ namespace RealSix
             return result;
         }
     };
-
+#endif
     class SDL3HardwareInfo : public HardwareInfo
     {
     public:

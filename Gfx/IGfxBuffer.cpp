@@ -11,11 +11,13 @@ namespace RealSix
         const GfxConfig &gfxConfig = GfxConfig::GetInstance();
         switch (gfxConfig.GetBackend())
         {
+#if defined(PLATFORM_SUPPORT_VULKAN)
         case GfxBackend::VULKAN:
         {
             vertexBuffer->mGfxBuffer.reset(GfxVulkanAllocator::CreateVertexBuffer(device, desc));
             return vertexBuffer;
         }
+#endif
         case GfxBackend::D3D12:
             REALSIX_LOG_ERROR("Not implemented D3D12 device creation yet");
             break;

@@ -69,6 +69,7 @@ namespace RealSix
         MemoryInfo mMemoryInfo;
     };
 
+#if defined(PLATFORM_SUPPORT_VULKAN)
     class VulkanPlatformInfo
     {
     public:
@@ -77,9 +78,11 @@ namespace RealSix
 
         static VulkanPlatformInfo *Create();
 
-        virtual std::vector<const char *> GetInstanceWindowExtensionList() = 0;
+        virtual std::vector<const char *> GetInstanceExtensionList() { return {}; }
+        virtual std::vector<const char *> GetDeviceExtensionList() { return {}; }
         virtual VkSurfaceKHR CreateSurface(const Window *window, VkInstance instance) = 0;
     };
+#endif
 
     class PlatformInfo : public Singleton<PlatformInfo>
     {
@@ -100,14 +103,18 @@ namespace RealSix
             return mHardwareInfo.get();
         }
 
+    private:
+        std::unique_ptr<HardwareInfo> mHardwareInfo;
+
+#if defined(PLATFORM_SUPPORT_VULKAN)
+    public:
         VulkanPlatformInfo *GetVulkanPlatformInfo() const
         {
             return mVulkanPlatformInfo.get();
         }
 
     private:
-        std::unique_ptr<HardwareInfo> mHardwareInfo;
-
         std::unique_ptr<VulkanPlatformInfo> mVulkanPlatformInfo;
+#endif
     };
 }

@@ -37,8 +37,10 @@ namespace RealSix
         const GfxConfig &gfxConfig = GfxConfig::GetInstance();
         switch (gfxConfig.GetBackend())
         {
+#if defined(PLATFORM_SUPPORT_VULKAN)
         case GfxBackend::VULKAN:
             return new GfxVulkanRasterPipeline(device, pipelineState);
+#endif
         case GfxBackend::D3D12:
             REALSIX_LOG_ERROR("Not implemented D3D12 device creation yet");
             break;
