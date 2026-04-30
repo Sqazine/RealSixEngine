@@ -145,7 +145,7 @@ namespace RealSix::Script
         return mStackTop;
     }
 
-    Value *Allocator::Stack()
+    Value *Allocator::StackBase()
     {
         return mValueStack;
     }
@@ -160,7 +160,7 @@ namespace RealSix::Script
         mStackTop[offset] = value;
     }
 
-    Value *Allocator::GetGlobalValueReference(size_t idx)
+    Value *Allocator::GetGlobalValueRef(size_t idx)
     {
         return &mGlobalValueList[idx];
     }
@@ -170,7 +170,7 @@ namespace RealSix::Script
         mGlobalValueList[idx] = v;
     }
 
-    StaticValue *Allocator::GetStaticValueReference(size_t idx)
+    StaticValue *Allocator::GetStaticValueRef(size_t idx)
     {
         return &mStaticValueList[idx];
     }

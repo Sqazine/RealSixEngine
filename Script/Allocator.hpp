@@ -68,7 +68,7 @@ namespace RealSix::Script
 
         void SetStackTop(Value *top);
         Value *StackTop() const;
-        Value *Stack();
+        Value *StackBase();
         void MoveStackTop(int32_t offset);
 
         void PushCallFrame(const CallFrame &callFrame);
@@ -83,10 +83,10 @@ namespace RealSix::Script
 
         void SetValueFromStackTopOffset(int32_t offset, const Value &value);
 
-        Value *GetGlobalValueReference(size_t idx);
+        Value *GetGlobalValueRef(size_t idx);
         void SetGlobalValue(size_t idx, const Value &v);
 
-        StaticValue *GetStaticValueReference(size_t idx);
+        StaticValue *GetStaticValueRef(size_t idx);
     private:
         friend class VM;
         friend class Compiler;
@@ -132,15 +132,15 @@ namespace RealSix::Script
         size_t mNextGCByteSize;
     };
 
-#define GET_GLOBAL_VALUE_REFERENCE(idx) (Allocator::GetInstance().GetGlobalValueReference(idx))
+#define GET_GLOBAL_VALUE_REF(idx) (Allocator::GetInstance().GetGlobalValueRef(idx))
 
-#define GET_STATIC_VALUE_REFERENCE(idx) (Allocator::GetInstance().GetStaticValueReference(idx))
+#define GET_STATIC_VALUE_REF(idx) (Allocator::GetInstance().GetStaticValueRef(idx))
 
 #define PUSH_STACK(v) (Allocator::GetInstance().PushStack(v))
 #define POP_STACK() (Allocator::GetInstance().PopStack())
 #define PEEK_STACK(dist) (Allocator::GetInstance().PeekStack(dist))
 #define STACK_TOP() (Allocator::GetInstance().StackTop())
-#define STACK() (Allocator::GetInstance().Stack())
+#define STACK_BASE() (Allocator::GetInstance().StackBase())
 #define SET_STACK_TOP(v) (Allocator::GetInstance().SetStackTop(v))
 #define MOVE_STACK_TOP(idx) (Allocator::GetInstance().MoveStackTop(idx))
 #define SET_VALUE_FROM_STACK_TOP_OFFSET(offset, v) (Allocator::GetInstance().SetValueFromStackTopOffset(offset, v))

@@ -37,11 +37,11 @@ namespace RealSix::Script
 
 		std::vector<Value> returnValues;
 #ifndef NDEBUG
-		if (STACK_TOP() != STACK() + 1)
+		if (STACK_TOP() != STACK_BASE() + 1)
 			REALSIX_SCRIPT_LOG_ERROR(new Token(), "Stack occupancy exception.");
 #endif
 
-		while (STACK_TOP() != STACK() + 1)
+		while (STACK_TOP() != STACK_BASE() + 1)
 			returnValues.emplace_back(POP_STACK());
 
 		POP_STACK();
@@ -204,7 +204,7 @@ namespace RealSix::Script
 				auto pos = READ_INS();
 				auto v = PEEK_STACK(0);
 
-				auto globalValue = GET_GLOBAL_VALUE_REFERENCE(pos);
+				auto globalValue = GET_GLOBAL_VALUE_REF(pos);
 
 				globalValue = GetEndOfRefValuePtr(globalValue);
 				*globalValue = v;
@@ -214,7 +214,7 @@ namespace RealSix::Script
 			{
 				OUTPUT_OPCODE_LOCATION();
 				auto pos = READ_INS();
-				PUSH_STACK(*GET_GLOBAL_VALUE_REFERENCE(pos));
+				PUSH_STACK(*GET_GLOBAL_VALUE_REF(pos));
 				break;
 			}
 			case OP_DEF_STATIC:
@@ -222,7 +222,7 @@ namespace RealSix::Script
 				OUTPUT_OPCODE_LOCATION();
 				auto pos = READ_INS();
 				auto v = PEEK_STACK(0);
-				auto staticValue = GET_STATIC_VALUE_REFERENCE(pos);
+				auto staticValue = GET_STATIC_VALUE_REF(pos);
 
 				if (!staticValue->initialized)
 				{
@@ -237,7 +237,7 @@ namespace RealSix::Script
 				auto pos = READ_INS();
 				auto v = PEEK_STACK(0);
 
-				auto staticValue = GET_STATIC_VALUE_REFERENCE(pos);
+				auto staticValue = GET_STATIC_VALUE_REF(pos);
 				Value *valuePtr = &(staticValue->value);
 				valuePtr = GetEndOfRefValuePtr(valuePtr);
 				*valuePtr = v;
@@ -247,7 +247,7 @@ namespace RealSix::Script
 			{
 				OUTPUT_OPCODE_LOCATION();
 				auto pos = READ_INS();
-				PUSH_STACK(GET_STATIC_VALUE_REFERENCE(pos)->value);
+				PUSH_STACK(GET_STATIC_VALUE_REF(pos)->value);
 				break;
 			}
 			case OP_SET_LOCAL:
@@ -563,7 +563,7 @@ namespace RealSix::Script
 			{
 				OUTPUT_OPCODE_LOCATION();
 				auto index = READ_INS();
-				PUSH_STACK(Allocator::GetInstance().CreateObject<RefObject>(GET_GLOBAL_VALUE_REFERENCE(index)));
+				PUSH_STACK(Allocator::GetInstance().CreateObject<RefObject>(GET_GLOBAL_VALUE_REF(index)));
 				break;
 			}
 			case OP_REF_LOCAL:
@@ -586,7 +586,7 @@ namespace RealSix::Script
 				auto index = READ_INS();
 				auto idxValue = POP_STACK();
 
-				auto globalValue = GET_GLOBAL_VALUE_REFERENCE(index);
+				auto globalValue = GET_GLOBAL_VALUE_REF(index);
 
 				if (IS_DICT_VALUE(*globalValue))
 					PUSH_STACK(Allocator::GetInstance().CreateObject<RefObject>(&TO_DICT_VALUE(*globalValue)->elements[idxValue]));
