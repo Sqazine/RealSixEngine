@@ -417,7 +417,7 @@ namespace RealSix
 
 			if (!layerFound)
 			{
-				REALSIX_LOG_ERROR("Missing Vulkan Validation Layer:{}", layerName);
+				REALSIX_LOG_ERROR("Missing Vulkan Validation Layer:{}.Please install VulkanSDK from https://vulkan.lunarg.com/sdk/home", layerName);
 			}
 		}
 	}

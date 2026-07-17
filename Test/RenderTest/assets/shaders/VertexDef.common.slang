@@ -1,21 +1,27 @@
+#define STATIC_VERTEX_MARCO     \
+    [[vk::location(0)]]         \
+    float3 position : POSITION; \
+    [[vk::location(1)]]         \
+    float3 normal : NORMAL;     \
+    [[vk::location(2)]]         \
+    float3 tangent : TANGENT;   \
+    [[vk::location(3)]]         \
+    float3 binormal : BINORMAL; \
+    [[vk::location(4)]]         \
+    float4 color : COLOR;       \
+    [[vk::location(5)]]         \
+    float2 uv0 : TEXCOORD0;
+
+
 struct StaticVertexInput
 {
-    [[vk::location(0)]]
-    float3 position : POSITION;
-    [[vk::location(1)]]
-    float3 normal : NORMAL;
-    [[vk::location(2)]]
-    float3 tangent : TANGENT;
-    [[vk::location(3)]]
-    float3 binormal : BINORMAL;
-    [[vk::location(4)]]
-    float4 color : COLOR;
-    [[vk::location(5)]]
-    float2 uv0 : TEXCOORD0;
+    STATIC_VERTEX_MARCO
 };
 
-struct SkeletalVertexInput : StaticVertexInput
+struct SkeletalVertexInput
 {
+    STATIC_VERTEX_MARCO
+    
     [[vk::location(6)]]
     uint4 boneIndices : BONE_INDICES;
     [[vk::location(7)]]
