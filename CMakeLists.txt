@@ -139,6 +139,9 @@ source_group("Render" FILES ${RENDER_SRC})
 file(GLOB SCRIPT_SRC "${CMAKE_SOURCE_DIR}/Script/*.cpp" "${CMAKE_SOURCE_DIR}/Script/*.h" "${CMAKE_SOURCE_DIR}/Script/*.hpp" "${CMAKE_SOURCE_DIR}/Script/*.inl")
 source_group("Script" FILES ${SCRIPT_SRC})
 
+file(GLOB SCRIPT_LIBRARY_SRC "${CMAKE_SOURCE_DIR}/Script/Library/*.cpp" "${CMAKE_SOURCE_DIR}/Script/Library/*.h" "${CMAKE_SOURCE_DIR}/Script/Library/*.hpp" "${CMAKE_SOURCE_DIR}/Script/Library/*.inl")
+source_group("Script/Library" FILES ${SCRIPT_LIBRARY_SRC})
+
 file(GLOB FRAMEGRAPH_SRC "${CMAKE_SOURCE_DIR}/Render/FrameGraph/*.cpp" "${CMAKE_SOURCE_DIR}/Render/FrameGraph/*.h" "${CMAKE_SOURCE_DIR}/Render/FrameGraph/*.hpp" "${CMAKE_SOURCE_DIR}/Render/FrameGraph/*.inl")
 source_group("Render/FrameGraph" FILES ${FRAMEGRAPH_SRC})
 
@@ -169,6 +172,7 @@ set(REALSIX_SRC
     ${FRAMEGRAPH_SRC}
     ${RESOURCE_SRC}
     ${SCRIPT_SRC}
+    ${SCRIPT_LIBRARY_SRC}
     ${STB_SRC}
 )
 if(PLATFORM_SUPPORT_VULKAN IN_LIST PLATFORM_SUPPORT_GFX_BACKEND)

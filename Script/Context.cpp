@@ -1,5 +1,5 @@
 #include "Context.hpp"
-#include "LibraryManager.hpp"
+#include "library/LibraryManager.hpp"
 #include "Allocator.hpp"
 namespace RealSix::Script
 {

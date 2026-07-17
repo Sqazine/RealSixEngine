@@ -1,7 +1,7 @@
 #include "Compiler.hpp"
 #include "Common.hpp"
 #include "Object.hpp"
-#include "LibraryManager.hpp"
+#include "library/LibraryManager.hpp"
 #include "Logger.hpp"
 #include "Allocator.hpp"
 namespace RealSix::Script
