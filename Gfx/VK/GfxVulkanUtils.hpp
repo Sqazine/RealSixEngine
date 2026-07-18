@@ -19,7 +19,6 @@ namespace RealSix
 
         switch (result)
         {
-
             CASE(SUCCESS);
             CASE(NOT_READY);
             CASE(TIMEOUT);
@@ -58,27 +57,27 @@ namespace RealSix
 #undef CASE
     }
 
-#define VK_CHECK(r)                                                                                     \
-    do                                                                                                  \
-    {                                                                                                   \
-        VkResult vkResult = (r);                                                                        \
-        if (vkResult != VK_SUCCESS)                                                                     \
+#define VK_CHECK(r)                                                                               \
+    do                                                                                            \
+    {                                                                                             \
+        VkResult vkResult = (r);                                                                  \
+        if (vkResult != VK_SUCCESS)                                                               \
             REALSIX_LOG_ERROR("[{}]File:{} Line:{}", GetErrorCode(vkResult), __FILE__, __LINE__); \
     } while (false)
 
-#define GET_VK_INSTANCE_PFN(instance, funcName)                                                             \
-    do                                                                                                      \
-    {                                                                                                       \
-        funcName = reinterpret_cast<PFN_##funcName>(vkGetInstanceProcAddr(instance, #funcName));            \
-        if (funcName == nullptr)                                                                            \
-            REALSIX_LOG_WARN("Failed to get vulkan instance extension function {}", #funcName); \
+#define GET_VK_INSTANCE_PFN(instance, funcName)                                                  \
+    do                                                                                           \
+    {                                                                                            \
+        funcName = reinterpret_cast<PFN_##funcName>(vkGetInstanceProcAddr(instance, #funcName)); \
+        if (funcName == nullptr)                                                                 \
+            REALSIX_LOG_WARN("Failed to get vulkan instance extension function {}", #funcName);  \
     } while (false)
 
-#define GET_VK_DEVICE_PFN(device, funcName)                                                               \
-    do                                                                                                    \
-    {                                                                                                     \
-        funcName = reinterpret_cast<PFN_##funcName>(vkGetDeviceProcAddr(device, #funcName));              \
-        if (funcName == nullptr)                                                                          \
+#define GET_VK_DEVICE_PFN(device, funcName)                                                   \
+    do                                                                                        \
+    {                                                                                         \
+        funcName = reinterpret_cast<PFN_##funcName>(vkGetDeviceProcAddr(device, #funcName));  \
+        if (funcName == nullptr)                                                              \
             REALSIX_LOG_WARN("Failed to get vulkan device extension function {}", #funcName); \
     } while (false)
 

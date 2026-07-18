@@ -54,6 +54,7 @@ namespace RealSix
 
         cmdBuffer->Begin();
         cmdBuffer->TransitionImageLayout(GetCurrentSwapChainBackTexture(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        cmdBuffer->TransitionImageLayout(mDepthBackTexture.get(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
         VkViewport viewport{};
         viewport.x = 0.0f;

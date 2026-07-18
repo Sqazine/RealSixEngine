@@ -26,7 +26,7 @@ namespace RealSix
     }
 
     GfxVulkanCommandBuffer::GfxVulkanCommandBuffer(IGfxDevice *device, GfxCommandType type, bool isSingleUse)
-        : GfxVulkanObject(device), mCommandType(type), mRelatedQueue(QueryQueueByCommandType(device, type)), mPoolHandle(VK_NULL_HANDLE), mHandle(VK_NULL_HANDLE),mIsUseOnce(isSingleUse)
+        : GfxVulkanObject(device), mCommandType(type), mRelatedQueue(QueryQueueByCommandType(device, type)), mPoolHandle(VK_NULL_HANDLE), mHandle(VK_NULL_HANDLE), mIsUseOnce(isSingleUse)
     {
         VkCommandPoolCreateInfo poolInfo;
         ZeroVulkanStruct(poolInfo, VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO);
@@ -64,7 +64,7 @@ namespace RealSix
     {
         VkCommandBufferBeginInfo beginInfo{};
         ZeroVulkanStruct(beginInfo, VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
-        if(mIsUseOnce)
+        if (mIsUseOnce)
         {
             beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         }
@@ -201,10 +201,7 @@ namespace RealSix
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &mHandle;
 
-        if (mFence)
-            VK_CHECK(vkQueueSubmit(mRelatedQueue, 1, &submitInfo, mFence->GetHandle()));
-        else
-            VK_CHECK(vkQueueSubmit(mRelatedQueue, 1, &submitInfo, VK_NULL_HANDLE));
+        VK_CHECK(vkQueueSubmit(mRelatedQueue, 1, &submitInfo, mFence ? mFence->GetHandle() : VK_NULL_HANDLE));
 
         return this;
     }
@@ -256,6 +253,14 @@ namespace RealSix
 
             sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        }
+        else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+        {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
         }
         else if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
         {
